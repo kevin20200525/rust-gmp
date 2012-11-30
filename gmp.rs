@@ -3,10 +3,12 @@ extern mod std;
 use libc::c_char;
 use libc::c_int;
 use libc::size_t;
+use libc::c_ulong;
 use libc::c_void;
 use ptr::null;
-use str::as_c_str;
 use ptr::addr_of;
+use str::as_c_str;
+use str::to_str;
 
 struct mpz_struct {
   _mp_alloc: c_int,
@@ -23,6 +25,13 @@ extern mod gmp {
   fn __gmpz_get_str(str: *c_char, base: c_int, op: mpz_t) -> *c_char;
   fn __gmpz_sizeinbase(op: mpz_t, base: c_int) -> size_t;
   fn __gmpz_cmp(op: mpz_t, op2: mpz_t) -> c_int;
+  fn __gmpz_cmp_ui(op1: mpz_t, op2: c_ulong) -> c_int;
+  fn __gmpz_add(rop: mpz_t, op1: mpz_t, op2: mpz_t);
+  fn __gmpz_sub(rop: mpz_t, op1: mpz_t, op2: mpz_t);
+  fn __gmpz_mul(rop: mpz_t, op1: mpz_t, op2: mpz_t);
+  fn __gmpz_neg(rop: mpz_t, op: mpz_t);
+  fn __gmpz_tdiv_q(r: mpz_t, n: mpz_t, d: mpz_t);
+  fn __gmpz_mod(r: mpz_t, n: mpz_t, d: mpz_t);
 }
 
 use gmp::*;
@@ -71,6 +80,53 @@ impl Mpz: cmp::Ord {
   }
 }
 
+impl Mpz: num::Num {
+  pure fn add(other: &Mpz) -> Mpz unsafe {
+    let res = init();
+    __gmpz_add(addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
+    res
+  }
+  pure fn sub(other: &Mpz) -> Mpz unsafe {
+    let res = init();
+    __gmpz_sub(addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
+    res
+  }
+  pure fn mul(other: &Mpz) -> Mpz unsafe {
+    let res = init();
+    __gmpz_mul(addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
+    res
+  }
+  pure fn div(other: &Mpz) -> Mpz unsafe {
+    if __gmpz_cmp_ui(addr_of(&self.mpz), 0) == 0 {
+      fail ~"divide by zero";
+    }
+
+    let res = init();
+    __gmpz_tdiv_q(addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
+    res
+  }
+  pure fn modulo(other: &Mpz) -> Mpz unsafe {
+    if __gmpz_cmp_ui(addr_of(&self.mpz), 0) == 0 {
+      fail ~"divide by zero";
+    }
+
+    let res = init();
+    __gmpz_mod(addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
+    res
+  }
+  pure fn neg() -> Mpz unsafe {
+    let res = init();
+    __gmpz_neg(addr_of(&res.mpz), addr_of(&self.mpz));
+    res
+  }
+  pure fn to_int() -> int {
+    fail ~"not implemented";
+  }
+  static pure fn from_int(other: int) -> Mpz unsafe {
+    fail ~"not implemented";
+  }
+}
+
 fn init() -> Mpz {
   let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
   __gmpz_init(addr_of(&mpz));
@@ -85,6 +141,7 @@ mod tests {
     x.set_str("150000", 10);
     assert(x.size_in_base(10) == 6);
   }
+
   #[test]
   fn eq() {
     let x = init();
@@ -98,6 +155,7 @@ mod tests {
     assert(x != z);
     assert(y != z);
   }
+
   #[test]
   fn ord() {
     let x = init();
@@ -111,5 +169,36 @@ mod tests {
     assert(x <= x && x <= y && x <= z && y <= z);
     assert(z > y && z > x && y > x);
     assert(z >= z && z >= y && z >= x && y >= x);
+  }
+
+  #[test]
+  #[should_fail]
+  fn div_zero() {
+    let x = init();
+    x / x;
+  }
+
+  #[test]
+  #[should_fail]
+  fn modulo_zero() {
+    let x = init();
+    x % x;
+  }
+
+  #[test]
+  fn test_div_round() {
+    let x = init();
+    let y = init();
+    let mut z: Mpz;
+
+    x.set_str("2", 10);
+    y.set_str("3", 10);
+    z = x / y;
+    assert(__gmpz_cmp_ui(addr_of(&z.mpz), 2 / 3) == 0);
+
+    x.set_str("2", 10);
+    y.set_str("-3", 10);
+    z = x / y;
+    assert(__gmpz_cmp_ui(addr_of(&z.mpz), 2 / -3) == 0);
   }
 }
