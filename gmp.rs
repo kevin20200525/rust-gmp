@@ -127,7 +127,7 @@ impl Mpz: num::Num {
   }
 }
 
-fn init() -> Mpz {
+pub fn init() -> Mpz {
   let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
   __gmpz_init(addr_of(&mpz));
   Mpz { mpz: mpz }
