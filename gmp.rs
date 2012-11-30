@@ -56,6 +56,21 @@ impl Mpz: cmp::Eq {
   }
 }
 
+impl Mpz: cmp::Ord {
+  pure fn lt(other: &Mpz) -> bool unsafe {
+    __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) < 0
+  }
+  pure fn le(other: &Mpz) -> bool unsafe {
+    __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) <= 0
+  }
+  pure fn gt(other: &Mpz) -> bool unsafe {
+    __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) > 0
+  }
+  pure fn ge(other: &Mpz) -> bool unsafe {
+    __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) >= 0
+  }
+}
+
 fn init() -> Mpz {
   let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
   __gmpz_init(addr_of(&mpz));
@@ -82,5 +97,19 @@ mod tests {
     assert(x == y);
     assert(x != z);
     assert(y != z);
+  }
+  #[test]
+  fn ord() {
+    let x = init();
+    x.set_str("40000000000000000000000", 10);
+    let y = init();
+    y.set_str("45000000000000000000000", 10);
+    let z = init();
+    z.set_str("50000000000000000000000", 10);
+
+    assert(x < y && x < z && y < z);
+    assert(x <= x && x <= y && x <= z && y <= z);
+    assert(z > y && z > x && y > x);
+    assert(z >= z && z >= y && z >= x && y >= x);
   }
 }
