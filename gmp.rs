@@ -8,6 +8,7 @@ use libc::c_void;
 use ptr::null;
 use ptr::addr_of;
 use ptr::mut_addr_of;
+use ptr::to_mut_unsafe_ptr;
 use str::as_c_str;
 
 struct mpz_struct {
@@ -47,8 +48,8 @@ pub struct Mpz {
 }
 
 impl Mpz {
-  fn set_str(&self, s: &str, base: int) -> bool {
-    let mpz = mut_addr_of(&self.mpz);
+  fn set_str(&mut self, s: &str, base: int) -> bool {
+    let mpz = to_mut_unsafe_ptr(&mut self.mpz);
     let r = as_c_str(s, { |s| __gmpz_set_str(mpz, s, base as c_int) });
     r == 0
   }
@@ -125,7 +126,7 @@ impl Mpz: num::Num {
     fail ~"not implemented";
   }
   static pure fn from_int(other: int) -> Mpz unsafe {
-    let res = init();
+    let mut res = init();
     // the gmp functions dealing with longs aren't usable here - long is only
     // guaranteed to be at least 32-bit
     assert(res.set_str(other.to_str(), 10));
@@ -218,8 +219,8 @@ mod tests {
 
   #[test]
   fn test_div_round() {
-    let x = init();
-    let y = init();
+    let mut x = init();
+    let mut y = init();
     let mut z: Mpz;
 
     x.set_str("2", 10);
