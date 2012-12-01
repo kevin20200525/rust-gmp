@@ -25,9 +25,9 @@ extern mod gmp {
   fn __gmpz_clear(x: mpz_ptr);
   fn __gmpz_set_str(rop: mpz_ptr, str: *c_char, base: c_int) -> c_int;
   fn __gmpz_get_str(str: *c_char, base: c_int, op: mpz_srcptr) -> *c_char;
-  fn __gmpz_sizeinbase(op: mpz_srcptr, base: c_int) -> size_t;
-  fn __gmpz_cmp(op: mpz_srcptr, op2: mpz_srcptr) -> c_int;
-  fn __gmpz_cmp_ui(op1: mpz_srcptr, op2: c_ulong) -> c_int;
+  pure fn __gmpz_sizeinbase(op: mpz_srcptr, base: c_int) -> size_t;
+  pure fn __gmpz_cmp(op: mpz_srcptr, op2: mpz_srcptr) -> c_int;
+  pure fn __gmpz_cmp_ui(op1: mpz_srcptr, op2: c_ulong) -> c_int;
   fn __gmpz_add(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
   fn __gmpz_sub(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
   fn __gmpz_mul(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
@@ -53,31 +53,31 @@ impl Mpz {
     r == 0
   }
 
-  fn size_in_base(&self, base: int) -> uint {
+  pure fn size_in_base(&self, base: int) -> uint {
     __gmpz_sizeinbase(addr_of(&self.mpz), base as c_int) as uint
   }
 }
 
 impl Mpz: cmp::Eq {
-  pure fn eq(other: &Mpz) -> bool unsafe {
+  pure fn eq(other: &Mpz) -> bool {
     __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) == 0
   }
-  pure fn ne(other: &Mpz) -> bool unsafe {
+  pure fn ne(other: &Mpz) -> bool {
     __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) != 0
   }
 }
 
 impl Mpz: cmp::Ord {
-  pure fn lt(other: &Mpz) -> bool unsafe {
+  pure fn lt(other: &Mpz) -> bool {
     __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) < 0
   }
-  pure fn le(other: &Mpz) -> bool unsafe {
+  pure fn le(other: &Mpz) -> bool {
     __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) <= 0
   }
-  pure fn gt(other: &Mpz) -> bool unsafe {
+  pure fn gt(other: &Mpz) -> bool {
     __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) > 0
   }
-  pure fn ge(other: &Mpz) -> bool unsafe {
+  pure fn ge(other: &Mpz) -> bool {
     __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) >= 0
   }
 }
