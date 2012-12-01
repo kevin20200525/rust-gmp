@@ -135,13 +135,7 @@ impl Mpz: num::Num {
 
 impl Mpz : from_str::FromStr {
   static fn from_str(s: &str) -> Option<Mpz> {
-    let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
-    if as_c_str(s, { |s| __gmpz_init_set_str(mut_addr_of(&mpz), s, 10) }) == 0 {
-      Some(Mpz { mpz: mpz })
-    } else {
-      __gmpz_clear(mut_addr_of(&mpz));
-      None
-    }
+    init_set_str(s, 10)
   }
 }
 
@@ -159,6 +153,18 @@ pub fn init() -> Mpz {
   let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
   __gmpz_init(mut_addr_of(&mpz));
   Mpz { mpz: mpz }
+}
+
+pub fn init_set_str(s: &str, base: int) -> Option<Mpz> {
+  let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
+  let mpz_ptr = mut_addr_of(&mpz);
+  let r = as_c_str(s, { |s| __gmpz_init_set_str(mpz_ptr, s, base as c_int) });
+  if r == 0 {
+    Some(Mpz { mpz: mpz })
+  } else {
+    __gmpz_clear(mpz_ptr);
+    None
+  }
 }
 
 #[cfg(test)]
@@ -235,5 +241,10 @@ mod tests {
     let x = init();
     x.set_str("1234567890", 10);
     assert(x.to_str() == ~"1234567890");
+  }
+
+  #[test]
+  fn invalid_str() {
+    assert(init_set_str("foobar", 10).is_none());
   }
 }
