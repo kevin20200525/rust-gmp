@@ -133,9 +133,13 @@ impl Mpz: num::Num {
   }
 }
 
+pub fn from_str(s: &str) -> Option<Mpz> {
+  init_set_str(s, 10)
+}
+
 impl Mpz : from_str::FromStr {
   static fn from_str(s: &str) -> Option<Mpz> {
-    init_set_str(s, 10)
+    from_str(s)
   }
 }
 
@@ -178,9 +182,9 @@ mod tests {
 
   #[test]
   fn eq() {
-    let x = option::unwrap(init_set_str("4242142195", 10));
-    let y = option::unwrap(init_set_str("4242142195", 10));
-    let z = option::unwrap(init_set_str("4242142196", 10));
+    let x = option::unwrap(from_str("4242142195"));
+    let y = option::unwrap(from_str("4242142195"));
+    let z = option::unwrap(from_str("4242142196"));
 
     assert(x == y);
     assert(x != z);
@@ -189,9 +193,9 @@ mod tests {
 
   #[test]
   fn ord() {
-    let x = option::unwrap(init_set_str("40000000000000000000000", 10));
-    let y = option::unwrap(init_set_str("45000000000000000000000", 10));
-    let z = option::unwrap(init_set_str("50000000000000000000000", 10));
+    let x = option::unwrap(from_str("40000000000000000000000"));
+    let y = option::unwrap(from_str("45000000000000000000000"));
+    let z = option::unwrap(from_str("50000000000000000000000"));
 
     assert(x < y && x < z && y < z);
     assert(x <= x && x <= y && x <= z && y <= z);
@@ -232,12 +236,12 @@ mod tests {
 
   #[test]
   fn to_str() {
-    let x = option::unwrap(init_set_str("1234567890", 10));
+    let x = option::unwrap(from_str("1234567890"));
     assert(x.to_str() == ~"1234567890");
   }
 
   #[test]
   fn invalid_str() {
-    assert(init_set_str("foobar", 10).is_none());
+    assert(from_str("foobar").is_none());
   }
 }
