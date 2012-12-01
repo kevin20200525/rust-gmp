@@ -19,6 +19,7 @@ type mpz_t = *mpz_struct;
 
 extern mod gmp {
   fn __gmpz_init(x: mpz_t);
+  fn __gmpz_init_set_str(rop: mpz_t, str: *c_char, base: c_int) -> c_int;
   fn __gmpz_clear(x: mpz_t);
   fn __gmpz_set_str(rop: mpz_t, str: *c_char, base: c_int) -> c_int;
   fn __gmpz_get_str(str: *c_char, base: c_int, op: mpz_t) -> *c_char;
@@ -123,6 +124,18 @@ impl Mpz: num::Num {
   }
   static pure fn from_int(other: int) -> Mpz unsafe {
     fail ~"not implemented";
+  }
+}
+
+impl Mpz : from_str::FromStr {
+  static fn from_str(s: &str) -> Option<Mpz> {
+    let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
+    if as_c_str(s, { |s| __gmpz_init_set_str(addr_of(&mpz), s, 10) }) == 0 {
+      Some(Mpz { mpz: mpz })
+    } else {
+      __gmpz_clear(addr_of(&mpz));
+      None
+    }
   }
 }
 
