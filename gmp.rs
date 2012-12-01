@@ -133,7 +133,7 @@ impl Mpz: num::Num {
   }
 }
 
-pub fn from_str(s: &str) -> Option<Mpz> {
+pub pure fn from_str(s: &str) -> Option<Mpz> {
   init_set_str(s, 10)
 }
 
@@ -153,13 +153,13 @@ impl Mpz : to_str::ToStr {
   }
 }
 
-pub fn init() -> Mpz {
+pub pure fn init() -> Mpz unsafe {
   let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
   __gmpz_init(mut_addr_of(&mpz));
   Mpz { mpz: mpz }
 }
 
-pub fn init_set_str(s: &str, base: int) -> Option<Mpz> {
+pub pure fn init_set_str(s: &str, base: int) -> Option<Mpz> unsafe {
   let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
   let mpz_ptr = mut_addr_of(&mpz);
   let r = as_c_str(s, { |s| __gmpz_init_set_str(mpz_ptr, s, base as c_int) });
