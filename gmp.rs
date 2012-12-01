@@ -7,6 +7,7 @@ use libc::c_ulong;
 use libc::c_void;
 use ptr::null;
 use ptr::addr_of;
+use ptr::mut_addr_of;
 use str::as_c_str;
 
 struct mpz_struct {
@@ -15,23 +16,24 @@ struct mpz_struct {
   _mp_d: *c_void
 }
 
-type mpz_srcptr = *mpz_struct;
+type mpz_srcptr = *const mpz_struct;
+type mpz_ptr = *mut mpz_struct;
 
 extern mod gmp {
-  fn __gmpz_init(x: mpz_srcptr);
-  fn __gmpz_init_set_str(rop: mpz_srcptr, str: *c_char, base: c_int) -> c_int;
-  fn __gmpz_clear(x: mpz_srcptr);
-  fn __gmpz_set_str(rop: mpz_srcptr, str: *c_char, base: c_int) -> c_int;
+  fn __gmpz_init(x: mpz_ptr);
+  fn __gmpz_init_set_str(rop: mpz_ptr, str: *c_char, base: c_int) -> c_int;
+  fn __gmpz_clear(x: mpz_ptr);
+  fn __gmpz_set_str(rop: mpz_ptr, str: *c_char, base: c_int) -> c_int;
   fn __gmpz_get_str(str: *c_char, base: c_int, op: mpz_srcptr) -> *c_char;
   fn __gmpz_sizeinbase(op: mpz_srcptr, base: c_int) -> size_t;
   fn __gmpz_cmp(op: mpz_srcptr, op2: mpz_srcptr) -> c_int;
   fn __gmpz_cmp_ui(op1: mpz_srcptr, op2: c_ulong) -> c_int;
-  fn __gmpz_add(rop: mpz_srcptr, op1: mpz_srcptr, op2: mpz_srcptr);
-  fn __gmpz_sub(rop: mpz_srcptr, op1: mpz_srcptr, op2: mpz_srcptr);
-  fn __gmpz_mul(rop: mpz_srcptr, op1: mpz_srcptr, op2: mpz_srcptr);
-  fn __gmpz_neg(rop: mpz_srcptr, op: mpz_srcptr);
-  fn __gmpz_tdiv_q(r: mpz_srcptr, n: mpz_srcptr, d: mpz_srcptr);
-  fn __gmpz_mod(r: mpz_srcptr, n: mpz_srcptr, d: mpz_srcptr);
+  fn __gmpz_add(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
+  fn __gmpz_sub(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
+  fn __gmpz_mul(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
+  fn __gmpz_neg(rop: mpz_ptr, op: mpz_srcptr);
+  fn __gmpz_tdiv_q(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
+  fn __gmpz_mod(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
 }
 
 use gmp::*;
@@ -40,13 +42,13 @@ pub struct Mpz {
   priv mpz: mpz_struct,
 
   drop {
-    __gmpz_clear(addr_of(&self.mpz));
+    __gmpz_clear(mut_addr_of(&self.mpz));
   }
 }
 
 impl Mpz {
   fn set_str(&self, s: &str, base: int) -> bool {
-    let mpz = addr_of(&self.mpz);
+    let mpz = mut_addr_of(&self.mpz);
     let r = as_c_str(s, { |s| __gmpz_set_str(mpz, s, base as c_int) });
     r == 0
   }
@@ -83,17 +85,17 @@ impl Mpz: cmp::Ord {
 impl Mpz: num::Num {
   pure fn add(other: &Mpz) -> Mpz unsafe {
     let res = init();
-    __gmpz_add(addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
+    __gmpz_add(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
   pure fn sub(other: &Mpz) -> Mpz unsafe {
     let res = init();
-    __gmpz_sub(addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
+    __gmpz_sub(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
   pure fn mul(other: &Mpz) -> Mpz unsafe {
     let res = init();
-    __gmpz_mul(addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
+    __gmpz_mul(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
   pure fn div(other: &Mpz) -> Mpz unsafe {
@@ -102,7 +104,7 @@ impl Mpz: num::Num {
     }
 
     let res = init();
-    __gmpz_tdiv_q(addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
+    __gmpz_tdiv_q(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
   pure fn modulo(other: &Mpz) -> Mpz unsafe {
@@ -111,12 +113,12 @@ impl Mpz: num::Num {
     }
 
     let res = init();
-    __gmpz_mod(addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
+    __gmpz_mod(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
   pure fn neg() -> Mpz unsafe {
     let res = init();
-    __gmpz_neg(addr_of(&res.mpz), addr_of(&self.mpz));
+    __gmpz_neg(mut_addr_of(&res.mpz), addr_of(&self.mpz));
     res
   }
   pure fn to_int() -> int {
@@ -130,10 +132,10 @@ impl Mpz: num::Num {
 impl Mpz : from_str::FromStr {
   static fn from_str(s: &str) -> Option<Mpz> {
     let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
-    if as_c_str(s, { |s| __gmpz_init_set_str(addr_of(&mpz), s, 10) }) == 0 {
+    if as_c_str(s, { |s| __gmpz_init_set_str(mut_addr_of(&mpz), s, 10) }) == 0 {
       Some(Mpz { mpz: mpz })
     } else {
-      __gmpz_clear(addr_of(&mpz));
+      __gmpz_clear(mut_addr_of(&mpz));
       None
     }
   }
@@ -151,7 +153,7 @@ impl Mpz : to_str::ToStr {
 
 pub fn init() -> Mpz {
   let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
-  __gmpz_init(addr_of(&mpz));
+  __gmpz_init(mut_addr_of(&mpz));
   Mpz { mpz: mpz }
 }
 
