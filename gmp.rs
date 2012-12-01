@@ -8,7 +8,6 @@ use libc::c_void;
 use ptr::null;
 use ptr::addr_of;
 use str::as_c_str;
-use str::to_str;
 
 struct mpz_struct {
   _mp_alloc: c_int,
@@ -127,6 +126,16 @@ impl Mpz: num::Num {
   }
 }
 
+impl Mpz : to_str::ToStr {
+  pure fn to_str() -> ~str unsafe {
+    let length = self.size_in_base(10) + 2;
+    let dst = vec::to_mut(vec::from_elem(length, '0'));
+    let pdst = vec::raw::to_ptr(dst);
+
+    str::raw::from_c_str(__gmpz_get_str(pdst as *c_char, 10, addr_of(&self.mpz)))
+  }
+}
+
 pub fn init() -> Mpz {
   let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
   __gmpz_init(addr_of(&mpz));
@@ -200,5 +209,12 @@ mod tests {
     y.set_str("-3", 10);
     z = x / y;
     assert(__gmpz_cmp_ui(addr_of(&z.mpz), 2 / -3) == 0);
+  }
+
+  #[test]
+  fn to_str() {
+    let x = init();
+    x.set_str("1234567890", 10);
+    assert(x.to_str() == ~"1234567890");
   }
 }
