@@ -175,8 +175,7 @@ pub pure fn init_set_str(s: &str, base: int) -> Option<Mpz> unsafe {
 mod tests {
   #[test]
   fn size_in_base() {
-    let x = init();
-    x.set_str("150000", 10);
+    let x = option::unwrap(from_str("150000"));
     assert(x.size_in_base(10) == 6);
   }
 
