@@ -178,12 +178,9 @@ mod tests {
 
   #[test]
   fn eq() {
-    let x = init();
-    x.set_str("4242142195", 10);
-    let y = init();
-    y.set_str("4242142195", 10);
-    let z = init();
-    z.set_str("4242142196", 10);
+    let x = option::unwrap(init_set_str("4242142195", 10));
+    let y = option::unwrap(init_set_str("4242142195", 10));
+    let z = option::unwrap(init_set_str("4242142196", 10));
 
     assert(x == y);
     assert(x != z);
@@ -192,12 +189,9 @@ mod tests {
 
   #[test]
   fn ord() {
-    let x = init();
-    x.set_str("40000000000000000000000", 10);
-    let y = init();
-    y.set_str("45000000000000000000000", 10);
-    let z = init();
-    z.set_str("50000000000000000000000", 10);
+    let x = option::unwrap(init_set_str("40000000000000000000000", 10));
+    let y = option::unwrap(init_set_str("45000000000000000000000", 10));
+    let z = option::unwrap(init_set_str("50000000000000000000000", 10));
 
     assert(x < y && x < z && y < z);
     assert(x <= x && x <= y && x <= z && y <= z);
@@ -238,8 +232,7 @@ mod tests {
 
   #[test]
   fn to_str() {
-    let x = init();
-    x.set_str("1234567890", 10);
+    let x = option::unwrap(init_set_str("1234567890", 10));
     assert(x.to_str() == ~"1234567890");
   }
 
