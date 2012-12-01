@@ -15,23 +15,23 @@ struct mpz_struct {
   _mp_d: *c_void
 }
 
-type mpz_t = *mpz_struct;
+type mpz_srcptr = *mpz_struct;
 
 extern mod gmp {
-  fn __gmpz_init(x: mpz_t);
-  fn __gmpz_init_set_str(rop: mpz_t, str: *c_char, base: c_int) -> c_int;
-  fn __gmpz_clear(x: mpz_t);
-  fn __gmpz_set_str(rop: mpz_t, str: *c_char, base: c_int) -> c_int;
-  fn __gmpz_get_str(str: *c_char, base: c_int, op: mpz_t) -> *c_char;
-  fn __gmpz_sizeinbase(op: mpz_t, base: c_int) -> size_t;
-  fn __gmpz_cmp(op: mpz_t, op2: mpz_t) -> c_int;
-  fn __gmpz_cmp_ui(op1: mpz_t, op2: c_ulong) -> c_int;
-  fn __gmpz_add(rop: mpz_t, op1: mpz_t, op2: mpz_t);
-  fn __gmpz_sub(rop: mpz_t, op1: mpz_t, op2: mpz_t);
-  fn __gmpz_mul(rop: mpz_t, op1: mpz_t, op2: mpz_t);
-  fn __gmpz_neg(rop: mpz_t, op: mpz_t);
-  fn __gmpz_tdiv_q(r: mpz_t, n: mpz_t, d: mpz_t);
-  fn __gmpz_mod(r: mpz_t, n: mpz_t, d: mpz_t);
+  fn __gmpz_init(x: mpz_srcptr);
+  fn __gmpz_init_set_str(rop: mpz_srcptr, str: *c_char, base: c_int) -> c_int;
+  fn __gmpz_clear(x: mpz_srcptr);
+  fn __gmpz_set_str(rop: mpz_srcptr, str: *c_char, base: c_int) -> c_int;
+  fn __gmpz_get_str(str: *c_char, base: c_int, op: mpz_srcptr) -> *c_char;
+  fn __gmpz_sizeinbase(op: mpz_srcptr, base: c_int) -> size_t;
+  fn __gmpz_cmp(op: mpz_srcptr, op2: mpz_srcptr) -> c_int;
+  fn __gmpz_cmp_ui(op1: mpz_srcptr, op2: c_ulong) -> c_int;
+  fn __gmpz_add(rop: mpz_srcptr, op1: mpz_srcptr, op2: mpz_srcptr);
+  fn __gmpz_sub(rop: mpz_srcptr, op1: mpz_srcptr, op2: mpz_srcptr);
+  fn __gmpz_mul(rop: mpz_srcptr, op1: mpz_srcptr, op2: mpz_srcptr);
+  fn __gmpz_neg(rop: mpz_srcptr, op: mpz_srcptr);
+  fn __gmpz_tdiv_q(r: mpz_srcptr, n: mpz_srcptr, d: mpz_srcptr);
+  fn __gmpz_mod(r: mpz_srcptr, n: mpz_srcptr, d: mpz_srcptr);
 }
 
 use gmp::*;
