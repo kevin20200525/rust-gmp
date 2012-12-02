@@ -22,6 +22,7 @@ type mpz_ptr = *mut mpz_struct;
 
 extern mod gmp {
   fn __gmpz_init(x: mpz_ptr);
+  fn __gmpz_init_set(rop: mpz_ptr, op: mpz_srcptr);
   fn __gmpz_init_set_str(rop: mpz_ptr, str: *c_char, base: c_int) -> c_int;
   fn __gmpz_clear(x: mpz_ptr);
   fn __gmpz_set_str(rop: mpz_ptr, str: *c_char, base: c_int) -> c_int;
@@ -65,6 +66,13 @@ impl Mpz {
 
   pure fn size_in_base(&self, base: int) -> uint {
     __gmpz_sizeinbase(addr_of(&self.mpz), base as c_int) as uint
+  }
+
+  // TODO: implement the clone::Clone trait when 0.5 is released
+  pure fn clone() -> Mpz unsafe {
+    let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
+    __gmpz_init_set(mut_addr_of(&mpz), addr_of(&self.mpz));
+    Mpz { mpz: mpz }
   }
 }
 
@@ -252,5 +260,13 @@ mod tests {
   #[test]
   fn invalid_str() {
     assert(from_str("foobar").is_none());
+  }
+
+  #[test]
+  fn test_clone() {
+    let a = option::unwrap(from_str("100"));
+    let b = a.clone();
+    assert(b == a);
+    assert(a + b == option::unwrap(from_str("200")));
   }
 }
