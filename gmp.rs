@@ -246,19 +246,10 @@ mod tests {
 
   #[test]
   fn test_div_round() {
-    let mut x = init();
-    let mut y = init();
-    let mut z: Mpz;
-
-    x.set_str("2", 10);
-    y.set_str("3", 10);
-    z = x / y;
-    assert(__gmpz_cmp_ui(addr_of(&z.mpz), 2 / 3) == 0);
-
-    x.set_str("2", 10);
-    y.set_str("-3", 10);
-    z = x / y;
-    assert(__gmpz_cmp_ui(addr_of(&z.mpz), 2 / -3) == 0);
+    let x: Mpz = from_int(2);
+    let y: Mpz = from_int(3);
+    assert((x / y).to_str() == (2 / 3).to_str());
+    assert((x / -y).to_str() == (2 / -3).to_str());
   }
 
   #[test]
