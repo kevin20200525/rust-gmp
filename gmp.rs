@@ -5,6 +5,7 @@ use libc::c_int;
 use libc::size_t;
 use libc::c_ulong;
 use libc::c_void;
+use num::from_int;
 use ptr::null;
 use ptr::addr_of;
 use ptr::mut_addr_of;
@@ -25,6 +26,7 @@ extern mod gmp {
   fn __gmpz_init_set(rop: mpz_ptr, op: mpz_srcptr);
   fn __gmpz_init_set_str(rop: mpz_ptr, str: *c_char, base: c_int) -> c_int;
   fn __gmpz_clear(x: mpz_ptr);
+  fn __gmpz_set(rop: mpz_ptr, op: mpz_srcptr);
   fn __gmpz_set_str(rop: mpz_ptr, str: *c_char, base: c_int) -> c_int;
   fn __gmpz_get_str(str: *c_char, base: c_int, op: mpz_srcptr) -> *c_char;
   pure fn __gmpz_sizeinbase(op: mpz_srcptr, base: c_int) -> size_t;
@@ -49,6 +51,10 @@ pub struct Mpz {
 }
 
 impl Mpz {
+  fn set(&mut self, other: &Mpz) {
+    __gmpz_set(mut_addr_of(&self.mpz), addr_of(&other.mpz));
+  }
+
   fn set_str(&mut self, s: &str, base: int) -> bool {
     let mpz = to_mut_unsafe_ptr(&mut self.mpz);
     let r = as_c_str(s, { |s| __gmpz_set_str(mpz, s, base as c_int) });
@@ -186,6 +192,14 @@ pub pure fn init() -> Mpz unsafe {
 #[cfg(test)]
 mod tests {
   #[test]
+  fn test_set() {
+    let mut x: Mpz = num::from_int(1000);
+    let y: Mpz = num::from_int(5000);
+    x.set(&y);
+    assert(x == y);
+  }
+
+  #[test]
   fn size_in_base() {
     let x = option::unwrap(from_str("150000"));
     assert(x.size_in_base(10) == 6);
@@ -273,8 +287,8 @@ mod tests {
   }
 
   #[test]
-  fn from_int() {
-    let x: Mpz = num::from_int(150);
+  fn test_from_int() {
+    let x: Mpz = from_int(150);
     assert(x.to_str() == ~"150");
     assert(x == option::unwrap(from_str("150")));
   }
