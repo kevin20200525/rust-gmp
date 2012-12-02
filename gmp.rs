@@ -125,12 +125,10 @@ impl Mpz: num::Num {
   pure fn to_int() -> int {
     fail ~"not implemented";
   }
-  static pure fn from_int(other: int) -> Mpz unsafe {
-    let mut res = init();
+  static pure fn from_int(other: int) -> Mpz {
     // the gmp functions dealing with longs aren't usable here - long is only
     // guaranteed to be at least 32-bit
-    assert(res.set_str(other.to_str(), 10));
-    res
+    option::unwrap(from_str(other.to_str()))
   }
 }
 
