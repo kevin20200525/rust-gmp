@@ -164,7 +164,7 @@ impl Mpz : from_str::FromStr {
 }
 
 impl Mpz : to_str::ToStr {
-  pure fn to_str() -> ~str unsafe {
+  pure fn to_str() -> ~str {
     self.to_str_radix(10)
   }
 }
