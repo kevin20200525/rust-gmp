@@ -54,6 +54,15 @@ impl Mpz {
     r == 0
   }
 
+  pure fn to_str_radix(&self, base: int) -> ~str unsafe {
+    let length = self.size_in_base(10) + 2;
+    let dst = vec::to_mut(vec::from_elem(length, '0'));
+    let pdst = vec::raw::to_ptr(dst);
+
+    str::raw::from_c_str(__gmpz_get_str(pdst as *c_char, base as c_int,
+                         addr_of(&self.mpz)))
+  }
+
   pure fn size_in_base(&self, base: int) -> uint {
     __gmpz_sizeinbase(addr_of(&self.mpz), base as c_int) as uint
   }
@@ -156,11 +165,7 @@ impl Mpz : from_str::FromStr {
 
 impl Mpz : to_str::ToStr {
   pure fn to_str() -> ~str unsafe {
-    let length = self.size_in_base(10) + 2;
-    let dst = vec::to_mut(vec::from_elem(length, '0'));
-    let pdst = vec::raw::to_ptr(dst);
-
-    str::raw::from_c_str(__gmpz_get_str(pdst as *c_char, 10, addr_of(&self.mpz)))
+    self.to_str_radix(10)
   }
 }
 
@@ -230,6 +235,12 @@ mod tests {
     y.set_str("-3", 10);
     z = x / y;
     assert(__gmpz_cmp_ui(addr_of(&z.mpz), 2 / -3) == 0);
+  }
+
+  #[test]
+  fn to_str_radix() {
+    let x = option::unwrap(from_str("255"));
+    assert(x.to_str_radix(16) == ~"ff");
   }
 
   #[test]
