@@ -189,6 +189,8 @@ mod tests {
   fn size_in_base() {
     let x = option::unwrap(from_str("150000"));
     assert(x.size_in_base(10) == 6);
+    assert(x == option::unwrap(from_str_radix("249f0", 16)));
+    assert(x.size_in_base(16) == 5);
   }
 
   #[test]
