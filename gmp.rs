@@ -269,4 +269,11 @@ mod tests {
     assert(b == a);
     assert(a + b == option::unwrap(from_str("200")));
   }
+
+  #[test]
+  fn from_int() {
+    let x: Mpz = num::from_int(150);
+    assert(x.to_str() == ~"150");
+    assert(x == option::unwrap(from_str("150")));
+  }
 }
