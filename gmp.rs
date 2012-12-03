@@ -39,6 +39,9 @@ extern mod gmp {
   fn __gmpz_abs(rop: mpz_ptr, op: mpz_srcptr);
   fn __gmpz_tdiv_q(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
   fn __gmpz_mod(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
+  fn __gmpz_and(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
+  fn __gmpz_ior(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
+  fn __gmpz_xor(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
 }
 
 use gmp::*;
@@ -159,6 +162,30 @@ impl Mpz: num::Num {
     // the gmp functions dealing with longs aren't usable here - long is only
     // guaranteed to be at least 32-bit
     option::unwrap(from_str(other.to_str()))
+  }
+}
+
+impl Mpz: BitAnd<Mpz, Mpz> {
+  pure fn bitand(other: &Mpz) -> Mpz unsafe {
+    let res = init();
+    __gmpz_and(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
+    res
+  }
+}
+
+impl Mpz: BitOr<Mpz, Mpz> {
+  pure fn bitor(other: &Mpz) -> Mpz unsafe {
+    let res = init();
+    __gmpz_ior(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
+    res
+  }
+}
+
+impl Mpz: BitXor<Mpz, Mpz> {
+  pure fn bitxor(other: &Mpz) -> Mpz unsafe {
+    let res = init();
+    __gmpz_xor(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
+    res
   }
 }
 
@@ -299,5 +326,44 @@ mod tests {
     assert(x == y.neg());
     assert(x == y.abs());
     assert(x.abs() == y.abs());
+  }
+
+  #[test]
+  fn test_bitand() {
+    let a = 0b1001_0111;
+    let b = 0b1100_0100;
+    let c = a & b;
+
+    let m_a: Mpz = from_int(a);
+    let m_b: Mpz = from_int(b);
+    let m_c: Mpz = from_int(c);
+
+    assert(m_a & m_b == m_c);
+  }
+
+  #[test]
+  fn test_bitor() {
+    let a = 0b1001_0111;
+    let b = 0b1100_0100;
+    let c = a | b;
+
+    let m_a: Mpz = from_int(a);
+    let m_b: Mpz = from_int(b);
+    let m_c: Mpz = from_int(c);
+
+    assert(m_a | m_b == m_c);
+  }
+
+  #[test]
+  fn test_bitxor() {
+    let a = 0b1001_0111;
+    let b = 0b1100_0100;
+    let c = a ^ b;
+
+    let m_a: Mpz = from_int(a);
+    let m_b: Mpz = from_int(b);
+    let m_c: Mpz = from_int(c);
+
+    assert(m_a ^ m_b == m_c);
   }
 }
