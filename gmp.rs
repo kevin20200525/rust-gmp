@@ -18,6 +18,7 @@ struct mpz_struct {
   _mp_d: *c_void
 }
 
+type mp_bitcnt_t = c_ulong;
 type mpz_srcptr = *const mpz_struct;
 type mpz_ptr = *mut mpz_struct;
 
@@ -42,6 +43,7 @@ extern mod gmp {
   fn __gmpz_and(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
   fn __gmpz_ior(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
   fn __gmpz_xor(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
+  pure fn __gmpz_popcount(op: mpz_srcptr) -> mp_bitcnt_t;
 }
 
 use gmp::*;
@@ -89,6 +91,10 @@ impl Mpz {
     let res = init();
     __gmpz_abs(mut_addr_of(&res.mpz), addr_of(&self.mpz));
     res
+  }
+
+  pure fn popcount() -> uint {
+    __gmpz_popcount(addr_of(&self.mpz)) as uint
   }
 }
 
@@ -365,5 +371,11 @@ mod tests {
     let m_c: Mpz = from_int(c);
 
     assert(m_a ^ m_b == m_c);
+  }
+
+  #[test]
+  fn test_popcount() {
+    let a = option::unwrap(from_str_radix("1010010011", 2));
+    assert(a.popcount() == 5);
   }
 }
