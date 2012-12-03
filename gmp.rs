@@ -36,6 +36,7 @@ extern mod gmp {
   fn __gmpz_sub(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
   fn __gmpz_mul(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
   fn __gmpz_neg(rop: mpz_ptr, op: mpz_srcptr);
+  fn __gmpz_abs(rop: mpz_ptr, op: mpz_srcptr);
   fn __gmpz_tdiv_q(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
   fn __gmpz_mod(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
 }
@@ -79,6 +80,12 @@ impl Mpz {
     let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
     __gmpz_init_set(mut_addr_of(&mpz), addr_of(&self.mpz));
     Mpz { mpz: mpz }
+  }
+
+  pure fn abs() -> Mpz unsafe {
+    let res = init();
+    __gmpz_abs(mut_addr_of(&res.mpz), addr_of(&self.mpz));
+    res
   }
 }
 
@@ -282,5 +289,15 @@ mod tests {
     let x: Mpz = from_int(150);
     assert(x.to_str() == ~"150");
     assert(x == option::unwrap(from_str("150")));
+  }
+
+  #[test]
+  fn test_abs() {
+    let x: Mpz = from_int(1000);
+    let y: Mpz = from_int(-1000);
+    assert(x.neg() == y);
+    assert(x == y.neg());
+    assert(x == y.abs());
+    assert(x.abs() == y.abs());
   }
 }
