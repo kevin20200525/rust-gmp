@@ -358,8 +358,8 @@ mod tests {
   fn test_abs() {
     let x: Mpz = from_int(1000);
     let y: Mpz = from_int(-1000);
-    assert(x.neg() == y);
-    assert(x == y.neg());
+    assert(-x == y);
+    assert(x == -y);
     assert(x == y.abs());
     assert(x.abs() == y.abs());
   }
