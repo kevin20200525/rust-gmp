@@ -47,6 +47,7 @@ extern mod gmp {
   fn __gmpz_xor(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
   fn __gmpz_com(rop: mpz_ptr, op: mpz_srcptr);
   pure fn __gmpz_popcount(op: mpz_srcptr) -> mp_bitcnt_t;
+  pure fn __gmpz_hamdist(op1: mpz_srcptr, op2: mpz_srcptr) -> mp_bitcnt_t;
 }
 
 use gmp::*;
@@ -104,6 +105,10 @@ impl Mpz {
 
   pure fn popcount() -> uint {
     __gmpz_popcount(addr_of(&self.mpz)) as uint
+  }
+
+  pure fn hamdist(other: &Mpz) -> uint {
+    __gmpz_hamdist(addr_of(&self.mpz), addr_of(&other.mpz)) as uint
   }
 }
 
@@ -400,5 +405,12 @@ mod tests {
   fn test_popcount() {
     let a = option::unwrap(from_str_radix("1010010011", 2));
     assert(a.popcount() == 5);
+  }
+
+  #[test]
+  fn test_hamdist() {
+    let a: Mpz = from_int(0b1011_0001);
+    let b: Mpz = from_int(0b0010_1011);
+    assert(a.hamdist(&b) == 4);
   }
 }
