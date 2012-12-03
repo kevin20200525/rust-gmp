@@ -45,6 +45,7 @@ extern mod gmp {
   fn __gmpz_and(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
   fn __gmpz_ior(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
   fn __gmpz_xor(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
+  fn __gmpz_com(rop: mpz_ptr, op: mpz_srcptr);
   pure fn __gmpz_popcount(op: mpz_srcptr) -> mp_bitcnt_t;
 }
 
@@ -87,6 +88,12 @@ impl Mpz {
     let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
     __gmpz_init_set(mut_addr_of(&mpz), addr_of(&self.mpz));
     Mpz { mpz: mpz }
+  }
+
+  pure fn compl() -> Mpz unsafe {
+    let res = init();
+    __gmpz_com(mut_addr_of(&res.mpz), addr_of(&self.mpz));
+    res
   }
 
   pure fn abs() -> Mpz unsafe {
@@ -381,6 +388,12 @@ mod tests {
     assert((-i << 4).to_str() == (-j << 4).to_str());
     assert((i >> 4).to_str() == (j >> 4).to_str());
     assert((-i >> 4).to_str() == (-j >> 4).to_str());
+  }
+
+  #[test]
+  fn test_compl() {
+    assert(from_int::<Mpz>(13).compl().to_str() == (!13).to_str());
+    assert(from_int::<Mpz>(-442).compl().to_str() == (!-442).to_str());
   }
 
   #[test]
