@@ -356,39 +356,21 @@ mod tests {
   fn test_bitand() {
     let a = 0b1001_0111;
     let b = 0b1100_0100;
-    let c = a & b;
-
-    let m_a: Mpz = from_int(a);
-    let m_b: Mpz = from_int(b);
-    let m_c: Mpz = from_int(c);
-
-    assert(m_a & m_b == m_c);
+    assert(from_int::<Mpz>(a) & from_int::<Mpz>(b) == from_int::<Mpz>(a & b));
   }
 
   #[test]
   fn test_bitor() {
     let a = 0b1001_0111;
     let b = 0b1100_0100;
-    let c = a | b;
-
-    let m_a: Mpz = from_int(a);
-    let m_b: Mpz = from_int(b);
-    let m_c: Mpz = from_int(c);
-
-    assert(m_a | m_b == m_c);
+    assert(from_int::<Mpz>(a) | from_int::<Mpz>(b) == from_int::<Mpz>(a | b));
   }
 
   #[test]
   fn test_bitxor() {
     let a = 0b1001_0111;
     let b = 0b1100_0100;
-    let c = a ^ b;
-
-    let m_a: Mpz = from_int(a);
-    let m_b: Mpz = from_int(b);
-    let m_c: Mpz = from_int(c);
-
-    assert(m_a ^ m_b == m_c);
+    assert(from_int::<Mpz>(a) ^ from_int::<Mpz>(b) == from_int::<Mpz>(a ^ b));
   }
 
   #[test]
