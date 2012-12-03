@@ -36,9 +36,11 @@ extern mod gmp {
   fn __gmpz_add(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
   fn __gmpz_sub(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
   fn __gmpz_mul(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
+  fn __gmpz_mul_2exp(rop: mpz_ptr, op1: mpz_srcptr, op2: mp_bitcnt_t);
   fn __gmpz_neg(rop: mpz_ptr, op: mpz_srcptr);
   fn __gmpz_abs(rop: mpz_ptr, op: mpz_srcptr);
-  fn __gmpz_tdiv_q(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
+  fn __gmpz_tdiv_q(q: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
+  fn __gmpz_fdiv_q_2exp(q: mpz_ptr, n: mpz_srcptr, b: mp_bitcnt_t);
   fn __gmpz_mod(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
   fn __gmpz_and(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
   fn __gmpz_ior(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
@@ -191,6 +193,22 @@ impl Mpz: BitXor<Mpz, Mpz> {
   pure fn bitxor(other: &Mpz) -> Mpz unsafe {
     let res = init();
     __gmpz_xor(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
+    res
+  }
+}
+
+impl Mpz: Shl<c_ulong, Mpz> {
+  pure fn shl(other: &c_ulong) -> Mpz unsafe {
+    let res = init();
+    __gmpz_mul_2exp(mut_addr_of(&res.mpz), addr_of(&self.mpz), *other);
+    res
+  }
+}
+
+impl Mpz: Shr<c_ulong, Mpz> {
+  pure fn shr(other: &c_ulong) -> Mpz unsafe {
+    let res = init();
+    __gmpz_fdiv_q_2exp(mut_addr_of(&res.mpz), addr_of(&self.mpz), *other);
     res
   }
 }
@@ -371,6 +389,16 @@ mod tests {
     let m_c: Mpz = from_int(c);
 
     assert(m_a ^ m_b == m_c);
+  }
+
+  #[test]
+  fn test_shifts() {
+    let i = 227;
+    let j: Mpz = from_int(i);
+    assert((i << 4).to_str() == (j << 4).to_str());
+    assert((-i << 4).to_str() == (-j << 4).to_str());
+    assert((i >> 4).to_str() == (j >> 4).to_str());
+    assert((-i >> 4).to_str() == (-j >> 4).to_str());
   }
 
   #[test]
