@@ -66,16 +66,12 @@ impl Mpz {
   }
 
   pure fn to_str_radix(&self, base: int) -> ~str unsafe {
-    let length = self.size_in_base(10) + 2;
-    let dst = vec::to_mut(vec::from_elem(length, '0'));
+    let len = __gmpz_sizeinbase(addr_of(&self.mpz), base as c_int) as uint + 2;
+    let dst = vec::to_mut(vec::from_elem(len, '0'));
     let pdst = vec::raw::to_ptr(dst);
 
     str::raw::from_c_str(__gmpz_get_str(pdst as *c_char, base as c_int,
                          addr_of(&self.mpz)))
-  }
-
-  pure fn size_in_base(&self, base: int) -> uint {
-    __gmpz_sizeinbase(addr_of(&self.mpz), base as c_int) as uint
   }
 
   // TODO: implement the clone::Clone trait when 0.5 is released
@@ -272,14 +268,6 @@ mod test_mpz {
     assert(x != y);
     x.set_from_str_radix("5000", 10);
     assert(x == y);
-  }
-
-  #[test]
-  fn test_size_in_base() {
-    let x = option::unwrap(from_str("150000"));
-    assert(x.size_in_base(10) == 6);
-    assert(x == option::unwrap(from_str_radix("249f0", 16)));
-    assert(x.size_in_base(16) == 5);
   }
 
   #[test]
