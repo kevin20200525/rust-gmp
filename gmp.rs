@@ -58,7 +58,8 @@ impl Mpz {
     __gmpz_set(mut_addr_of(&self.mpz), addr_of(&other.mpz));
   }
 
-  fn set_from_str_radix(&mut self, s: &str, base: int) -> bool {
+  fn set_from_str_radix(&mut self, s: &str, base: uint) -> bool {
+    assert(base == 0 || base >= 2 || base <= 62);
     let mpz = to_mut_unsafe_ptr(&mut self.mpz);
     let r = as_c_str(s, { |s| __gmpz_set_str(mpz, s, base as c_int) });
     r == 0
@@ -218,7 +219,8 @@ impl Mpz: Shr<c_ulong, Mpz> {
   }
 }
 
-pub pure fn from_str_radix(s: &str, base: int) -> Option<Mpz> unsafe {
+pub pure fn from_str_radix(s: &str, base: uint) -> Option<Mpz> unsafe {
+  assert(base == 0 || base >= 2 || base <= 62);
   let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
   let mpz_ptr = mut_addr_of(&mpz);
   let r = as_c_str(s, { |s| __gmpz_init_set_str(mpz_ptr, s, base as c_int) });
