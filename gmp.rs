@@ -260,17 +260,27 @@ pub pure fn init() -> Mpz unsafe {
 }
 
 #[cfg(test)]
-mod tests {
+mod test_mpz {
   #[test]
   fn test_set() {
-    let mut x: Mpz = num::from_int(1000);
-    let y: Mpz = num::from_int(5000);
+    let mut x: Mpz = from_int(1000);
+    let y: Mpz = from_int(5000);
+    assert(x != y);
     x.set(&y);
     assert(x == y);
   }
 
   #[test]
-  fn size_in_base() {
+  fn test_set_str() {
+    let mut x: Mpz = from_int(1000);
+    let y: Mpz = from_int(5000);
+    assert(x != y);
+    x.set_str("5000", 10);
+    assert(x == y);
+  }
+
+  #[test]
+  fn test_size_in_base() {
     let x = option::unwrap(from_str("150000"));
     assert(x.size_in_base(10) == 6);
     assert(x == option::unwrap(from_str_radix("249f0", 16)));
@@ -278,7 +288,7 @@ mod tests {
   }
 
   #[test]
-  fn eq() {
+  fn test_eq() {
     let x = option::unwrap(from_str("4242142195"));
     let y = option::unwrap(from_str("4242142195"));
     let z = option::unwrap(from_str("4242142196"));
@@ -289,7 +299,7 @@ mod tests {
   }
 
   #[test]
-  fn ord() {
+  fn test_ord() {
     let x = option::unwrap(from_str("40000000000000000000000"));
     let y = option::unwrap(from_str("45000000000000000000000"));
     let z = option::unwrap(from_str("50000000000000000000000"));
@@ -302,14 +312,14 @@ mod tests {
 
   #[test]
   #[should_fail]
-  fn div_zero() {
+  fn test_div_zero() {
     let x = init();
     x / x;
   }
 
   #[test]
   #[should_fail]
-  fn modulo_zero() {
+  fn test_modulo_zero() {
     let x = init();
     x % x;
   }
@@ -323,19 +333,19 @@ mod tests {
   }
 
   #[test]
-  fn to_str_radix() {
+  fn test_to_str_radix() {
     let x = option::unwrap(from_str("255"));
     assert(x.to_str_radix(16) == ~"ff");
   }
 
   #[test]
-  fn to_str() {
+  fn test_to_str() {
     let x = option::unwrap(from_str("1234567890"));
     assert(x.to_str() == ~"1234567890");
   }
 
   #[test]
-  fn invalid_str() {
+  fn test_invalid_str() {
     assert(from_str("foobar").is_none());
   }
 
