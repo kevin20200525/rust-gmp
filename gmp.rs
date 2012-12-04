@@ -1,15 +1,8 @@
 extern mod std;
 
-use libc::c_char;
-use libc::c_int;
-use libc::size_t;
-use libc::c_ulong;
-use libc::c_void;
-use num::from_int;
-use ptr::null;
-use ptr::addr_of;
-use ptr::mut_addr_of;
-use ptr::to_mut_unsafe_ptr;
+use libc::{c_char,c_int,c_ulong,c_void,size_t};
+use num::{from_int,Num};
+use ptr::{addr_of,mut_addr_of,null,to_mut_unsafe_ptr};
 use str::as_c_str;
 
 struct mpz_struct {
@@ -136,7 +129,7 @@ impl Mpz: cmp::Ord {
   }
 }
 
-impl Mpz: num::Num {
+impl Mpz: Num {
   pure fn add(other: &Mpz) -> Mpz unsafe {
     let res = init();
     __gmpz_add(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
