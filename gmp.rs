@@ -58,7 +58,7 @@ impl Mpz {
     __gmpz_set(mut_addr_of(&self.mpz), addr_of(&other.mpz));
   }
 
-  fn set_str(&mut self, s: &str, base: int) -> bool {
+  fn set_from_str_radix(&mut self, s: &str, base: int) -> bool {
     let mpz = to_mut_unsafe_ptr(&mut self.mpz);
     let r = as_c_str(s, { |s| __gmpz_set_str(mpz, s, base as c_int) });
     r == 0
@@ -264,11 +264,11 @@ mod test_mpz {
   }
 
   #[test]
-  fn test_set_str() {
+  fn test_set_from_str_radix() {
     let mut x: Mpz = from_int(1000);
     let y: Mpz = from_int(5000);
     assert(x != y);
-    x.set_str("5000", 10);
+    x.set_from_str_radix("5000", 10);
     assert(x == y);
   }
 
