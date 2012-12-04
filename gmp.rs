@@ -74,6 +74,10 @@ impl Mpz {
                          addr_of(&self.mpz)))
   }
 
+  pure fn bit_length() -> uint {
+    return __gmpz_sizeinbase(addr_of(&self.mpz), 2) as uint
+  }
+
   // TODO: implement the clone::Clone trait when 0.5 is released
   pure fn clone() -> Mpz unsafe {
     let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
@@ -405,5 +409,11 @@ mod test_mpz {
     let a: Mpz = from_int(0b1011_0001);
     let b: Mpz = from_int(0b0010_1011);
     assert(a.hamdist(&b) == 4);
+  }
+
+  #[test]
+  fn test_bit_length() {
+    assert(from_int::<Mpz>(0b1011_0000_0001_0000).bit_length() == 16);
+    assert(from_int::<Mpz>(0b101).bit_length() == 3);
   }
 }
