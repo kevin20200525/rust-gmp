@@ -61,8 +61,7 @@ impl Mpz {
   fn set_from_str_radix(&mut self, s: &str, base: uint) -> bool {
     assert(base == 0 || base >= 2 || base <= 62);
     let mpz = to_mut_unsafe_ptr(&mut self.mpz);
-    let r = as_c_str(s, { |s| __gmpz_set_str(mpz, s, base as c_int) });
-    r == 0
+    as_c_str(s, { |s| __gmpz_set_str(mpz, s, base as c_int) }) == 0
   }
 
   pure fn to_str_radix(&self, base: int) -> ~str unsafe {
