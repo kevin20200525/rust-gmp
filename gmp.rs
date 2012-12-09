@@ -269,8 +269,9 @@ mod test_mpz {
     let mut x: Mpz = from_int(1000);
     let y: Mpz = from_int(5000);
     assert(x != y);
-    x.set_from_str_radix("5000", 10);
+    assert(x.set_from_str_radix("5000", 10));
     assert(x == y);
+    assert(!x.set_from_str_radix("aaaa", 2));
   }
 
   #[test]
