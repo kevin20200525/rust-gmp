@@ -363,10 +363,10 @@ mod test_mpz {
 
   #[test]
   fn test_clone() {
-    let a = option::unwrap(from_str("100"));
+    let a = from_int::<Mpz>(100);
     let b = a.clone();
     assert b == a;
-    assert a + b == option::unwrap(from_str("200"));
+    assert a + b == from_int::<Mpz>(200);
   }
 
   #[test]
@@ -425,15 +425,12 @@ mod test_mpz {
 
   #[test]
   fn test_popcount() {
-    let a = option::unwrap(from_str_radix("1010010011", 2));
-    assert a.popcount() == 5;
+    option::unwrap(from_str_radix("1010010011", 2)).popcount() == 5;
   }
 
   #[test]
   fn test_hamdist() {
-    let a: Mpz = from_int(0b1011_0001);
-    let b: Mpz = from_int(0b0010_1011);
-    assert a.hamdist(&b) == 4;
+    assert from_int::<Mpz>(0b1011_0001).hamdist(&from_int(0b0010_1011)) == 4;
   }
 
   #[test]
