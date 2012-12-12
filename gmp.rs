@@ -41,6 +41,7 @@ extern mod gmp {
   fn __gmpz_com(rop: mpz_ptr, op: mpz_srcptr);
   pure fn __gmpz_popcount(op: mpz_srcptr) -> mp_bitcnt_t;
   pure fn __gmpz_hamdist(op1: mpz_srcptr, op2: mpz_srcptr) -> mp_bitcnt_t;
+  fn __gmpz_invert(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr) -> c_int;
 }
 
 use gmp::*;
@@ -94,6 +95,16 @@ impl Mpz {
     let res = init();
     __gmpz_abs(mut_addr_of(&res.mpz), addr_of(&self.mpz));
     res
+  }
+
+  pure fn invert(modulo: &Mpz) -> Option<Mpz> unsafe {
+    let res = init();
+    if __gmpz_invert(mut_addr_of(&res.mpz), addr_of(&self.mpz),
+                     addr_of(&modulo.mpz)) == 0 {
+      None
+    } else {
+      Some(res)
+    }
   }
 
   pure fn popcount() -> uint {
@@ -415,5 +426,14 @@ mod test_mpz {
   fn test_bit_length() {
     assert(from_int::<Mpz>(0b1011_0000_0001_0000).bit_length() == 16);
     assert(from_int::<Mpz>(0b101).bit_length() == 3);
+  }
+
+  #[test]
+  fn test_invert() {
+    assert from_int::<Mpz>(3).invert(&from_int(11)) == Some(from_int(4));
+    assert from_int::<Mpz>(4).invert(&from_int(11)) == Some(from_int(3));
+    assert from_int::<Mpz>(2).invert(&from_int(5)) == Some(from_int(3));
+    assert from_int::<Mpz>(3).invert(&from_int(5)) == Some(from_int(2));
+    assert from_int::<Mpz>(2).invert(&from_int(4)).is_none();
   }
 }
