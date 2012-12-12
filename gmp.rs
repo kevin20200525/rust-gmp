@@ -60,7 +60,7 @@ impl Mpz {
   }
 
   fn set_from_str_radix(&mut self, s: &str, base: uint) -> bool {
-    assert(base == 0 || base >= 2 || base <= 62);
+    assert base == 0 || base >= 2 || base <= 62;
     let mpz = to_mut_unsafe_ptr(&mut self.mpz);
     as_c_str(s, { |s| __gmpz_set_str(mpz, s, base as c_int) }) == 0
   }
@@ -230,7 +230,7 @@ impl Mpz: Shr<c_ulong, Mpz> {
 }
 
 pub pure fn from_str_radix(s: &str, base: uint) -> Option<Mpz> unsafe {
-  assert(base == 0 || base >= 2 || base <= 62);
+  assert base == 0 || base >= 2 || base <= 62;
   let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
   let mpz_ptr = mut_addr_of(&mpz);
   let r = as_c_str(s, { |s| __gmpz_init_set_str(mpz_ptr, s, base as c_int) });
@@ -270,19 +270,19 @@ mod test_mpz {
   fn test_set() {
     let mut x: Mpz = from_int(1000);
     let y: Mpz = from_int(5000);
-    assert(x != y);
+    assert x != y;
     x.set(&y);
-    assert(x == y);
+    assert x == y;
   }
 
   #[test]
   fn test_set_from_str_radix() {
     let mut x: Mpz = from_int(1000);
     let y: Mpz = from_int(5000);
-    assert(x != y);
-    assert(x.set_from_str_radix("5000", 10));
-    assert(x == y);
-    assert(!x.set_from_str_radix("aaaa", 2));
+    assert x != y;
+    assert x.set_from_str_radix("5000", 10);
+    assert x == y;
+    assert !x.set_from_str_radix("aaaa", 2);
   }
 
   #[test]
@@ -291,9 +291,9 @@ mod test_mpz {
     let y = option::unwrap(from_str("4242142195"));
     let z = option::unwrap(from_str("4242142196"));
 
-    assert(x == y);
-    assert(x != z);
-    assert(y != z);
+    assert x == y;
+    assert x != z;
+    assert y != z;
   }
 
   #[test]
@@ -302,10 +302,10 @@ mod test_mpz {
     let y = option::unwrap(from_str("45000000000000000000000"));
     let z = option::unwrap(from_str("50000000000000000000000"));
 
-    assert(x < y && x < z && y < z);
-    assert(x <= x && x <= y && x <= z && y <= z);
-    assert(z > y && z > x && y > x);
-    assert(z >= z && z >= y && z >= x && y >= x);
+    assert x < y && x < z && y < z;
+    assert x <= x && x <= y && x <= z && y <= z;
+    assert z > y && z > x && y > x;
+    assert z >= z && z >= y && z >= x && y >= x;
   }
 
   #[test]
@@ -326,106 +326,106 @@ mod test_mpz {
   fn test_div_round() {
     let x: Mpz = from_int(2);
     let y: Mpz = from_int(3);
-    assert((x / y).to_str() == (2 / 3).to_str());
-    assert((x / -y).to_str() == (2 / -3).to_str());
+    assert (x / y).to_str() == (2 / 3).to_str();
+    assert (x / -y).to_str() == (2 / -3).to_str();
   }
 
   #[test]
   fn test_to_str_radix() {
     let x = option::unwrap(from_str("255"));
-    assert(x.to_str_radix(16) == ~"ff");
+    assert x.to_str_radix(16) == ~"ff";
   }
 
   #[test]
   fn test_to_str() {
     let x = option::unwrap(from_str("1234567890"));
-    assert(x.to_str() == ~"1234567890");
+    assert x.to_str() == ~"1234567890";
   }
 
   #[test]
   fn test_invalid_str() {
-    assert(from_str("foobar").is_none());
+    assert from_str("foobar").is_none();
   }
 
   #[test]
   fn test_clone() {
     let a = option::unwrap(from_str("100"));
     let b = a.clone();
-    assert(b == a);
-    assert(a + b == option::unwrap(from_str("200")));
+    assert b == a;
+    assert a + b == option::unwrap(from_str("200"));
   }
 
   #[test]
   fn test_from_int() {
     let x: Mpz = from_int(150);
-    assert(x.to_str() == ~"150");
-    assert(x == option::unwrap(from_str("150")));
+    assert x.to_str() == ~"150";
+    assert x == option::unwrap(from_str("150"));
   }
 
   #[test]
   fn test_abs() {
     let x: Mpz = from_int(1000);
     let y: Mpz = from_int(-1000);
-    assert(-x == y);
-    assert(x == -y);
-    assert(x == y.abs());
-    assert(x.abs() == y.abs());
+    assert -x == y;
+    assert x == -y;
+    assert x == y.abs();
+    assert x.abs() == y.abs();
   }
 
   #[test]
   fn test_bitand() {
     let a = 0b1001_0111;
     let b = 0b1100_0100;
-    assert(from_int::<Mpz>(a) & from_int::<Mpz>(b) == from_int::<Mpz>(a & b));
+    assert from_int::<Mpz>(a) & from_int::<Mpz>(b) == from_int::<Mpz>(a & b);
   }
 
   #[test]
   fn test_bitor() {
     let a = 0b1001_0111;
     let b = 0b1100_0100;
-    assert(from_int::<Mpz>(a) | from_int::<Mpz>(b) == from_int::<Mpz>(a | b));
+    assert from_int::<Mpz>(a) | from_int::<Mpz>(b) == from_int::<Mpz>(a | b);
   }
 
   #[test]
   fn test_bitxor() {
     let a = 0b1001_0111;
     let b = 0b1100_0100;
-    assert(from_int::<Mpz>(a) ^ from_int::<Mpz>(b) == from_int::<Mpz>(a ^ b));
+    assert from_int::<Mpz>(a) ^ from_int::<Mpz>(b) == from_int::<Mpz>(a ^ b);
   }
 
   #[test]
   fn test_shifts() {
     let i = 227;
     let j: Mpz = from_int(i);
-    assert((i << 4).to_str() == (j << 4).to_str());
-    assert((-i << 4).to_str() == (-j << 4).to_str());
-    assert((i >> 4).to_str() == (j >> 4).to_str());
-    assert((-i >> 4).to_str() == (-j >> 4).to_str());
+    assert (i << 4).to_str() == (j << 4).to_str();
+    assert (-i << 4).to_str() == (-j << 4).to_str();
+    assert (i >> 4).to_str() == (j >> 4).to_str();
+    assert (-i >> 4).to_str() == (-j >> 4).to_str();
   }
 
   #[test]
   fn test_compl() {
-    assert(from_int::<Mpz>(13).compl().to_str() == (!13).to_str());
-    assert(from_int::<Mpz>(-442).compl().to_str() == (!-442).to_str());
+    assert from_int::<Mpz>(13).compl().to_str() == (!13).to_str();
+    assert from_int::<Mpz>(-442).compl().to_str() == (!-442).to_str();
   }
 
   #[test]
   fn test_popcount() {
     let a = option::unwrap(from_str_radix("1010010011", 2));
-    assert(a.popcount() == 5);
+    assert a.popcount() == 5;
   }
 
   #[test]
   fn test_hamdist() {
     let a: Mpz = from_int(0b1011_0001);
     let b: Mpz = from_int(0b0010_1011);
-    assert(a.hamdist(&b) == 4);
+    assert a.hamdist(&b) == 4;
   }
 
   #[test]
   fn test_bit_length() {
-    assert(from_int::<Mpz>(0b1011_0000_0001_0000).bit_length() == 16);
-    assert(from_int::<Mpz>(0b101).bit_length() == 3);
+    assert from_int::<Mpz>(0b1011_0000_0001_0000).bit_length() == 16;
+    assert from_int::<Mpz>(0b101).bit_length() == 3;
   }
 
   #[test]
