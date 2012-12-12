@@ -42,6 +42,7 @@ extern mod gmp {
   pure fn __gmpz_popcount(op: mpz_srcptr) -> mp_bitcnt_t;
   pure fn __gmpz_hamdist(op1: mpz_srcptr, op2: mpz_srcptr) -> mp_bitcnt_t;
   fn __gmpz_gcd(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
+  fn __gmpz_lcm(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
   fn __gmpz_invert(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr) -> c_int;
 }
 
@@ -101,6 +102,12 @@ impl Mpz {
   pure fn gcd(other: &Mpz) -> Mpz unsafe {
     let res = init();
     __gmpz_gcd(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
+    res
+  }
+
+  pure fn lcm(other: &Mpz) -> Mpz unsafe {
+    let res = init();
+    __gmpz_lcm(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
 
@@ -440,6 +447,14 @@ mod test_mpz {
     assert from_int::<Mpz>(0).gcd(&from_int(0)) == from_int(0);
     assert from_int::<Mpz>(3).gcd(&from_int(6)) == from_int(3);
     assert from_int::<Mpz>(18).gcd(&from_int(24)) == from_int(6);
+  }
+
+  #[test]
+  fn test_lcm() {
+    assert from_int::<Mpz>(0).lcm(&from_int(5)) == from_int(0);
+    assert from_int::<Mpz>(5).lcm(&from_int(0)) == from_int(0);
+    assert from_int::<Mpz>(3).lcm(&from_int(6)) == from_int(6);
+    assert from_int::<Mpz>(18).lcm(&from_int(24)) == from_int(72);
   }
 
   #[test]
