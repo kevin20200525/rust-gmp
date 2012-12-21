@@ -221,7 +221,7 @@ impl Mpz: Num {
   static pure fn from_int(&self, other: int) -> Mpz {
     // the gmp functions dealing with longs aren't usable here - long is only
     // guaranteed to be at least 32-bit
-    option::unwrap(FromStr::from_str(other.to_str()))
+    FromStr::from_str(other.to_str()).unwrap()
   }
 }
 
@@ -326,9 +326,9 @@ mod test_mpz {
 
   #[test]
   fn test_ord() {
-    let x: Mpz = option::unwrap(from_str("40000000000000000000000"));
-    let y: Mpz = option::unwrap(from_str("45000000000000000000000"));
-    let z: Mpz = option::unwrap(from_str("50000000000000000000000"));
+    let x: Mpz = from_str("40000000000000000000000").unwrap();
+    let y: Mpz = from_str("45000000000000000000000").unwrap();
+    let z: Mpz = from_str("50000000000000000000000").unwrap();
 
     assert x < y && x < z && y < z;
     assert x <= x && x <= y && x <= z && y <= z;
@@ -366,7 +366,7 @@ mod test_mpz {
 
   #[test]
   fn test_to_str() {
-    let x: Mpz = option::unwrap(from_str("1234567890"));
+    let x: Mpz = from_str("1234567890").unwrap();
     assert x.to_str() == ~"1234567890";
   }
 
@@ -387,7 +387,7 @@ mod test_mpz {
   fn test_from_int() {
     let x: Mpz = from_int(150);
     assert x.to_str() == ~"150";
-    assert x == option::unwrap(from_str("150"));
+    assert x == from_str("150").unwrap();
   }
 
   #[test]
@@ -439,7 +439,7 @@ mod test_mpz {
 
   #[test]
   fn test_popcount() {
-    option::unwrap(Mpz::from_str_radix("1010010011", 2)).popcount() == 5;
+    Mpz::from_str_radix("1010010011", 2).unwrap().popcount() == 5;
   }
 
   #[test]
