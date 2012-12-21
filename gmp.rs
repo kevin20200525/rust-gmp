@@ -1,5 +1,6 @@
 extern mod std;
 
+use from_str::FromStr;
 use libc::{c_char,c_int,c_ulong,c_void,size_t};
 use num::{Num, One, Zero};
 use ptr::{addr_of,mut_addr_of,null,to_mut_unsafe_ptr};
@@ -199,7 +200,7 @@ impl Mpz: Num {
   static pure fn from_int(&self, other: int) -> Mpz {
     // the gmp functions dealing with longs aren't usable here - long is only
     // guaranteed to be at least 32-bit
-    option::unwrap(from_str(other.to_str()))
+    option::unwrap(FromStr::from_str(other.to_str()))
   }
 }
 
@@ -268,13 +269,9 @@ pub pure fn from_str_radix(s: &str, base: uint) -> Option<Mpz> unsafe {
   }
 }
 
-pub pure fn from_str(s: &str) -> Option<Mpz> {
-  from_str_radix(s, 10)
-}
-
-impl Mpz : from_str::FromStr {
+impl Mpz : FromStr {
   static pure fn from_str(s: &str) -> Option<Mpz> {
-    from_str(s)
+    from_str_radix(s, 10)
   }
 }
 
@@ -293,6 +290,7 @@ pub pure fn init() -> Mpz unsafe {
 #[cfg(test)]
 mod test_mpz {
   use Num::from_int;
+  use FromStr::from_str;
 
   #[test]
   fn test_set() {
@@ -315,9 +313,9 @@ mod test_mpz {
 
   #[test]
   fn test_eq() {
-    let x = option::unwrap(from_str("4242142195"));
-    let y = option::unwrap(from_str("4242142195"));
-    let z = option::unwrap(from_str("4242142196"));
+    let x: Mpz = from_int(4242142195);
+    let y: Mpz = from_int(4242142195);
+    let z: Mpz = from_int(4242142196);
 
     assert x == y;
     assert x != z;
@@ -326,9 +324,9 @@ mod test_mpz {
 
   #[test]
   fn test_ord() {
-    let x = option::unwrap(from_str("40000000000000000000000"));
-    let y = option::unwrap(from_str("45000000000000000000000"));
-    let z = option::unwrap(from_str("50000000000000000000000"));
+    let x: Mpz = option::unwrap(from_str("40000000000000000000000"));
+    let y: Mpz = option::unwrap(from_str("45000000000000000000000"));
+    let z: Mpz = option::unwrap(from_str("50000000000000000000000"));
 
     assert x < y && x < z && y < z;
     assert x <= x && x <= y && x <= z && y <= z;
@@ -360,19 +358,19 @@ mod test_mpz {
 
   #[test]
   fn test_to_str_radix() {
-    let x = option::unwrap(from_str("255"));
+    let x: Mpz = from_int(255);
     assert x.to_str_radix(16) == ~"ff";
   }
 
   #[test]
   fn test_to_str() {
-    let x = option::unwrap(from_str("1234567890"));
+    let x: Mpz = option::unwrap(from_str("1234567890"));
     assert x.to_str() == ~"1234567890";
   }
 
   #[test]
   fn test_invalid_str() {
-    assert from_str("foobar").is_none();
+    assert from_str::<Mpz>("foobar").is_none();
   }
 
   #[test]
