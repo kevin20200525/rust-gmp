@@ -83,31 +83,31 @@ impl Mpz {
   }
 
   pure fn compl(&self) -> Mpz unsafe {
-    let res = Mpz::init();
+    let res = Mpz::new();
     __gmpz_com(mut_addr_of(&res.mpz), addr_of(&self.mpz));
     res
   }
 
   pure fn abs(&self) -> Mpz unsafe {
-    let res = Mpz::init();
+    let res = Mpz::new();
     __gmpz_abs(mut_addr_of(&res.mpz), addr_of(&self.mpz));
     res
   }
 
   pure fn gcd(&self, other: &Mpz) -> Mpz unsafe {
-    let res = Mpz::init();
+    let res = Mpz::new();
     __gmpz_gcd(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
 
   pure fn lcm(&self, other: &Mpz) -> Mpz unsafe {
-    let res = Mpz::init();
+    let res = Mpz::new();
     __gmpz_lcm(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
 
   pure fn invert(&self, modulo: &Mpz) -> Option<Mpz> unsafe {
-    let res = Mpz::init();
+    let res = Mpz::new();
     if __gmpz_invert(mut_addr_of(&res.mpz), addr_of(&self.mpz),
                      addr_of(&modulo.mpz)) == 0 {
       None
@@ -124,7 +124,7 @@ impl Mpz {
     __gmpz_hamdist(addr_of(&self.mpz), addr_of(&other.mpz)) as uint
   }
 
-  static pure fn init() -> Mpz unsafe {
+  static pure fn new() -> Mpz unsafe {
     let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
     __gmpz_init(mut_addr_of(&mpz));
     Mpz { mpz: mpz }
@@ -165,17 +165,17 @@ impl Mpz: cmp::Ord {
 
 impl Mpz: Num {
   pure fn add(&self, other: &Mpz) -> Mpz unsafe {
-    let res = Mpz::init();
+    let res = Mpz::new();
     __gmpz_add(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
   pure fn sub(&self, other: &Mpz) -> Mpz unsafe {
-    let res = Mpz::init();
+    let res = Mpz::new();
     __gmpz_sub(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
   pure fn mul(&self, other: &Mpz) -> Mpz unsafe {
-    let res = Mpz::init();
+    let res = Mpz::new();
     __gmpz_mul(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
@@ -184,7 +184,7 @@ impl Mpz: Num {
       fail ~"divide by zero";
     }
 
-    let res = Mpz::init();
+    let res = Mpz::new();
     __gmpz_tdiv_q(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
@@ -193,12 +193,12 @@ impl Mpz: Num {
       fail ~"divide by zero";
     }
 
-    let res = Mpz::init();
+    let res = Mpz::new();
     __gmpz_mod(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
   pure fn neg(&self) -> Mpz unsafe {
-    let res = Mpz::init();
+    let res = Mpz::new();
     __gmpz_neg(mut_addr_of(&res.mpz), addr_of(&self.mpz));
     res
   }
@@ -220,13 +220,13 @@ impl Mpz: One {
 
 impl Mpz: Zero {
   static pure fn zero() -> Mpz {
-    Mpz::init()
+    Mpz::new()
   }
 }
 
 impl Mpz: BitAnd<Mpz, Mpz> {
   pure fn bitand(&self, other: &Mpz) -> Mpz unsafe {
-    let res = Mpz::init();
+    let res = Mpz::new();
     __gmpz_and(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
@@ -234,7 +234,7 @@ impl Mpz: BitAnd<Mpz, Mpz> {
 
 impl Mpz: BitOr<Mpz, Mpz> {
   pure fn bitor(&self, other: &Mpz) -> Mpz unsafe {
-    let res = Mpz::init();
+    let res = Mpz::new();
     __gmpz_ior(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
@@ -242,7 +242,7 @@ impl Mpz: BitOr<Mpz, Mpz> {
 
 impl Mpz: BitXor<Mpz, Mpz> {
   pure fn bitxor(&self, other: &Mpz) -> Mpz unsafe {
-    let res = Mpz::init();
+    let res = Mpz::new();
     __gmpz_xor(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
@@ -250,7 +250,7 @@ impl Mpz: BitXor<Mpz, Mpz> {
 
 impl Mpz: Shl<c_ulong, Mpz> {
   pure fn shl(&self, other: &c_ulong) -> Mpz unsafe {
-    let res = Mpz::init();
+    let res = Mpz::new();
     __gmpz_mul_2exp(mut_addr_of(&res.mpz), addr_of(&self.mpz), *other);
     res
   }
@@ -258,7 +258,7 @@ impl Mpz: Shl<c_ulong, Mpz> {
 
 impl Mpz: Shr<c_ulong, Mpz> {
   pure fn shr(&self, other: &c_ulong) -> Mpz unsafe {
-    let res = Mpz::init();
+    let res = Mpz::new();
     __gmpz_fdiv_q_2exp(mut_addr_of(&res.mpz), addr_of(&self.mpz), *other);
     res
   }
@@ -339,14 +339,14 @@ mod test_mpz {
   #[test]
   #[should_fail]
   fn test_div_zero() {
-    let x = Mpz::init();
+    let x = Mpz::new();
     x / x;
   }
 
   #[test]
   #[should_fail]
   fn test_modulo_zero() {
-    let x = Mpz::init();
+    let x = Mpz::new();
     x % x;
   }
 
