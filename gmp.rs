@@ -78,35 +78,35 @@ impl Mpz {
                          addr_of(&self.mpz)))
   }
 
-  pure fn bit_length() -> uint {
+  pure fn bit_length(&self) -> uint {
     return __gmpz_sizeinbase(addr_of(&self.mpz), 2) as uint
   }
 
-  pure fn compl() -> Mpz unsafe {
+  pure fn compl(&self) -> Mpz unsafe {
     let res = init();
     __gmpz_com(mut_addr_of(&res.mpz), addr_of(&self.mpz));
     res
   }
 
-  pure fn abs() -> Mpz unsafe {
+  pure fn abs(&self) -> Mpz unsafe {
     let res = init();
     __gmpz_abs(mut_addr_of(&res.mpz), addr_of(&self.mpz));
     res
   }
 
-  pure fn gcd(other: &Mpz) -> Mpz unsafe {
+  pure fn gcd(&self, other: &Mpz) -> Mpz unsafe {
     let res = init();
     __gmpz_gcd(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
 
-  pure fn lcm(other: &Mpz) -> Mpz unsafe {
+  pure fn lcm(&self, other: &Mpz) -> Mpz unsafe {
     let res = init();
     __gmpz_lcm(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
 
-  pure fn invert(modulo: &Mpz) -> Option<Mpz> unsafe {
+  pure fn invert(&self, modulo: &Mpz) -> Option<Mpz> unsafe {
     let res = init();
     if __gmpz_invert(mut_addr_of(&res.mpz), addr_of(&self.mpz),
                      addr_of(&modulo.mpz)) == 0 {
@@ -116,11 +116,11 @@ impl Mpz {
     }
   }
 
-  pure fn popcount() -> uint {
+  pure fn popcount(&self) -> uint {
     __gmpz_popcount(addr_of(&self.mpz)) as uint
   }
 
-  pure fn hamdist(other: &Mpz) -> uint {
+  pure fn hamdist(&self, other: &Mpz) -> uint {
     __gmpz_hamdist(addr_of(&self.mpz), addr_of(&other.mpz)) as uint
   }
 }
