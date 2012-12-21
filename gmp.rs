@@ -1,5 +1,6 @@
 extern mod std;
 
+use clone::Clone;
 use from_str::FromStr;
 use libc::{c_char,c_int,c_ulong,c_void,size_t};
 use num::{Num, One, Zero};
@@ -81,13 +82,6 @@ impl Mpz {
     return __gmpz_sizeinbase(addr_of(&self.mpz), 2) as uint
   }
 
-  // TODO: implement the clone::Clone trait when 0.5 is released
-  pure fn clone() -> Mpz unsafe {
-    let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
-    __gmpz_init_set(mut_addr_of(&mpz), addr_of(&self.mpz));
-    Mpz { mpz: mpz }
-  }
-
   pure fn compl() -> Mpz unsafe {
     let res = init();
     __gmpz_com(mut_addr_of(&res.mpz), addr_of(&self.mpz));
@@ -128,6 +122,14 @@ impl Mpz {
 
   pure fn hamdist(other: &Mpz) -> uint {
     __gmpz_hamdist(addr_of(&self.mpz), addr_of(&other.mpz)) as uint
+  }
+}
+
+impl Mpz: Clone {
+  pure fn clone(&self) -> Mpz unsafe {
+    let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
+    __gmpz_init_set(mut_addr_of(&mpz), addr_of(&self.mpz));
+    Mpz { mpz: mpz }
   }
 }
 
