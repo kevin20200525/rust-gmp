@@ -1,7 +1,7 @@
 extern mod std;
 
 use libc::{c_char,c_int,c_ulong,c_void,size_t};
-use num::Num;
+use num::{Num, One, Zero};
 use ptr::{addr_of,mut_addr_of,null,to_mut_unsafe_ptr};
 use str::as_c_str;
 
@@ -200,6 +200,18 @@ impl Mpz: Num {
     // the gmp functions dealing with longs aren't usable here - long is only
     // guaranteed to be at least 32-bit
     option::unwrap(from_str(other.to_str()))
+  }
+}
+
+impl Mpz: One {
+  static pure fn one() -> Mpz {
+    Num::from_int(1)
+  }
+}
+
+impl Mpz: Zero {
+  static pure fn zero() -> Mpz {
+    init()
   }
 }
 
