@@ -1,7 +1,7 @@
 extern mod std;
 
 use libc::{c_char,c_int,c_ulong,c_void,size_t};
-use num::{from_int,Num};
+use num::Num;
 use ptr::{addr_of,mut_addr_of,null,to_mut_unsafe_ptr};
 use str::as_c_str;
 
@@ -131,46 +131,46 @@ impl Mpz {
 }
 
 impl Mpz: cmp::Eq {
-  pure fn eq(other: &Mpz) -> bool {
+  pure fn eq(&self, other: &Mpz) -> bool {
     __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) == 0
   }
-  pure fn ne(other: &Mpz) -> bool {
+  pure fn ne(&self, other: &Mpz) -> bool {
     __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) != 0
   }
 }
 
 impl Mpz: cmp::Ord {
-  pure fn lt(other: &Mpz) -> bool {
+  pure fn lt(&self, other: &Mpz) -> bool {
     __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) < 0
   }
-  pure fn le(other: &Mpz) -> bool {
+  pure fn le(&self, other: &Mpz) -> bool {
     __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) <= 0
   }
-  pure fn gt(other: &Mpz) -> bool {
+  pure fn gt(&self, other: &Mpz) -> bool {
     __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) > 0
   }
-  pure fn ge(other: &Mpz) -> bool {
+  pure fn ge(&self, other: &Mpz) -> bool {
     __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) >= 0
   }
 }
 
 impl Mpz: Num {
-  pure fn add(other: &Mpz) -> Mpz unsafe {
+  pure fn add(&self, other: &Mpz) -> Mpz unsafe {
     let res = init();
     __gmpz_add(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
-  pure fn sub(other: &Mpz) -> Mpz unsafe {
+  pure fn sub(&self, other: &Mpz) -> Mpz unsafe {
     let res = init();
     __gmpz_sub(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
-  pure fn mul(other: &Mpz) -> Mpz unsafe {
+  pure fn mul(&self, other: &Mpz) -> Mpz unsafe {
     let res = init();
     __gmpz_mul(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
-  pure fn div(other: &Mpz) -> Mpz unsafe {
+  pure fn div(&self, other: &Mpz) -> Mpz unsafe {
     if __gmpz_cmp_ui(addr_of(&self.mpz), 0) == 0 {
       fail ~"divide by zero";
     }
@@ -179,7 +179,7 @@ impl Mpz: Num {
     __gmpz_tdiv_q(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
-  pure fn modulo(other: &Mpz) -> Mpz unsafe {
+  pure fn modulo(&self, other: &Mpz) -> Mpz unsafe {
     if __gmpz_cmp_ui(addr_of(&self.mpz), 0) == 0 {
       fail ~"divide by zero";
     }
@@ -188,15 +188,15 @@ impl Mpz: Num {
     __gmpz_mod(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
   }
-  pure fn neg() -> Mpz unsafe {
+  pure fn neg(&self) -> Mpz unsafe {
     let res = init();
     __gmpz_neg(mut_addr_of(&res.mpz), addr_of(&self.mpz));
     res
   }
-  pure fn to_int() -> int {
+  pure fn to_int(&self) -> int {
     fail ~"not implemented";
   }
-  static pure fn from_int(other: int) -> Mpz {
+  static pure fn from_int(&self, other: int) -> Mpz {
     // the gmp functions dealing with longs aren't usable here - long is only
     // guaranteed to be at least 32-bit
     option::unwrap(from_str(other.to_str()))
@@ -204,7 +204,7 @@ impl Mpz: Num {
 }
 
 impl Mpz: BitAnd<Mpz, Mpz> {
-  pure fn bitand(other: &Mpz) -> Mpz unsafe {
+  pure fn bitand(&self, other: &Mpz) -> Mpz unsafe {
     let res = init();
     __gmpz_and(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
@@ -212,7 +212,7 @@ impl Mpz: BitAnd<Mpz, Mpz> {
 }
 
 impl Mpz: BitOr<Mpz, Mpz> {
-  pure fn bitor(other: &Mpz) -> Mpz unsafe {
+  pure fn bitor(&self, other: &Mpz) -> Mpz unsafe {
     let res = init();
     __gmpz_ior(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
@@ -220,7 +220,7 @@ impl Mpz: BitOr<Mpz, Mpz> {
 }
 
 impl Mpz: BitXor<Mpz, Mpz> {
-  pure fn bitxor(other: &Mpz) -> Mpz unsafe {
+  pure fn bitxor(&self, other: &Mpz) -> Mpz unsafe {
     let res = init();
     __gmpz_xor(mut_addr_of(&res.mpz), addr_of(&self.mpz), addr_of(&other.mpz));
     res
@@ -228,7 +228,7 @@ impl Mpz: BitXor<Mpz, Mpz> {
 }
 
 impl Mpz: Shl<c_ulong, Mpz> {
-  pure fn shl(other: &c_ulong) -> Mpz unsafe {
+  pure fn shl(&self, other: &c_ulong) -> Mpz unsafe {
     let res = init();
     __gmpz_mul_2exp(mut_addr_of(&res.mpz), addr_of(&self.mpz), *other);
     res
@@ -236,7 +236,7 @@ impl Mpz: Shl<c_ulong, Mpz> {
 }
 
 impl Mpz: Shr<c_ulong, Mpz> {
-  pure fn shr(other: &c_ulong) -> Mpz unsafe {
+  pure fn shr(&self, other: &c_ulong) -> Mpz unsafe {
     let res = init();
     __gmpz_fdiv_q_2exp(mut_addr_of(&res.mpz), addr_of(&self.mpz), *other);
     res
@@ -261,7 +261,7 @@ pub pure fn from_str(s: &str) -> Option<Mpz> {
 }
 
 impl Mpz : from_str::FromStr {
-  static fn from_str(s: &str) -> Option<Mpz> {
+  static pure fn from_str(s: &str) -> Option<Mpz> {
     from_str(s)
   }
 }
@@ -280,6 +280,8 @@ pub pure fn init() -> Mpz unsafe {
 
 #[cfg(test)]
 mod test_mpz {
+  use Num::from_int;
+
   #[test]
   fn test_set() {
     let mut x: Mpz = from_int(1000);
