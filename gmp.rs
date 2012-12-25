@@ -20,6 +20,7 @@ type mpz_ptr = *mut mpz_struct;
 extern mod gmp {
   fn __gmpz_init(x: mpz_ptr);
   fn __gmpz_init_set(rop: mpz_ptr, op: mpz_srcptr);
+  fn __gmpz_init_set_ui(rop: mpz_ptr, op: c_ulong);
   fn __gmpz_init_set_str(rop: mpz_ptr, str: *c_char, base: c_int) -> c_int;
   fn __gmpz_clear(x: mpz_ptr);
   fn __gmpz_set(rop: mpz_ptr, op: mpz_srcptr);
@@ -227,7 +228,9 @@ impl Mpz: Num {
 
 impl Mpz: One {
   static pure fn one() -> Mpz {
-    Num::from_int(1)
+    let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
+    unsafe { __gmpz_init_set_ui(mut_addr_of(&mpz), 1) } // purity
+    Mpz { mpz: mpz }
   }
 }
 
@@ -475,5 +478,10 @@ mod test_mpz {
     assert from_int::<Mpz>(2).invert(&from_int(5)) == Some(from_int(3));
     assert from_int::<Mpz>(3).invert(&from_int(5)) == Some(from_int(2));
     assert from_int::<Mpz>(2).invert(&from_int(4)).is_none();
+  }
+
+  #[test]
+  fn test_one() {
+    assert One::one::<Mpz>() == Num::from_int(1);
   }
 }
