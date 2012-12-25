@@ -1,5 +1,10 @@
 extern mod std;
 
+#[abi = "rust-intrinsic"]
+extern mod rusti {
+  fn init<T>() -> T;
+}
+
 use clone::Clone;
 use from_str::FromStr;
 use libc::{c_char,c_int,c_ulong,c_void,size_t};
@@ -13,9 +18,16 @@ struct mpz_struct {
   _mp_d: *c_void
 }
 
+struct gmp_randstate_struct {
+  _mp_seed: mpz_struct,
+  _mp_alg: c_int,
+  _mp_algdata: *c_void
+}
+
 type mp_bitcnt_t = c_ulong;
 type mpz_srcptr = *const mpz_struct;
 type mpz_ptr = *mut mpz_struct;
+type gmp_randstate_t = *mut gmp_randstate_struct;
 
 extern mod gmp {
   fn __gmpz_init(x: mpz_ptr);
@@ -47,6 +59,14 @@ extern mod gmp {
   fn __gmpz_gcd(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
   fn __gmpz_lcm(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
   fn __gmpz_invert(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr) -> c_int;
+  fn __gmp_randinit_default(state: gmp_randstate_t);
+  fn __gmp_randinit_mt(state: gmp_randstate_t);
+  fn __gmp_randinit_lc_2exp(state: gmp_randstate_t, a: mpz_srcptr, c: c_ulong, m2exp: mp_bitcnt_t);
+  fn __gmp_randinit_lc_2exp_size(state: gmp_randstate_t, size: mp_bitcnt_t);
+  fn __gmp_randinit_set(state: gmp_randstate_t, op: *const gmp_randstate_struct);
+  fn __gmp_randclear(state: gmp_randstate_t);
+  fn __gmp_randseed(state: gmp_randstate_t, seed: mpz_srcptr);
+  fn __gmp_randseed_ui(state: gmp_randstate_t, seed: c_ulong);
 }
 
 use gmp::*;
@@ -292,6 +312,56 @@ impl Mpz : to_str::ToStr {
   }
 }
 
+pub struct RandState {
+  priv state: gmp_randstate_struct,
+
+  drop {
+    __gmp_randclear(mut_addr_of(&self.state));
+  }
+}
+
+impl RandState {
+  static pure fn new() -> RandState unsafe {
+    let state: gmp_randstate_struct = rusti::init();
+    __gmp_randinit_default(mut_addr_of(&state));
+    RandState { state: state }
+  }
+
+  static pure fn new_mt() -> RandState unsafe {
+    let state: gmp_randstate_struct = rusti::init();
+    __gmp_randinit_mt(mut_addr_of(&state));
+    RandState { state: state }
+  }
+
+  static pure fn new_lc_2exp(a: Mpz, c: c_ulong, m2exp: c_ulong) -> RandState unsafe {
+    let state: gmp_randstate_struct = rusti::init();
+    __gmp_randinit_lc_2exp(mut_addr_of(&state), addr_of(&a.mpz), c, m2exp);
+    RandState { state: state }
+  }
+
+  static pure fn new_lc_2exp_size(size: c_ulong) -> RandState unsafe {
+    let state: gmp_randstate_struct = rusti::init();
+    __gmp_randinit_lc_2exp_size(mut_addr_of(&state), size);
+    RandState { state: state }
+  }
+
+  fn seed(&mut self, seed: Mpz) {
+    __gmp_randseed(mut_addr_of(&self.state), addr_of(&seed.mpz));
+  }
+
+  fn seed_ui(&mut self, seed: c_ulong) {
+    __gmp_randseed_ui(mut_addr_of(&self.state), seed);
+  }
+}
+
+impl RandState: Clone {
+  pure fn clone(&self) -> RandState unsafe {
+    let state: gmp_randstate_struct = rusti::init();
+    __gmp_randinit_set(mut_addr_of(&state), addr_of(&self.state));
+    RandState { state: state }
+  }
+}
+
 #[cfg(test)]
 mod test_mpz {
   use Num::from_int;
@@ -483,5 +553,14 @@ mod test_mpz {
   #[test]
   fn test_one() {
     assert One::one::<Mpz>() == Num::from_int(1);
+  }
+}
+
+#[cfg(test)]
+mod test_rand {
+  #[test]
+  fn test_randstate() {
+    let mut state = RandState::new();
+    state.seed_ui(42);
   }
 }
