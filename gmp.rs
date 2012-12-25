@@ -9,7 +9,7 @@ use clone::Clone;
 use from_str::FromStr;
 use libc::{c_char,c_int,c_ulong,c_void,size_t};
 use num::{Num, One, Zero};
-use ptr::{addr_of,mut_addr_of,null,to_mut_unsafe_ptr};
+use ptr::{addr_of,mut_addr_of,to_mut_unsafe_ptr};
 use str::as_c_str;
 
 struct mpz_struct {
@@ -148,14 +148,14 @@ impl Mpz {
   }
 
   static pure fn new() -> Mpz unsafe {
-    let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
+    let mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
     __gmpz_init(mut_addr_of(&mpz));
     Mpz { mpz: mpz }
   }
 
   static pure fn from_str_radix(s: &str, base: uint) -> Option<Mpz> unsafe {
     assert base == 0 || base >= 2 || base <= 62;
-    let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
+    let mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
     let mpz_ptr = mut_addr_of(&mpz);
     let r = as_c_str(s, { |s| __gmpz_init_set_str(mpz_ptr, s, base as c_int) });
     if r == 0 {
@@ -169,7 +169,7 @@ impl Mpz {
 
 impl Mpz: Clone {
   pure fn clone(&self) -> Mpz unsafe {
-    let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
+    let mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
     __gmpz_init_set(mut_addr_of(&mpz), addr_of(&self.mpz));
     Mpz { mpz: mpz }
   }
@@ -249,9 +249,9 @@ impl Mpz: Num {
 }
 
 impl Mpz: One {
-  static pure fn one() -> Mpz {
-    let mpz = mpz_struct { _mp_alloc: 0, _mp_size: 0, _mp_d: null() };
-    unsafe { __gmpz_init_set_ui(mut_addr_of(&mpz), 1) } // purity
+  static pure fn one() -> Mpz unsafe {
+    let mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
+    __gmpz_init_set_ui(mut_addr_of(&mpz), 1);
     Mpz { mpz: mpz }
   }
 }
