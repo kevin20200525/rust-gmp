@@ -67,6 +67,8 @@ extern mod gmp {
   fn __gmp_randclear(state: gmp_randstate_t);
   fn __gmp_randseed(state: gmp_randstate_t, seed: mpz_srcptr);
   fn __gmp_randseed_ui(state: gmp_randstate_t, seed: c_ulong);
+  fn __gmpz_urandomb(rop: mpz_ptr, state: gmp_randstate_t, n: mp_bitcnt_t);
+  fn __gmpz_urandomm(rop: mpz_ptr, state: gmp_randstate_t, n: mpz_srcptr);
 }
 
 use gmp::*;
@@ -352,6 +354,20 @@ impl RandState {
   fn seed_ui(&mut self, seed: c_ulong) {
     __gmp_randseed_ui(mut_addr_of(&self.state), seed);
   }
+
+  /// Generate a uniform random integer in the range 0 to n-1, inclusive.
+  fn urandom(n: &Mpz) -> Mpz {
+    let res = Mpz::new();
+    __gmpz_urandomm(mut_addr_of(&res.mpz), mut_addr_of(&self.state), addr_of(&n.mpz));
+    res
+  }
+
+  /// Generate a uniformly distributed random integer in the range 0 to 2^n−1, inclusive.
+  fn urandom_2exp(n: c_ulong) -> Mpz {
+    let res = Mpz::new();
+    __gmpz_urandomb(mut_addr_of(&res.mpz), mut_addr_of(&self.state), n);
+    res
+  }
 }
 
 impl RandState: Clone {
@@ -562,5 +578,11 @@ mod test_rand {
   fn test_randstate() {
     let mut state = RandState::new();
     state.seed_ui(42);
+    for uint::range(1, 1000) |_| {
+      for int::range(1, 10) |x| {
+        let upper = Num::from_int(x);
+        assert state.urandom(&upper) < upper;
+      }
+    }
   }
 }
