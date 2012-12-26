@@ -46,7 +46,7 @@ extern mod gmp {
   fn __gmpz_set_str(rop: mpz_ptr, str: *c_char, base: c_int) -> c_int;
   fn __gmpz_get_str(str: *c_char, base: c_int, op: mpz_srcptr) -> *c_char;
   pure fn __gmpz_sizeinbase(op: mpz_srcptr, base: c_int) -> size_t;
-  pure fn __gmpz_cmp(op: mpz_srcptr, op2: mpz_srcptr) -> c_int;
+  pure fn __gmpz_cmp(op1: mpz_srcptr, op2: mpz_srcptr) -> c_int;
   pure fn __gmpz_cmp_ui(op1: mpz_srcptr, op2: c_ulong) -> c_int;
   fn __gmpz_add(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
   fn __gmpz_sub(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
@@ -79,6 +79,7 @@ extern mod gmp {
   fn __gmpq_init(x: mpq_ptr);
   fn __gmpq_clear(x: mpq_ptr);
   fn __gmpq_set(rop: mpq_ptr, op: mpq_srcptr);
+  pure fn __gmpq_cmp(op1: mpq_srcptr, op2: mpq_srcptr) -> c_int;
 }
 
 use gmp::*;
@@ -413,6 +414,30 @@ impl Mpq: Clone {
     let mut res = Mpq::new();
     res.set(self);
     res
+  }
+}
+
+impl Mpq: cmp::Eq {
+  pure fn eq(&self, other: &Mpq) -> bool {
+    __gmpq_cmp(addr_of(&self.mpq), addr_of(&other.mpq)) == 0
+  }
+  pure fn ne(&self, other: &Mpq) -> bool {
+    __gmpq_cmp(addr_of(&self.mpq), addr_of(&other.mpq)) != 0
+  }
+}
+
+impl Mpq: cmp::Ord {
+  pure fn lt(&self, other: &Mpq) -> bool {
+    __gmpq_cmp(addr_of(&self.mpq), addr_of(&other.mpq)) < 0
+  }
+  pure fn le(&self, other: &Mpq) -> bool {
+    __gmpq_cmp(addr_of(&self.mpq), addr_of(&other.mpq)) <= 0
+  }
+  pure fn gt(&self, other: &Mpq) -> bool {
+    __gmpq_cmp(addr_of(&self.mpq), addr_of(&other.mpq)) > 0
+  }
+  pure fn ge(&self, other: &Mpq) -> bool {
+    __gmpq_cmp(addr_of(&self.mpq), addr_of(&other.mpq)) >= 0
   }
 }
 
