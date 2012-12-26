@@ -78,6 +78,7 @@ extern mod gmp {
   fn __gmpz_urandomm(rop: mpz_ptr, state: gmp_randstate_t, n: mpz_srcptr);
   fn __gmpq_init(x: mpq_ptr);
   fn __gmpq_clear(x: mpq_ptr);
+  fn __gmpq_set(rop: mpq_ptr, op: mpq_srcptr);
 }
 
 use gmp::*;
@@ -400,6 +401,18 @@ impl Mpq {
     let mpq = rusti::init(); // TODO: switch to rusti::uninit when implemented
     __gmpq_init(mut_addr_of(&mpq));
     Mpq { mpq: mpq }
+  }
+
+  fn set(&mut self, other: &Mpq) {
+    __gmpq_set(mut_addr_of(&self.mpq), addr_of(&other.mpq));
+  }
+}
+
+impl Mpq: Clone {
+  pure fn clone(&self) -> Mpq unsafe {
+    let mut res = Mpq::new();
+    res.set(self);
+    res
   }
 }
 
