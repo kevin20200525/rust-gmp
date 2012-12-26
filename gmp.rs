@@ -79,6 +79,7 @@ extern mod gmp {
   fn __gmpq_init(x: mpq_ptr);
   fn __gmpq_clear(x: mpq_ptr);
   fn __gmpq_set(rop: mpq_ptr, op: mpq_srcptr);
+  fn __gmpq_set_z(rop: mpq_ptr, op: mpz_srcptr);
   pure fn __gmpq_cmp(op1: mpq_srcptr, op2: mpq_srcptr) -> c_int;
   pure fn __gmpq_equal(op1: mpq_srcptr, op2: mpq_srcptr) -> c_int;
 }
@@ -407,6 +408,10 @@ impl Mpq {
 
   fn set(&mut self, other: &Mpq) {
     __gmpq_set(mut_addr_of(&self.mpq), addr_of(&other.mpq));
+  }
+
+  fn set_z(&mut self, other: &Mpz) {
+    __gmpq_set_z(mut_addr_of(&self.mpq), addr_of(&other.mpz));
   }
 }
 
