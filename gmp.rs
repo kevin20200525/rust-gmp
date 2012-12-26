@@ -104,6 +104,8 @@ extern mod gmp {
   fn __gmpq_get_den(denominator: mpz_ptr, rational: mpq_srcptr);
   fn __gmpf_init2(x: mpf_ptr, prec: mp_bitcnt_t);
   fn __gmpf_clear(x: mpf_ptr);
+  pure fn __gmpf_get_prec(op: mpf_srcptr) -> mp_bitcnt_t;
+  fn __gmpf_set_prec(rop: mpf_srcptr, prec: mp_bitcnt_t);
 }
 
 use gmp::*;
@@ -555,6 +557,14 @@ impl Mpf {
     let mpf = rusti::init(); // TODO: switch to rusti::uninit when implemented
     __gmpf_init2(mut_addr_of(&mpf), precision);
     Mpf { mpf: mpf }
+  }
+
+  pure fn get_prec(&self) -> c_ulong {
+    __gmpf_get_prec(addr_of(&self.mpf))
+  }
+
+  fn set_prec(&mut self, precision: c_ulong) {
+    __gmpf_set_prec(mut_addr_of(&self.mpf), precision);
   }
 }
 
