@@ -88,6 +88,7 @@ extern mod gmp {
   fn __gmpq_div(product: mpq_ptr, multiplier: mpq_srcptr, multiplicand: mpq_srcptr);
   fn __gmpq_neg(negated_operand: mpq_ptr, operand: mpq_srcptr);
   fn __gmpq_abs(rop: mpq_ptr, op: mpq_srcptr);
+  fn __gmpq_inv(inverted_number: mpq_ptr, number: mpq_srcptr);
 }
 
 use gmp::*;
@@ -428,6 +429,13 @@ impl Mpq {
   pure fn abs(&self) -> Mpq unsafe {
     let res = Mpq::new();
     __gmpq_abs(mut_addr_of(&res.mpq), addr_of(&self.mpq));
+    res
+  }
+
+  // TODO: handle division by zero
+  pure fn invert(&self) -> Mpq unsafe {
+    let res = Mpq::new();
+    __gmpq_inv(mut_addr_of(&res.mpq), addr_of(&self.mpq));
     res
   }
 }
