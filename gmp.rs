@@ -82,6 +82,9 @@ extern mod gmp {
   fn __gmpq_set_z(rop: mpq_ptr, op: mpz_srcptr);
   pure fn __gmpq_cmp(op1: mpq_srcptr, op2: mpq_srcptr) -> c_int;
   pure fn __gmpq_equal(op1: mpq_srcptr, op2: mpq_srcptr) -> c_int;
+  fn __gmpq_add(sum: mpq_ptr, addend1: mpq_srcptr, addend2: mpq_srcptr);
+  fn __gmpq_sub(difference: mpq_ptr, minuend: mpq_srcptr, subtrahend: mpq_srcptr);
+  fn __gmpq_mul(product: mpq_ptr, multiplier: mpq_srcptr, multiplicand: mpq_srcptr);
   fn __gmpq_neg(negated_operand: mpq_ptr, operand: mpq_srcptr);
   fn __gmpq_abs(rop: mpq_ptr, op: mpq_srcptr);
 }
@@ -456,14 +459,20 @@ impl Mpq: cmp::Ord {
 }
 
 impl Mpq: Num {
-  pure fn add(&self, _other: &Mpq) -> Mpq unsafe {
-    fail ~"not implemented";
+  pure fn add(&self, other: &Mpq) -> Mpq unsafe {
+    let res = Mpq::new();
+    __gmpq_add(mut_addr_of(&res.mpq), addr_of(&self.mpq), addr_of(&other.mpq));
+    res
   }
-  pure fn sub(&self, _other: &Mpq) -> Mpq unsafe {
-    fail ~"not implemented";
+  pure fn sub(&self, other: &Mpq) -> Mpq unsafe {
+    let res = Mpq::new();
+    __gmpq_sub(mut_addr_of(&res.mpq), addr_of(&self.mpq), addr_of(&other.mpq));
+    res
   }
-  pure fn mul(&self, _other: &Mpq) -> Mpq unsafe {
-    fail ~"not implemented";
+  pure fn mul(&self, other: &Mpq) -> Mpq unsafe {
+    let res = Mpq::new();
+    __gmpq_mul(mut_addr_of(&res.mpq), addr_of(&self.mpq), addr_of(&other.mpq));
+    res
   }
   pure fn div(&self, _other: &Mpq) -> Mpq unsafe {
     fail ~"not implemented";
