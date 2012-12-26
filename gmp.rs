@@ -109,6 +109,10 @@ extern "C" mod gmp {
   pure fn __gmpf_get_prec(op: mpf_srcptr) -> mp_bitcnt_t;
   fn __gmpf_set_prec(rop: mpf_srcptr, prec: mp_bitcnt_t);
   pure fn __gmpf_cmp(op1: mpf_srcptr, op2: mpf_srcptr) -> c_int;
+  fn __gmpf_add(rop: mpf_ptr, op1: mpf_srcptr, op2: mpf_srcptr);
+  fn __gmpf_sub(rop: mpf_ptr, op1: mpf_srcptr, op2: mpf_srcptr);
+  fn __gmpf_mul(rop: mpf_ptr, op1: mpf_srcptr, op2: mpf_srcptr);
+  fn __gmpf_div(rop: mpf_ptr, op1: mpf_srcptr, op2: mpf_srcptr);
   fn __gmpf_neg(rop: mpf_ptr, op: mpf_srcptr);
   fn __gmpf_abs(rop: mpf_ptr, op: mpf_srcptr);
 }
@@ -620,17 +624,30 @@ impl Mpf: cmp::Ord {
 }
 
 impl Mpf: Num {
-  pure fn add(&self, _other: &Mpf) -> Mpf {
-    fail ~"not implemented";
+  pure fn add(&self, other: &Mpf) -> Mpf unsafe {
+    let res = Mpf::new(uint::max(self.get_prec() as uint,
+                                 other.get_prec() as uint) as c_ulong);
+    __gmpf_add(mut_addr_of(&res.mpf), addr_of(&self.mpf), addr_of(&other.mpf));
+    res
   }
-  pure fn sub(&self, _other: &Mpf) -> Mpf {
-    fail ~"not implemented";
+  pure fn sub(&self, other: &Mpf) -> Mpf unsafe {
+    let res = Mpf::new(uint::max(self.get_prec() as uint,
+                                 other.get_prec() as uint) as c_ulong);
+    __gmpf_sub(mut_addr_of(&res.mpf), addr_of(&self.mpf), addr_of(&other.mpf));
+    res
   }
-  pure fn mul(&self, _other: &Mpf) -> Mpf {
-    fail ~"not implemented";
+  pure fn mul(&self, other: &Mpf) -> Mpf unsafe {
+    let res = Mpf::new(uint::max(self.get_prec() as uint,
+                                 other.get_prec() as uint) as c_ulong);
+    __gmpf_mul(mut_addr_of(&res.mpf), addr_of(&self.mpf), addr_of(&other.mpf));
+    res
   }
-  pure fn div(&self, _other: &Mpf) -> Mpf {
-    fail ~"not implemented";
+  // TODO: handle division by zero
+  pure fn div(&self, other: &Mpf) -> Mpf unsafe {
+    let res = Mpf::new(uint::max(self.get_prec() as uint,
+                                 other.get_prec() as uint) as c_ulong);
+    __gmpf_div(mut_addr_of(&res.mpf), addr_of(&self.mpf), addr_of(&other.mpf));
+    res
   }
   pure fn modulo(&self, _other: &Mpf) -> Mpf {
     fail ~"not implemented";
