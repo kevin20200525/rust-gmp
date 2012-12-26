@@ -109,6 +109,8 @@ extern "C" mod gmp {
   pure fn __gmpf_get_prec(op: mpf_srcptr) -> mp_bitcnt_t;
   fn __gmpf_set_prec(rop: mpf_srcptr, prec: mp_bitcnt_t);
   pure fn __gmpf_cmp(op1: mpf_srcptr, op2: mpf_srcptr) -> c_int;
+  fn __gmpf_neg(rop: mpf_ptr, op: mpf_srcptr);
+  fn __gmpf_abs(rop: mpf_ptr, op: mpf_srcptr);
 }
 
 use gmp::*;
@@ -577,6 +579,12 @@ impl Mpf {
   fn set_prec(&mut self, precision: c_ulong) {
     __gmpf_set_prec(mut_addr_of(&self.mpf), precision);
   }
+
+  pure fn abs(&self) -> Mpf unsafe {
+    let res = Mpf::new(self.get_prec());
+    __gmpf_abs(mut_addr_of(&res.mpf), addr_of(&self.mpf));
+    res
+  }
 }
 
 impl Mpf: Clone {
@@ -608,6 +616,35 @@ impl Mpf: cmp::Ord {
   }
   pure fn ge(&self, other: &Mpf) -> bool {
     __gmpf_cmp(addr_of(&self.mpf), addr_of(&other.mpf)) >= 0
+  }
+}
+
+impl Mpf: Num {
+  pure fn add(&self, _other: &Mpf) -> Mpf {
+    fail ~"not implemented";
+  }
+  pure fn sub(&self, _other: &Mpf) -> Mpf {
+    fail ~"not implemented";
+  }
+  pure fn mul(&self, _other: &Mpf) -> Mpf {
+    fail ~"not implemented";
+  }
+  pure fn div(&self, _other: &Mpf) -> Mpf {
+    fail ~"not implemented";
+  }
+  pure fn modulo(&self, _other: &Mpf) -> Mpf {
+    fail ~"not implemented";
+  }
+  pure fn neg(&self) -> Mpf unsafe {
+    let res = Mpf::new(self.get_prec());
+    __gmpf_neg(mut_addr_of(&res.mpf), addr_of(&self.mpf));
+    res
+  }
+  pure fn to_int(&self) -> int {
+    fail ~"not implemented";
+  }
+  static pure fn from_int(&self, _other: int) -> Mpf {
+    fail ~"not implemented";
   }
 }
 
