@@ -343,24 +343,28 @@ pub struct RandState {
 
 impl RandState {
   static pure fn new() -> RandState unsafe {
+    // TODO: switch to rusti::uninit when implemented
     let state: gmp_randstate_struct = rusti::init();
     __gmp_randinit_default(mut_addr_of(&state));
     RandState { state: state }
   }
 
   static pure fn new_mt() -> RandState unsafe {
+    // TODO: switch to rusti::uninit when implemented
     let state: gmp_randstate_struct = rusti::init();
     __gmp_randinit_mt(mut_addr_of(&state));
     RandState { state: state }
   }
 
   static pure fn new_lc_2exp(a: Mpz, c: c_ulong, m2exp: c_ulong) -> RandState unsafe {
+    // TODO: switch to rusti::uninit when implemented
     let state: gmp_randstate_struct = rusti::init();
     __gmp_randinit_lc_2exp(mut_addr_of(&state), addr_of(&a.mpz), c, m2exp);
     RandState { state: state }
   }
 
   static pure fn new_lc_2exp_size(size: c_ulong) -> RandState unsafe {
+    // TODO: switch to rusti::uninit when implemented
     let state: gmp_randstate_struct = rusti::init();
     __gmp_randinit_lc_2exp_size(mut_addr_of(&state), size);
     RandState { state: state }
@@ -391,6 +395,7 @@ impl RandState {
 
 impl RandState: Clone {
   pure fn clone(&self) -> RandState unsafe {
+    // TODO: switch to rusti::uninit when implemented
     let state: gmp_randstate_struct = rusti::init();
     __gmp_randinit_set(mut_addr_of(&state), addr_of(&self.state));
     RandState { state: state }
