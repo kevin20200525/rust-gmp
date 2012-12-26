@@ -544,6 +544,14 @@ impl Mpq: Num {
   }
 }
 
+impl Mpq: One {
+  static pure fn one() -> Mpq { Num::from_int(1) }
+}
+
+impl Mpq: Zero {
+  static pure fn zero() -> Mpq { Mpq::new() }
+}
+
 pub struct Mpf {
   priv mpf: mpf_struct,
 
