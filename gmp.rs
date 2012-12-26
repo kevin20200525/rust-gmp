@@ -85,6 +85,7 @@ extern mod gmp {
   fn __gmpq_add(sum: mpq_ptr, addend1: mpq_srcptr, addend2: mpq_srcptr);
   fn __gmpq_sub(difference: mpq_ptr, minuend: mpq_srcptr, subtrahend: mpq_srcptr);
   fn __gmpq_mul(product: mpq_ptr, multiplier: mpq_srcptr, multiplicand: mpq_srcptr);
+  fn __gmpq_div(product: mpq_ptr, multiplier: mpq_srcptr, multiplicand: mpq_srcptr);
   fn __gmpq_neg(negated_operand: mpq_ptr, operand: mpq_srcptr);
   fn __gmpq_abs(rop: mpq_ptr, op: mpq_srcptr);
 }
@@ -474,8 +475,11 @@ impl Mpq: Num {
     __gmpq_mul(mut_addr_of(&res.mpq), addr_of(&self.mpq), addr_of(&other.mpq));
     res
   }
-  pure fn div(&self, _other: &Mpq) -> Mpq unsafe {
-    fail ~"not implemented";
+  // TODO: handle division by zero
+  pure fn div(&self, other: &Mpq) -> Mpq unsafe {
+    let res = Mpq::new();
+    __gmpq_div(mut_addr_of(&res.mpq), addr_of(&self.mpq), addr_of(&other.mpq));
+    res
   }
   pure fn modulo(&self, _other: &Mpq) -> Mpq unsafe {
     fail ~"not implemented";
