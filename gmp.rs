@@ -11,6 +11,7 @@ use libc::{c_char, c_int, c_long, c_ulong, c_void, size_t};
 use num::{Num, One, Zero};
 use ptr::{addr_of, mut_addr_of, to_mut_unsafe_ptr};
 use str::as_c_str;
+use Num::from_int;
 
 struct mpz_struct {
   _mp_alloc: c_int,
@@ -547,7 +548,7 @@ impl Mpq: Num {
 }
 
 impl Mpq: One {
-  static pure fn one() -> Mpq { Num::from_int(1) }
+  static pure fn one() -> Mpq { from_int(1) }
 }
 
 impl Mpq: Zero {
@@ -612,7 +613,6 @@ impl Mpf: cmp::Ord {
 
 #[cfg(test)]
 mod test_mpz {
-  use Num::from_int;
   use FromStr::from_str;
 
   #[test]
