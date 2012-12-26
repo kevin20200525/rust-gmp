@@ -497,8 +497,13 @@ impl Mpq: Num {
   pure fn to_int(&self) -> int {
     fail ~"not implemented";
   }
-  static pure fn from_int(&self, _other: int) -> Mpq {
-    fail ~"not implemented";
+  static pure fn from_int(&self, other: int) -> Mpq {
+    let mut res = Mpq::new();
+    // the gmp functions dealing with longs aren't usable here - long is only
+    // guaranteed to be at least 32-bit
+    let mpz = FromStr::from_str(other.to_str()).unwrap();
+    unsafe { res.set_z(&mpz); } // purity workaround
+    res
   }
 }
 
