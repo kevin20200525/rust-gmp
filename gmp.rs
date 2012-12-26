@@ -7,9 +7,9 @@ extern mod rusti {
 
 use clone::Clone;
 use from_str::FromStr;
-use libc::{c_char,c_int,c_ulong,c_void,size_t};
+use libc::{c_char, c_int, c_long, c_ulong, c_void, size_t};
 use num::{Num, One, Zero};
-use ptr::{addr_of,mut_addr_of,to_mut_unsafe_ptr};
+use ptr::{addr_of, mut_addr_of, to_mut_unsafe_ptr};
 use str::as_c_str;
 
 struct mpz_struct {
@@ -23,6 +23,15 @@ struct mpq_struct {
   _mp_den: mpz_struct
 }
 
+type mp_exp_t = c_long;
+
+struct mpf_struct {
+  _mp_prec: c_int,
+  _mp_size: c_int,
+  _mp_exp: mp_exp_t,
+  _mp_d: *c_void
+}
+
 struct gmp_randstate_struct {
   _mp_seed: mpz_struct,
   _mp_alg: c_int,
@@ -34,6 +43,8 @@ type mpz_srcptr = *const mpz_struct;
 type mpz_ptr = *mut mpz_struct;
 type mpq_srcptr = *const mpq_struct;
 type mpq_ptr = *mut mpq_struct;
+type mpf_srcptr = *const mpf_struct;
+type mpf_ptr = *mut mpf_struct;
 type gmp_randstate_t = *mut gmp_randstate_struct;
 
 extern mod gmp {
@@ -91,6 +102,8 @@ extern mod gmp {
   fn __gmpq_inv(inverted_number: mpq_ptr, number: mpq_srcptr);
   fn __gmpq_get_num(numerator: mpz_ptr, rational: mpq_srcptr);
   fn __gmpq_get_den(denominator: mpz_ptr, rational: mpq_srcptr);
+  fn __gmpf_init2(x: mpf_ptr, prec: mp_bitcnt_t);
+  fn __gmpf_clear(x: mpf_ptr);
 }
 
 use gmp::*;
@@ -529,6 +542,22 @@ impl Mpq: Num {
   }
 }
 
+pub struct Mpf {
+  priv mpf: mpf_struct,
+
+  drop {
+    __gmpf_clear(mut_addr_of(&self.mpf));
+  }
+}
+
+impl Mpf {
+  static pure fn new(precision: c_ulong) -> Mpf unsafe {
+    let mpf = rusti::init(); // TODO: switch to rusti::uninit when implemented
+    __gmpf_init2(mut_addr_of(&mpf), precision);
+    Mpf { mpf: mpf }
+  }
+}
+
 #[cfg(test)]
 mod test_mpz {
   use Num::from_int;
@@ -743,5 +772,13 @@ mod test_mpq {
   #[test]
   fn test_mpq() {
     assert Mpq::new() == Mpq::new();
+  }
+}
+
+#[cfg(test)]
+mod test_mpf {
+  #[test]
+  fn test_mpf() {
+    let _x = Mpf::new(100);
   }
 }
