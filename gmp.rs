@@ -406,14 +406,14 @@ impl RandState {
   }
 
   /// Generate a uniform random integer in the range 0 to n-1, inclusive.
-  fn urandom(n: &Mpz) -> Mpz {
+  fn urandom(&mut self, n: &Mpz) -> Mpz {
     let res = Mpz::new();
     __gmpz_urandomm(mut_addr_of(&res.mpz), mut_addr_of(&self.state), addr_of(&n.mpz));
     res
   }
 
   /// Generate a uniformly distributed random integer in the range 0 to 2^n−1, inclusive.
-  fn urandom_2exp(n: c_ulong) -> Mpz {
+  fn urandom_2exp(&mut self, n: c_ulong) -> Mpz {
     let res = Mpz::new();
     __gmpz_urandomb(mut_addr_of(&res.mpz), mut_addr_of(&self.state), n);
     res
