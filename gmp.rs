@@ -82,6 +82,8 @@ extern mod gmp {
   fn __gmpq_set_z(rop: mpq_ptr, op: mpz_srcptr);
   pure fn __gmpq_cmp(op1: mpq_srcptr, op2: mpq_srcptr) -> c_int;
   pure fn __gmpq_equal(op1: mpq_srcptr, op2: mpq_srcptr) -> c_int;
+  fn __gmpq_neg(negated_operand: mpq_ptr, operand: mpq_srcptr);
+  fn __gmpq_abs(rop: mpq_ptr, op: mpq_srcptr);
 }
 
 use gmp::*;
@@ -413,6 +415,12 @@ impl Mpq {
   fn set_z(&mut self, other: &Mpz) {
     __gmpq_set_z(mut_addr_of(&self.mpq), addr_of(&other.mpz));
   }
+
+  pure fn abs(&self) -> Mpq unsafe {
+    let res = Mpq::new();
+    __gmpq_abs(mut_addr_of(&res.mpq), addr_of(&self.mpq));
+    res
+  }
 }
 
 impl Mpq: Clone {
@@ -444,6 +452,35 @@ impl Mpq: cmp::Ord {
   }
   pure fn ge(&self, other: &Mpq) -> bool {
     __gmpq_cmp(addr_of(&self.mpq), addr_of(&other.mpq)) >= 0
+  }
+}
+
+impl Mpq: Num {
+  pure fn add(&self, _other: &Mpq) -> Mpq unsafe {
+    fail ~"not implemented";
+  }
+  pure fn sub(&self, _other: &Mpq) -> Mpq unsafe {
+    fail ~"not implemented";
+  }
+  pure fn mul(&self, _other: &Mpq) -> Mpq unsafe {
+    fail ~"not implemented";
+  }
+  pure fn div(&self, _other: &Mpq) -> Mpq unsafe {
+    fail ~"not implemented";
+  }
+  pure fn modulo(&self, _other: &Mpq) -> Mpq unsafe {
+    fail ~"not implemented";
+  }
+  pure fn neg(&self) -> Mpq unsafe {
+    let res = Mpq::new();
+    __gmpq_neg(mut_addr_of(&res.mpq), addr_of(&self.mpq));
+    res
+  }
+  pure fn to_int(&self) -> int {
+    fail ~"not implemented";
+  }
+  static pure fn from_int(&self, _other: int) -> Mpq {
+    fail ~"not implemented";
   }
 }
 
