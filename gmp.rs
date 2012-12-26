@@ -18,6 +18,11 @@ struct mpz_struct {
   _mp_d: *c_void
 }
 
+struct mpq_struct {
+  _mp_num: mpz_struct,
+  _mp_den: mpz_struct
+}
+
 struct gmp_randstate_struct {
   _mp_seed: mpz_struct,
   _mp_alg: c_int,
@@ -27,6 +32,8 @@ struct gmp_randstate_struct {
 type mp_bitcnt_t = c_ulong;
 type mpz_srcptr = *const mpz_struct;
 type mpz_ptr = *mut mpz_struct;
+type mpq_srcptr = *const mpq_struct;
+type mpq_ptr = *mut mpq_struct;
 type gmp_randstate_t = *mut gmp_randstate_struct;
 
 extern mod gmp {
@@ -69,6 +76,8 @@ extern mod gmp {
   fn __gmp_randseed_ui(state: gmp_randstate_t, seed: c_ulong);
   fn __gmpz_urandomb(rop: mpz_ptr, state: gmp_randstate_t, n: mp_bitcnt_t);
   fn __gmpz_urandomm(rop: mpz_ptr, state: gmp_randstate_t, n: mpz_srcptr);
+  fn __gmpq_init(x: mpq_ptr);
+  fn __gmpq_clear(x: mpq_ptr);
 }
 
 use gmp::*;
@@ -378,6 +387,22 @@ impl RandState: Clone {
   }
 }
 
+pub struct Mpq {
+  priv mpq: mpq_struct,
+
+  drop {
+    __gmpq_clear(mut_addr_of(&self.mpq));
+  }
+}
+
+impl Mpq {
+  static pure fn new() -> Mpq unsafe {
+    let mpq = rusti::init(); // TODO: switch to rusti::uninit when implemented
+    __gmpq_init(mut_addr_of(&mpq));
+    Mpq { mpq: mpq }
+  }
+}
+
 #[cfg(test)]
 mod test_mpz {
   use Num::from_int;
@@ -584,5 +609,13 @@ mod test_rand {
         assert state.urandom(&upper) < upper;
       }
     }
+  }
+}
+
+#[cfg(test)]
+mod test_mpq {
+  #[test]
+  fn test_mpq() {
+    let _x = Mpq::new();
   }
 }
