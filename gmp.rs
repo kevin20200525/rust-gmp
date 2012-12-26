@@ -107,6 +107,7 @@ extern "C" mod gmp {
   fn __gmpf_clear(x: mpf_ptr);
   pure fn __gmpf_get_prec(op: mpf_srcptr) -> mp_bitcnt_t;
   fn __gmpf_set_prec(rop: mpf_srcptr, prec: mp_bitcnt_t);
+  pure fn __gmpf_cmp(op1: mpf_srcptr, op2: mpf_srcptr) -> c_int;
 }
 
 use gmp::*;
@@ -582,6 +583,30 @@ impl Mpf: Clone {
     let mpf = rusti::init(); // TODO: switch to rusti::uninit when implemented
     __gmpf_init_set(mut_addr_of(&mpf), addr_of(&self.mpf));
     Mpf { mpf: mpf }
+  }
+}
+
+impl Mpf: cmp::Eq {
+  pure fn eq(&self, other: &Mpf) -> bool {
+    __gmpf_cmp(addr_of(&self.mpf), addr_of(&other.mpf)) == 0
+  }
+  pure fn ne(&self, other: &Mpf) -> bool {
+    __gmpf_cmp(addr_of(&self.mpf), addr_of(&other.mpf)) != 0
+  }
+}
+
+impl Mpf: cmp::Ord {
+  pure fn lt(&self, other: &Mpf) -> bool {
+    __gmpf_cmp(addr_of(&self.mpf), addr_of(&other.mpf)) < 0
+  }
+  pure fn le(&self, other: &Mpf) -> bool {
+    __gmpf_cmp(addr_of(&self.mpf), addr_of(&other.mpf)) <= 0
+  }
+  pure fn gt(&self, other: &Mpf) -> bool {
+    __gmpf_cmp(addr_of(&self.mpf), addr_of(&other.mpf)) > 0
+  }
+  pure fn ge(&self, other: &Mpf) -> bool {
+    __gmpf_cmp(addr_of(&self.mpf), addr_of(&other.mpf)) >= 0
   }
 }
 
