@@ -89,6 +89,8 @@ extern mod gmp {
   fn __gmpq_neg(negated_operand: mpq_ptr, operand: mpq_srcptr);
   fn __gmpq_abs(rop: mpq_ptr, op: mpq_srcptr);
   fn __gmpq_inv(inverted_number: mpq_ptr, number: mpq_srcptr);
+  fn __gmpq_get_num(numerator: mpz_ptr, rational: mpq_srcptr);
+  fn __gmpq_get_den(denominator: mpz_ptr, rational: mpq_srcptr);
 }
 
 use gmp::*;
@@ -424,6 +426,18 @@ impl Mpq {
 
   fn set_z(&mut self, other: &Mpz) {
     __gmpq_set_z(mut_addr_of(&self.mpq), addr_of(&other.mpz));
+  }
+
+  pure fn get_num() -> Mpz unsafe {
+    let res = Mpz::new();
+    __gmpq_get_num(mut_addr_of(&res.mpz), addr_of(&self.mpq));
+    res
+  }
+
+  pure fn get_den() -> Mpz unsafe {
+    let res = Mpz::new();
+    __gmpq_get_den(mut_addr_of(&res.mpz), addr_of(&self.mpq));
+    res
   }
 
   pure fn abs(&self) -> Mpq unsafe {
