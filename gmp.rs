@@ -80,6 +80,7 @@ extern mod gmp {
   fn __gmpq_clear(x: mpq_ptr);
   fn __gmpq_set(rop: mpq_ptr, op: mpq_srcptr);
   pure fn __gmpq_cmp(op1: mpq_srcptr, op2: mpq_srcptr) -> c_int;
+  pure fn __gmpq_equal(op1: mpq_srcptr, op2: mpq_srcptr) -> c_int;
 }
 
 use gmp::*;
@@ -419,10 +420,10 @@ impl Mpq: Clone {
 
 impl Mpq: cmp::Eq {
   pure fn eq(&self, other: &Mpq) -> bool {
-    __gmpq_cmp(addr_of(&self.mpq), addr_of(&other.mpq)) == 0
+    __gmpq_equal(addr_of(&self.mpq), addr_of(&other.mpq)) != 0
   }
   pure fn ne(&self, other: &Mpq) -> bool {
-    __gmpq_cmp(addr_of(&self.mpq), addr_of(&other.mpq)) != 0
+    __gmpq_equal(addr_of(&self.mpq), addr_of(&other.mpq)) == 0
   }
 }
 
@@ -654,6 +655,6 @@ mod test_rand {
 mod test_mpq {
   #[test]
   fn test_mpq() {
-    let _x = Mpq::new();
+    assert Mpq::new() == Mpq::new();
   }
 }
