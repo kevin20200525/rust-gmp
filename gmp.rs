@@ -75,6 +75,10 @@ extern "C" mod gmp {
   fn __gmpz_com(rop: mpz_ptr, op: mpz_srcptr);
   pure fn __gmpz_popcount(op: mpz_srcptr) -> mp_bitcnt_t;
   pure fn __gmpz_hamdist(op1: mpz_srcptr, op2: mpz_srcptr) -> mp_bitcnt_t;
+  fn __gmpz_setbit(rop: mpz_ptr, bit_index: mp_bitcnt_t);
+  fn __gmpz_clrbit(rop: mpz_ptr, bit_index: mp_bitcnt_t);
+  fn __gmpz_combit(rop: mpz_ptr, bit_index: mp_bitcnt_t);
+  pure fn __gmpz_tstbit(rop: mpz_srcptr, bit_index: mp_bitcnt_t) -> c_int;
   fn __gmpz_gcd(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
   fn __gmpz_lcm(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
   fn __gmpz_invert(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr) -> c_int;
@@ -215,6 +219,22 @@ impl Mpz {
 
   pure fn hamdist(&self, other: &Mpz) -> uint {
     __gmpz_hamdist(addr_of(&self.mpz), addr_of(&other.mpz)) as uint
+  }
+
+  fn setbit(&mut self, bit_index: c_ulong) {
+    __gmpz_setbit(mut_addr_of(&self.mpz), bit_index);
+  }
+
+  fn clrbit(&mut self, bit_index: c_ulong) {
+    __gmpz_clrbit(mut_addr_of(&self.mpz), bit_index);
+  }
+
+  fn combit(&mut self, bit_index: c_ulong) {
+    __gmpz_combit(mut_addr_of(&self.mpz), bit_index);
+  }
+
+  pure fn tstbit(&self, bit_index: c_ulong) -> bool {
+    __gmpz_tstbit(mut_addr_of(&self.mpz), bit_index) == 1
   }
 }
 
@@ -897,6 +917,34 @@ mod test_mpz {
   #[test]
   fn test_one() {
     assert One::one::<Mpz>() == from_int(1);
+  }
+
+  #[test]
+  fn test_bit_fiddling() {
+    let mut xs = from_int::<Mpz>(0b1010_1000_0010_0011);
+    assert xs.bit_length() == 16;
+    let mut ys = vec::reversed([true, false, true, false,
+                                true, false, false, false,
+                                false, false, true, false,
+                                false, false, true, true]);
+    for uint::range(0, xs.bit_length()) |i| {
+      assert xs.tstbit(i as c_ulong) == ys[i];
+    }
+    xs.setbit(0);
+    ys[0] = true;
+    xs.setbit(3);
+    ys[3] = true;
+    xs.clrbit(1);
+    ys[1] = false;
+    xs.clrbit(5);
+    ys[5] = false;
+    xs.combit(14);
+    ys[14] = !ys[14];
+    xs.combit(15);
+    ys[15] = !ys[15];
+    for uint::range(0, xs.bit_length()) |i| {
+      assert xs.tstbit(i as c_ulong) == ys[i];
+    }
   }
 }
 
