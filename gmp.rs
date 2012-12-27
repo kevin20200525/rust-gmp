@@ -130,10 +130,10 @@ use gmp::*;
 
 pub struct Mpz {
   priv mpz: mpz_struct,
+}
 
-  drop {
-    __gmpz_clear(mut_addr_of(&self.mpz));
-  }
+impl Mpz: Drop {
+  fn finalize(&self) { __gmpz_clear(mut_addr_of(&self.mpz)) }
 }
 
 impl Mpz {
@@ -388,10 +388,10 @@ impl Mpz : to_str::ToStr {
 
 pub struct RandState {
   priv state: gmp_randstate_struct,
+}
 
-  drop {
-    __gmp_randclear(mut_addr_of(&self.state));
-  }
+impl RandState: Drop {
+  fn finalize(&self) { __gmp_randclear(mut_addr_of(&self.state)) }
 }
 
 impl RandState {
@@ -457,10 +457,10 @@ impl RandState: Clone {
 
 pub struct Mpq {
   priv mpq: mpq_struct,
+}
 
-  drop {
-    __gmpq_clear(mut_addr_of(&self.mpq));
-  }
+impl Mpq: Drop {
+  fn finalize(&self) { __gmpq_clear(mut_addr_of(&self.mpq)) }
 }
 
 impl Mpq {
@@ -589,10 +589,10 @@ impl Mpq: Zero {
 
 pub struct Mpf {
   priv mpf: mpf_struct,
+}
 
-  drop {
-    __gmpf_clear(mut_addr_of(&self.mpf));
-  }
+impl Mpf: Drop {
+  fn finalize(&self) { __gmpf_clear(mut_addr_of(&self.mpf)) }
 }
 
 impl Mpf {
