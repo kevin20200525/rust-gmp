@@ -96,6 +96,7 @@ extern "C" mod gmp {
   fn __gmpq_clear(x: mpq_ptr);
   fn __gmpq_set(rop: mpq_ptr, op: mpq_srcptr);
   fn __gmpq_set_z(rop: mpq_ptr, op: mpz_srcptr);
+  fn __gmpq_set_ui(rop: mpq_ptr, op1: c_ulong, op2: c_ulong);
   pure fn __gmpq_cmp(op1: mpq_srcptr, op2: mpq_srcptr) -> c_int;
   pure fn __gmpq_equal(op1: mpq_srcptr, op2: mpq_srcptr) -> c_int;
   fn __gmpq_add(sum: mpq_ptr, addend1: mpq_srcptr, addend2: mpq_srcptr);
@@ -580,7 +581,11 @@ impl Mpq: Num {
 }
 
 impl Mpq: One {
-  static pure fn one() -> Mpq { from_int(1) }
+  static pure fn one() -> Mpq {
+    let res = Mpq::new();
+    unsafe { __gmpq_set_ui(mut_addr_of(&res.mpq), 1, 1) } // purity
+    res
+  }
 }
 
 impl Mpq: Zero {
@@ -969,6 +974,11 @@ mod test_mpq {
   #[test]
   fn test_mpq() {
     assert Mpq::new() == Mpq::new();
+  }
+
+  #[test]
+  fn test_one() {
+    assert One::one::<Mpq>() == from_int(1);
   }
 }
 
