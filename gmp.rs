@@ -7,7 +7,7 @@ extern mod rusti {
 
 use clone::Clone;
 use from_str::FromStr;
-use libc::{c_char, c_int, c_long, c_ulong, c_void, size_t};
+use libc::{c_char, c_double, c_int, c_long, c_ulong, c_void, size_t};
 use num::{Num, One, Zero};
 use ptr::{addr_of, mut_addr_of, to_mut_unsafe_ptr};
 use str::as_c_str;
@@ -109,6 +109,8 @@ extern "C" mod gmp {
   pure fn __gmpf_get_prec(op: mpf_srcptr) -> mp_bitcnt_t;
   fn __gmpf_set_prec(rop: mpf_srcptr, prec: mp_bitcnt_t);
   pure fn __gmpf_cmp(op1: mpf_srcptr, op2: mpf_srcptr) -> c_int;
+  pure fn __gmpf_cmp_d(op1: mpf_srcptr, op2: c_double) -> c_int;
+  fn __gmpf_reldiff(rop: mpf_ptr, op1: mpf_srcptr, op2: mpf_srcptr);
   fn __gmpf_add(rop: mpf_ptr, op1: mpf_srcptr, op2: mpf_srcptr);
   fn __gmpf_sub(rop: mpf_ptr, op1: mpf_srcptr, op2: mpf_srcptr);
   fn __gmpf_mul(rop: mpf_ptr, op1: mpf_srcptr, op2: mpf_srcptr);
@@ -589,6 +591,13 @@ impl Mpf {
     __gmpf_abs(mut_addr_of(&res.mpf), addr_of(&self.mpf));
     res
   }
+
+  pure fn reldiff(&self, other: &Mpf) -> Mpf unsafe {
+    let res = Mpf::new(uint::max(self.get_prec() as uint,
+                                 other.get_prec() as uint) as c_ulong);
+    __gmpf_reldiff(mut_addr_of(&res.mpf), addr_of(&self.mpf), addr_of(&other.mpf));
+    res
+  }
 }
 
 impl Mpf: Clone {
@@ -606,6 +615,18 @@ impl Mpf: cmp::Eq {
   pure fn ne(&self, other: &Mpf) -> bool {
     __gmpf_cmp(addr_of(&self.mpf), addr_of(&other.mpf)) != 0
   }
+}
+
+const fuzzy_epsilon: c_double = 1.0e-6;
+
+impl Mpf: std::cmp::FuzzyEq {
+  // TODO: switch to explicit self when FuzzyEq does
+  pure fn fuzzy_eq(other: &Mpf) -> bool {
+    let diff = self.reldiff(other);
+    __gmpf_cmp_d(addr_of(&diff.mpf), fuzzy_epsilon) < 0
+  }
+
+  // TODO: method that allows passing the epsilon value (issue #3966)
 }
 
 impl Mpf: cmp::Ord {
