@@ -133,6 +133,25 @@ pub struct Mpz {
 }
 
 impl Mpz {
+  static pure fn new() -> Mpz unsafe {
+    let mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
+    __gmpz_init(mut_addr_of(&mpz));
+    Mpz { mpz: mpz }
+  }
+
+  static pure fn from_str_radix(s: &str, base: uint) -> Option<Mpz> unsafe {
+    assert base == 0 || base >= 2 || base <= 62;
+    let mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
+    let mpz_ptr = mut_addr_of(&mpz);
+    let r = as_c_str(s, { |s| __gmpz_init_set_str(mpz_ptr, s, base as c_int) });
+    if r == 0 {
+      Some(Mpz { mpz: mpz })
+    } else {
+      __gmpz_clear(mpz_ptr);
+      None
+    }
+  }
+
   fn set(&mut self, other: &Mpz) {
     __gmpz_set(mut_addr_of(&self.mpz), addr_of(&other.mpz));
   }
@@ -196,25 +215,6 @@ impl Mpz {
 
   pure fn hamdist(&self, other: &Mpz) -> uint {
     __gmpz_hamdist(addr_of(&self.mpz), addr_of(&other.mpz)) as uint
-  }
-
-  static pure fn new() -> Mpz unsafe {
-    let mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
-    __gmpz_init(mut_addr_of(&mpz));
-    Mpz { mpz: mpz }
-  }
-
-  static pure fn from_str_radix(s: &str, base: uint) -> Option<Mpz> unsafe {
-    assert base == 0 || base >= 2 || base <= 62;
-    let mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
-    let mpz_ptr = mut_addr_of(&mpz);
-    let r = as_c_str(s, { |s| __gmpz_init_set_str(mpz_ptr, s, base as c_int) });
-    if r == 0 {
-      Some(Mpz { mpz: mpz })
-    } else {
-      __gmpz_clear(mpz_ptr);
-      None
-    }
   }
 }
 
