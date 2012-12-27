@@ -117,6 +117,9 @@ extern "C" mod gmp {
   fn __gmpf_div(rop: mpf_ptr, op1: mpf_srcptr, op2: mpf_srcptr);
   fn __gmpf_neg(rop: mpf_ptr, op: mpf_srcptr);
   fn __gmpf_abs(rop: mpf_ptr, op: mpf_srcptr);
+  fn __gmpf_ceil(rop: mpf_ptr, op: mpf_srcptr);
+  fn __gmpf_floor(rop: mpf_ptr, op: mpf_srcptr);
+  fn __gmpf_trunc(rop: mpf_ptr, op: mpf_srcptr);
 }
 
 use gmp::*;
@@ -589,6 +592,24 @@ impl Mpf {
   pure fn abs(&self) -> Mpf unsafe {
     let res = Mpf::new(self.get_prec());
     __gmpf_abs(mut_addr_of(&res.mpf), addr_of(&self.mpf));
+    res
+  }
+
+  pure fn ceil() -> Mpf unsafe {
+    let res = Mpf::new(self.get_prec());
+    __gmpf_ceil(mut_addr_of(&res.mpf), addr_of(&self.mpf));
+    res
+  }
+
+  pure fn floor() -> Mpf unsafe {
+    let res = Mpf::new(self.get_prec());
+    __gmpf_floor(mut_addr_of(&res.mpf), addr_of(&self.mpf));
+    res
+  }
+
+  pure fn trunc() -> Mpf unsafe {
+    let res = Mpf::new(self.get_prec());
+    __gmpf_trunc(mut_addr_of(&res.mpf), addr_of(&self.mpf));
     res
   }
 
