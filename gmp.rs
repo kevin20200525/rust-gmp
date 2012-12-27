@@ -160,6 +160,7 @@ impl Mpz {
     __gmpz_set(mut_addr_of(&self.mpz), addr_of(&other.mpz));
   }
 
+  // TODO: too easy to forget to check this return value - rename?
   fn set_from_str_radix(&mut self, s: &str, base: uint) -> bool {
     assert base == 0 || base >= 2 || base <= 62;
     let mpz = to_mut_unsafe_ptr(&mut self.mpz);
