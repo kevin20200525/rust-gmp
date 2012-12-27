@@ -896,7 +896,7 @@ mod test_mpz {
 
   #[test]
   fn test_one() {
-    assert One::one::<Mpz>() == Num::from_int(1);
+    assert One::one::<Mpz>() == from_int(1);
   }
 }
 
@@ -908,7 +908,7 @@ mod test_rand {
     state.seed_ui(42);
     for uint::range(1, 1000) |_| {
       for int::range(1, 10) |x| {
-        let upper = Num::from_int(x);
+        let upper = from_int(x);
         assert state.urandom(&upper) < upper;
       }
     }
