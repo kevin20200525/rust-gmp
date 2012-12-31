@@ -222,6 +222,7 @@ impl Mpz {
     res
   }
 
+  // TODO: handle a zero modulo
   pure fn invert(&self, modulo: &Mpz) -> Option<Mpz> unsafe {
     let res = Mpz::new();
     if __gmpz_invert(mut_addr_of(&res.mpz), addr_of(&self.mpz),
