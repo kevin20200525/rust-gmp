@@ -319,6 +319,7 @@ impl Mpz: Num {
   static pure fn from_int(&self, other: int) -> Mpz {
     // the gmp functions dealing with longs aren't usable here - long is only
     // guaranteed to be at least 32-bit
+    // TODO: see if mpz_import can be used here
     FromStr::from_str(other.to_str()).unwrap()
   }
 }
