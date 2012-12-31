@@ -195,7 +195,7 @@ impl Mpz {
   }
 
   pure fn bit_length(&self) -> uint {
-    return __gmpz_sizeinbase(addr_of(&self.mpz), 2) as uint
+    __gmpz_sizeinbase(addr_of(&self.mpz), 2) as uint
   }
 
   pure fn compl(&self) -> Mpz unsafe {
