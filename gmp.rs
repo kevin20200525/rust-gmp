@@ -349,9 +349,7 @@ impl Mpz: One {
 }
 
 impl Mpz: Zero {
-  static pure fn zero() -> Mpz {
-    Mpz::new()
-  }
+  static pure fn zero() -> Mpz { Mpz::new() }
 }
 
 impl Mpz: BitAnd<Mpz, Mpz> {
@@ -1018,8 +1016,7 @@ mod test_mpq {
   #[test]
   #[should_fail]
   fn test_invert_zero() {
-    let x = Mpq::new();
-    x.invert();
+    Mpq::new().invert();
   }
 }
 
