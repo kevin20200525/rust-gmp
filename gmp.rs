@@ -98,6 +98,7 @@ extern "C" mod gmp {
   fn __gmpq_set_z(rop: mpq_ptr, op: mpz_srcptr);
   fn __gmpq_set_ui(rop: mpq_ptr, op1: c_ulong, op2: c_ulong);
   pure fn __gmpq_cmp(op1: mpq_srcptr, op2: mpq_srcptr) -> c_int;
+  pure fn __gmpq_cmp_ui(op1: mpq_srcptr, num2: c_ulong, den2: c_ulong) -> c_int;
   pure fn __gmpq_equal(op1: mpq_srcptr, op2: mpq_srcptr) -> c_int;
   fn __gmpq_add(sum: mpq_ptr, addend1: mpq_srcptr, addend2: mpq_srcptr);
   fn __gmpq_sub(difference: mpq_ptr, minuend: mpq_srcptr, subtrahend: mpq_srcptr);
@@ -553,8 +554,11 @@ impl Mpq: Num {
     __gmpq_mul(mut_addr_of(&res.mpq), addr_of(&self.mpq), addr_of(&other.mpq));
     res
   }
-  // TODO: handle division by zero
   pure fn div(&self, other: &Mpq) -> Mpq unsafe {
+    if __gmpq_cmp_ui(addr_of(&self.mpq), 0, 1) == 0 {
+      fail ~"divide by zero";
+    }
+
     let res = Mpq::new();
     __gmpq_div(mut_addr_of(&res.mpq), addr_of(&self.mpq), addr_of(&other.mpq));
     res
@@ -979,6 +983,13 @@ mod test_mpq {
   #[test]
   fn test_one() {
     assert One::one::<Mpq>() == from_int(1);
+  }
+
+  #[test]
+  #[should_fail]
+  fn test_div_zero() {
+    let x = Mpq::new();
+    x / x;
   }
 }
 
