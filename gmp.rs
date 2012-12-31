@@ -116,6 +116,7 @@ extern "C" mod gmp {
   fn __gmpf_set_prec(rop: mpf_srcptr, prec: mp_bitcnt_t);
   pure fn __gmpf_cmp(op1: mpf_srcptr, op2: mpf_srcptr) -> c_int;
   pure fn __gmpf_cmp_d(op1: mpf_srcptr, op2: c_double) -> c_int;
+  pure fn __gmpf_cmp_ui(op1: mpf_srcptr, op2: c_ulong) -> c_int;
   fn __gmpf_reldiff(rop: mpf_ptr, op1: mpf_srcptr, op2: mpf_srcptr);
   fn __gmpf_add(rop: mpf_ptr, op1: mpf_srcptr, op2: mpf_srcptr);
   fn __gmpf_sub(rop: mpf_ptr, op1: mpf_srcptr, op2: mpf_srcptr);
@@ -717,8 +718,11 @@ impl Mpf: Num {
     __gmpf_mul(mut_addr_of(&res.mpf), addr_of(&self.mpf), addr_of(&other.mpf));
     res
   }
-  // TODO: handle division by zero
   pure fn div(&self, other: &Mpf) -> Mpf unsafe {
+    if __gmpf_cmp_ui(addr_of(&self.mpf), 0) == 0 {
+      fail ~"divide by zero";
+    }
+
     let res = Mpf::new(uint::max(self.get_prec() as uint,
                                  other.get_prec() as uint) as c_ulong);
     __gmpf_div(mut_addr_of(&res.mpf), addr_of(&self.mpf), addr_of(&other.mpf));
@@ -1008,5 +1012,12 @@ mod test_mpf {
   #[test]
   fn test_mpf() {
     let _x = Mpf::new(100);
+  }
+
+  #[test]
+  #[should_fail]
+  fn test_div_zero() {
+    let x = Mpf::new(100);
+    x / x;
   }
 }
