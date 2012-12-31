@@ -162,7 +162,7 @@ impl Mpz {
   }
 
   static pure fn from_str_radix(s: &str, base: uint) -> Option<Mpz> unsafe {
-    assert base == 0 || base >= 2 || base <= 62;
+    assert base == 0 || (base >= 2 && base <= 62);
     let mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
     let mpz_ptr = mut_addr_of(&mpz);
     let r = as_c_str(s, { |s| __gmpz_init_set_str(mpz_ptr, s, base as c_int) });
@@ -180,7 +180,7 @@ impl Mpz {
 
   // TODO: too easy to forget to check this return value - rename?
   fn set_from_str_radix(&mut self, s: &str, base: uint) -> bool {
-    assert base == 0 || base >= 2 || base <= 62;
+    assert base == 0 || (base >= 2 && base <= 62);
     let mpz = to_mut_unsafe_ptr(&mut self.mpz);
     as_c_str(s, { |s| __gmpz_set_str(mpz, s, base as c_int) }) == 0
   }
@@ -784,6 +784,32 @@ mod test_mpz {
     assert x.set_from_str_radix("5000", 10);
     assert x == y;
     assert !x.set_from_str_radix("aaaa", 2);
+  }
+
+  #[test]
+  #[should_fail]
+  fn test_from_str_radix_lower_bound() {
+    Mpz::from_str_radix("", 1);
+  }
+
+  #[test]
+  #[should_fail]
+  fn test_from_str_radix_upper_bound() {
+    Mpz::from_str_radix("", 63);
+  }
+
+  #[test]
+  #[should_fail]
+  fn test_set_from_str_radix_lower_bound() {
+    let mut x = Mpz::new();
+    x.set_from_str_radix("", 1);
+  }
+
+  #[test]
+  #[should_fail]
+  fn test_set_from_str_radix_upper_bound() {
+    let mut x = Mpz::new();
+    x.set_from_str_radix("", 63);
   }
 
   #[test]
