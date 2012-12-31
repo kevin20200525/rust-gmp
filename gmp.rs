@@ -50,6 +50,7 @@ type gmp_randstate_t = *mut gmp_randstate_struct;
 
 extern "C" mod gmp {
   fn __gmpz_init(x: mpz_ptr);
+  fn __gmpz_init2(x: mpz_ptr, n: mp_bitcnt_t);
   fn __gmpz_init_set(rop: mpz_ptr, op: mpz_srcptr);
   fn __gmpz_init_set_ui(rop: mpz_ptr, op: c_ulong);
   fn __gmpz_init_set_str(rop: mpz_ptr, str: *c_char, base: c_int) -> c_int;
@@ -144,6 +145,12 @@ impl Mpz {
   static pure fn new() -> Mpz unsafe {
     let mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
     __gmpz_init(mut_addr_of(&mpz));
+    Mpz { mpz: mpz }
+  }
+
+  static pure fn new_reserve(n: c_ulong) -> Mpz unsafe {
+    let mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
+    __gmpz_init2(mut_addr_of(&mpz), n);
     Mpz { mpz: mpz }
   }
 
