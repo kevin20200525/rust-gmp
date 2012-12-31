@@ -983,11 +983,6 @@ mod test_rand {
 #[cfg(test)]
 mod test_mpq {
   #[test]
-  fn test_mpq() {
-    assert Mpq::new() == Mpq::new();
-  }
-
-  #[test]
   fn test_one() {
     assert One::one::<Mpq>() == from_int(1);
   }
@@ -1009,11 +1004,6 @@ mod test_mpq {
 
 #[cfg(test)]
 mod test_mpf {
-  #[test]
-  fn test_mpf() {
-    let _x = Mpf::new(100);
-  }
-
   #[test]
   #[should_fail]
   fn test_div_zero() {
