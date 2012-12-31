@@ -9,6 +9,7 @@ The following functions are intentionally left out of the bindings:
 * `mpf_inits` (not thread-safe, va_list wrapper)
 * `mpf_clears` (va_list wrapper)
 * `mpf_swap` (no better than rust's swap)
+* `mpf_set_prec_raw` (could be exposed with an `unsafe` function if needed)
 * `mpz_inits` (va_list wrapper)
 * `mpz_clears` (va_list wrapper)
 * `mpz_swap` (no better than rust's swap)
