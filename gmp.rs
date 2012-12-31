@@ -498,8 +498,11 @@ impl Mpq {
     res
   }
 
-  // TODO: handle division by zero
   pure fn invert(&self) -> Mpq unsafe {
+    if __gmpq_cmp_ui(addr_of(&self.mpq), 0, 1) == 0 {
+      fail ~"divide by zero";
+    }
+
     let res = Mpq::new();
     __gmpq_inv(mut_addr_of(&res.mpq), addr_of(&self.mpq));
     res
@@ -990,6 +993,13 @@ mod test_mpq {
   fn test_div_zero() {
     let x = Mpq::new();
     x / x;
+  }
+
+  #[test]
+  #[should_fail]
+  fn test_invert_zero() {
+    let x = Mpq::new();
+    x.invert();
   }
 }
 
