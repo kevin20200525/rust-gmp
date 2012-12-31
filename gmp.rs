@@ -55,6 +55,7 @@ extern "C" mod gmp {
   fn __gmpz_init_set_ui(rop: mpz_ptr, op: c_ulong);
   fn __gmpz_init_set_str(rop: mpz_ptr, str: *c_char, base: c_int) -> c_int;
   fn __gmpz_clear(x: mpz_ptr);
+  fn __gmpz_realloc2(x: mpz_ptr, n: mp_bitcnt_t);
   fn __gmpz_set(rop: mpz_ptr, op: mpz_srcptr);
   fn __gmpz_set_str(rop: mpz_ptr, str: *c_char, base: c_int) -> c_int;
   fn __gmpz_get_str(str: *c_char, base: c_int, op: mpz_srcptr) -> *c_char;
@@ -152,6 +153,12 @@ impl Mpz {
     let mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
     __gmpz_init2(mut_addr_of(&mpz), n);
     Mpz { mpz: mpz }
+  }
+
+  fn reserve(&mut self, n: c_ulong) {
+    if (self.bit_length() as c_ulong < n) {
+      __gmpz_realloc2(mut_addr_of(&self.mpz), n);
+    }
   }
 
   static pure fn from_str_radix(s: &str, base: uint) -> Option<Mpz> unsafe {
