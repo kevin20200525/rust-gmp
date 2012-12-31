@@ -185,6 +185,7 @@ impl Mpz {
     as_c_str(s, { |s| __gmpz_set_str(mpz, s, base as c_int) }) == 0
   }
 
+  // TODO: fail on an invalid base
   pure fn to_str_radix(&self, base: int) -> ~str unsafe {
     let len = __gmpz_sizeinbase(addr_of(&self.mpz), base as c_int) as uint + 2;
     let dst = vec::to_mut(vec::from_elem(len, '0'));
