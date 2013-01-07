@@ -110,6 +110,8 @@ extern "C" mod gmp {
   fn __gmpq_set(rop: mpq_ptr, op: mpq_srcptr);
   fn __gmpq_set_z(rop: mpq_ptr, op: mpz_srcptr);
   fn __gmpq_set_ui(rop: mpq_ptr, op1: c_ulong, op2: c_ulong);
+  fn __gmpq_set_d(rop: mpq_ptr, op: c_double);
+  fn __gmpq_set_f(rop: mpq_ptr, op: mpf_srcptr);
   pure fn __gmpq_cmp(op1: mpq_srcptr, op2: mpq_srcptr) -> c_int;
   pure fn __gmpq_cmp_ui(op1: mpq_srcptr, num2: c_ulong, den2: c_ulong) -> c_int;
   pure fn __gmpq_equal(op1: mpq_srcptr, op2: mpq_srcptr) -> c_int;
@@ -509,6 +511,14 @@ impl Mpq {
 
   fn set_z(&mut self, other: &Mpz) {
     __gmpq_set_z(mut_addr_of(&self.mpq), addr_of(&other.mpz));
+  }
+
+  fn set_d(&mut self, other: f64) {
+    __gmpq_set_d(mut_addr_of(&self.mpq), other);
+  }
+
+  fn set_f(&mut self, other: &Mpf) {
+    __gmpq_set_f(mut_addr_of(&self.mpq), addr_of(&other.mpf));
   }
 
   pure fn get_num() -> Mpz unsafe {
