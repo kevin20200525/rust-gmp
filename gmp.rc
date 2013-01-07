@@ -93,6 +93,8 @@ extern "C" mod gmp {
   fn __gmpz_gcd(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
   fn __gmpz_lcm(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
   fn __gmpz_invert(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr) -> c_int;
+  fn __gmpz_import(rop: mpz_ptr, count: size_t, order: c_int, size: size_t,
+                   endian: c_int, nails: size_t, op: *const c_void);
   fn __gmp_randinit_default(state: gmp_randstate_t);
   fn __gmp_randinit_mt(state: gmp_randstate_t);
   fn __gmp_randinit_lc_2exp(state: gmp_randstate_t, a: mpz_srcptr, c: c_ulong, m2exp: mp_bitcnt_t);
@@ -342,11 +344,14 @@ impl Mpz: Num {
   pure fn to_int(&self) -> int {
     fail ~"not implemented";
   }
-  static pure fn from_int(&self, other: int) -> Mpz {
-    // the gmp functions dealing with longs aren't usable here - long is only
-    // guaranteed to be at least 32-bit
-    // TODO: see if mpz_import can be used here
-    FromStr::from_str(other.to_str()).unwrap()
+  static pure fn from_int(&self, other: int) -> Mpz unsafe {
+    let res = Mpz::new();
+    __gmpz_import(mut_addr_of(&res.mpz), 1, 1, int::bytes as size_t, 0, 0,
+                  addr_of(&int::abs(other)) as *c_void);
+    if int::is_negative(other) {
+      __gmpz_neg(mut_addr_of(&res.mpz), addr_of(&res.mpz))
+    }
+    res
   }
 }
 
@@ -605,10 +610,7 @@ impl Mpq: Num {
   }
   static pure fn from_int(&self, other: int) -> Mpq {
     let mut res = Mpq::new();
-    // the gmp functions dealing with longs aren't usable here - long is only
-    // guaranteed to be at least 32-bit
-    let mpz = FromStr::from_str(other.to_str()).unwrap();
-    unsafe { res.set_z(&mpz); } // purity workaround
+    unsafe { res.set_z(&from_int(other)); } // purity workaround
     res
   }
 }
