@@ -17,8 +17,8 @@ extern mod rusti {
 use core::clone::Clone;
 use core::from_str::FromStr;
 use core::libc::{c_char, c_double, c_int, c_long, c_ulong, c_void, size_t};
-use core::num::{Num, One, Zero};
-use core::num::Num::from_int;
+use core::num::{IntConvertible, One, Zero};
+use core::num::IntConvertible::from_int;
 use core::ptr::{addr_of, mut_addr_of, to_mut_unsafe_ptr};
 use core::str::as_c_str;
 use core::vec;
@@ -327,7 +327,7 @@ impl Mpz: cmp::Ord {
   }
 }
 
-impl Mpz: Num {
+impl Mpz: Add<Mpz, Mpz> {
   pure fn add(&self, other: &Mpz) -> Mpz {
     unsafe {
       let res = Mpz::new();
@@ -335,6 +335,9 @@ impl Mpz: Num {
       res
     }
   }
+}
+
+impl Mpz: Sub<Mpz, Mpz> {
   pure fn sub(&self, other: &Mpz) -> Mpz {
     unsafe {
       let res = Mpz::new();
@@ -342,6 +345,9 @@ impl Mpz: Num {
       res
     }
   }
+}
+
+impl Mpz: Mul<Mpz, Mpz> {
   pure fn mul(&self, other: &Mpz) -> Mpz {
     unsafe {
       let res = Mpz::new();
@@ -349,10 +355,13 @@ impl Mpz: Num {
       res
     }
   }
+}
+
+impl Mpz: Div<Mpz, Mpz> {
   pure fn div(&self, other: &Mpz) -> Mpz {
     unsafe {
       if __gmpz_cmp_ui(addr_of(&self.mpz), 0) == 0 {
-        die!(~"divide by zero")
+        fail!(~"divide by zero")
       }
 
       let res = Mpz::new();
@@ -360,10 +369,13 @@ impl Mpz: Num {
       res
     }
   }
+}
+
+impl Mpz: Modulo<Mpz, Mpz> {
   pure fn modulo(&self, other: &Mpz) -> Mpz {
     unsafe {
       if __gmpz_cmp_ui(addr_of(&self.mpz), 0) == 0 {
-        die!(~"divide by zero")
+        fail!(~"divide by zero")
       }
 
       let res = Mpz::new();
@@ -371,6 +383,9 @@ impl Mpz: Num {
       res
     }
   }
+}
+
+impl Mpz: Neg<Mpz> {
   pure fn neg(&self) -> Mpz {
     unsafe {
       let res = Mpz::new();
@@ -378,8 +393,11 @@ impl Mpz: Num {
       res
     }
   }
+}
+
+impl Mpz: IntConvertible {
   pure fn to_int(&self) -> int {
-    die!(~"not implemented")
+    fail!(~"not implemented")
   }
   static pure fn from_int(&self, other: int) -> Mpz {
     unsafe {
@@ -615,7 +633,7 @@ impl Mpq {
   pure fn invert(&self) -> Mpq {
     unsafe {
       if __gmpq_cmp_ui(addr_of(&self.mpq), 0, 1) == 0 {
-        die!(~"divide by zero")
+        fail!(~"divide by zero")
       }
 
       let res = Mpq::new();
@@ -659,7 +677,7 @@ impl Mpq: cmp::Ord {
   }
 }
 
-impl Mpq: Num {
+impl Mpq: Add<Mpq, Mpq> {
   pure fn add(&self, other: &Mpq) -> Mpq {
     unsafe {
       let res = Mpq::new();
@@ -667,6 +685,9 @@ impl Mpq: Num {
       res
     }
   }
+}
+
+impl Mpq: Sub<Mpq, Mpq> {
   pure fn sub(&self, other: &Mpq) -> Mpq {
     unsafe {
       let res = Mpq::new();
@@ -674,6 +695,9 @@ impl Mpq: Num {
       res
     }
   }
+}
+
+impl Mpq: Mul<Mpq, Mpq> {
   pure fn mul(&self, other: &Mpq) -> Mpq {
     unsafe {
       let res = Mpq::new();
@@ -681,10 +705,13 @@ impl Mpq: Num {
       res
     }
   }
+}
+
+impl Mpq: Div<Mpq, Mpq> {
   pure fn div(&self, other: &Mpq) -> Mpq {
     unsafe {
       if __gmpq_cmp_ui(addr_of(&self.mpq), 0, 1) == 0 {
-        die!(~"divide by zero")
+        fail!(~"divide by zero")
       }
 
       let res = Mpq::new();
@@ -692,9 +719,9 @@ impl Mpq: Num {
       res
     }
   }
-  pure fn modulo(&self, _other: &Mpq) -> Mpq {
-    die!(~"not implemented")
-  }
+}
+
+impl Mpq: Neg<Mpq> {
   pure fn neg(&self) -> Mpq {
     unsafe {
       let res = Mpq::new();
@@ -702,8 +729,11 @@ impl Mpq: Num {
       res
     }
   }
+}
+
+impl Mpq: IntConvertible {
   pure fn to_int(&self) -> int {
-    die!(~"not implemented")
+    fail!(~"not implemented")
   }
   static pure fn from_int(&self, other: int) -> Mpq {
     let mut res = Mpq::new();
@@ -842,7 +872,7 @@ impl Mpf: cmp::Ord {
   }
 }
 
-impl Mpf: Num {
+impl Mpf: Add<Mpf, Mpf> {
   pure fn add(&self, other: &Mpf) -> Mpf {
     unsafe {
       let res = Mpf::new(uint::max(self.get_prec() as uint,
@@ -851,6 +881,9 @@ impl Mpf: Num {
       res
     }
   }
+}
+
+impl Mpf: Sub<Mpf, Mpf> {
   pure fn sub(&self, other: &Mpf) -> Mpf {
     unsafe {
       let res = Mpf::new(uint::max(self.get_prec() as uint,
@@ -859,6 +892,9 @@ impl Mpf: Num {
       res
     }
   }
+}
+
+impl Mpf: Mul<Mpf, Mpf> {
   pure fn mul(&self, other: &Mpf) -> Mpf {
     unsafe {
       let res = Mpf::new(uint::max(self.get_prec() as uint,
@@ -867,10 +903,13 @@ impl Mpf: Num {
       res
     }
   }
+}
+
+impl Mpf: Div<Mpf, Mpf> {
   pure fn div(&self, other: &Mpf) -> Mpf {
     unsafe {
       if __gmpf_cmp_ui(addr_of(&self.mpf), 0) == 0 {
-        die!(~"divide by zero")
+        fail!(~"divide by zero")
       }
 
       let res = Mpf::new(uint::max(self.get_prec() as uint,
@@ -879,9 +918,9 @@ impl Mpf: Num {
       res
     }
   }
-  pure fn modulo(&self, _other: &Mpf) -> Mpf {
-    die!(~"not implemented")
-  }
+}
+
+impl Mpf: Neg<Mpf> {
   pure fn neg(&self) -> Mpf {
     unsafe {
       let res = Mpf::new(self.get_prec());
@@ -889,16 +928,11 @@ impl Mpf: Num {
       res
     }
   }
-  pure fn to_int(&self) -> int {
-    die!(~"not implemented")
-  }
-  static pure fn from_int(&self, _other: int) -> Mpf {
-    die!(~"not implemented")
-  }
 }
 
 #[cfg(test)]
 mod test_mpz {
+  use super::*;
   use FromStr::from_str;
 
   #[test]
@@ -987,8 +1021,8 @@ mod test_mpz {
   fn test_div_round() {
     let x: Mpz = from_int(2);
     let y: Mpz = from_int(3);
-    assert (x / y).to_str() == (2 / 3).to_str();
-    assert (x / -y).to_str() == (2 / -3).to_str();
+    assert (x / y).to_str() == (2i / 3).to_str();
+    assert (x / -y).to_str() == (2i / -3).to_str();
   }
 
   #[test]
@@ -1066,8 +1100,8 @@ mod test_mpz {
 
   #[test]
   fn test_compl() {
-    assert from_int::<Mpz>(13).compl().to_str() == (!13).to_str();
-    assert from_int::<Mpz>(-442).compl().to_str() == (!-442).to_str();
+    assert from_int::<Mpz>(13).compl().to_str() == (!13i).to_str();
+    assert from_int::<Mpz>(-442).compl().to_str() == (!-442i).to_str();
   }
 
   #[test]
@@ -1146,6 +1180,8 @@ mod test_mpz {
 
 #[cfg(test)]
 mod test_rand {
+  use super::*;
+
   #[test]
   fn test_randstate() {
     let mut state = RandState::new();
@@ -1161,6 +1197,8 @@ mod test_rand {
 
 #[cfg(test)]
 mod test_mpq {
+  use super::*;
+
   #[test]
   fn test_one() {
     assert One::one::<Mpq>() == from_int(1);
@@ -1182,6 +1220,8 @@ mod test_mpq {
 
 #[cfg(test)]
 mod test_mpf {
+  use super::*;
+
   #[test]
   #[should_fail]
   fn test_div_zero() {
