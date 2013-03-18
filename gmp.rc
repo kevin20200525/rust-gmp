@@ -933,7 +933,6 @@ impl Neg<Mpf> for Mpf {
 #[cfg(test)]
 mod test_mpz {
     use super::*;
-    use FromStr::from_str;
 
     #[test]
     fn test_set() {
@@ -993,9 +992,9 @@ mod test_mpz {
 
     #[test]
     fn test_ord() {
-        let x: Mpz = from_str("40000000000000000000000").unwrap();
-        let y: Mpz = from_str("45000000000000000000000").unwrap();
-        let z: Mpz = from_str("50000000000000000000000").unwrap();
+        let x: Mpz = FromStr::from_str("40000000000000000000000").unwrap();
+        let y: Mpz = FromStr::from_str("45000000000000000000000").unwrap();
+        let z: Mpz = FromStr::from_str("50000000000000000000000").unwrap();
 
         assert x < y && x < z && y < z;
         assert x <= x && x <= y && x <= z && y <= z;
@@ -1033,13 +1032,13 @@ mod test_mpz {
 
     #[test]
     fn test_to_str() {
-        let x: Mpz = from_str("1234567890").unwrap();
+        let x: Mpz = FromStr::from_str("1234567890").unwrap();
         assert x.to_str() == ~"1234567890";
     }
 
     #[test]
     fn test_invalid_str() {
-        assert from_str::<Mpz>("foobar").is_none();
+        assert FromStr::from_str::<Mpz>("foobar").is_none();
     }
 
     #[test]
@@ -1054,7 +1053,7 @@ mod test_mpz {
     fn test_from_int() {
         let x: Mpz = from_int(150);
         assert x.to_str() == ~"150";
-        assert x == from_str("150").unwrap();
+        assert x == FromStr::from_str("150").unwrap();
     }
 
     #[test]
