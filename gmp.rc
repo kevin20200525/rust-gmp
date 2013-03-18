@@ -152,7 +152,7 @@ pub struct Mpz {
     priv mpz: mpz_struct,
 }
 
-impl Mpz: Drop {
+impl Drop for Mpz {
     fn finalize(&self) { unsafe { __gmpz_clear(mut_addr_of(&self.mpz)) } }
 }
 
@@ -293,7 +293,7 @@ impl Mpz {
     }
 }
 
-impl Mpz: Clone {
+impl Clone for Mpz {
     pure fn clone(&self) -> Mpz {
         unsafe {
             let mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
@@ -303,7 +303,7 @@ impl Mpz: Clone {
     }
 }
 
-impl Mpz: cmp::Eq {
+impl cmp::Eq for Mpz {
     pure fn eq(&self, other: &Mpz) -> bool {
         unsafe { __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) == 0 }
     }
@@ -312,7 +312,7 @@ impl Mpz: cmp::Eq {
     }
 }
 
-impl Mpz: cmp::Ord {
+impl cmp::Ord for Mpz {
     pure fn lt(&self, other: &Mpz) -> bool {
         unsafe { __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) < 0 }
     }
@@ -327,7 +327,7 @@ impl Mpz: cmp::Ord {
     }
 }
 
-impl Mpz: Add<Mpz, Mpz> {
+impl Add<Mpz, Mpz> for Mpz {
     pure fn add(&self, other: &Mpz) -> Mpz {
         unsafe {
             let res = Mpz::new();
@@ -337,7 +337,7 @@ impl Mpz: Add<Mpz, Mpz> {
     }
 }
 
-impl Mpz: Sub<Mpz, Mpz> {
+impl Sub<Mpz, Mpz> for Mpz {
     pure fn sub(&self, other: &Mpz) -> Mpz {
         unsafe {
             let res = Mpz::new();
@@ -347,7 +347,7 @@ impl Mpz: Sub<Mpz, Mpz> {
     }
 }
 
-impl Mpz: Mul<Mpz, Mpz> {
+impl Mul<Mpz, Mpz> for Mpz {
     pure fn mul(&self, other: &Mpz) -> Mpz {
         unsafe {
             let res = Mpz::new();
@@ -357,7 +357,7 @@ impl Mpz: Mul<Mpz, Mpz> {
     }
 }
 
-impl Mpz: Div<Mpz, Mpz> {
+impl Div<Mpz, Mpz> for Mpz {
     pure fn div(&self, other: &Mpz) -> Mpz {
         unsafe {
             if __gmpz_cmp_ui(addr_of(&self.mpz), 0) == 0 {
@@ -371,7 +371,7 @@ impl Mpz: Div<Mpz, Mpz> {
     }
 }
 
-impl Mpz: Modulo<Mpz, Mpz> {
+impl Modulo<Mpz, Mpz> for Mpz {
     pure fn modulo(&self, other: &Mpz) -> Mpz {
         unsafe {
             if __gmpz_cmp_ui(addr_of(&self.mpz), 0) == 0 {
@@ -385,7 +385,7 @@ impl Mpz: Modulo<Mpz, Mpz> {
     }
 }
 
-impl Mpz: Neg<Mpz> {
+impl Neg<Mpz> for Mpz {
     pure fn neg(&self) -> Mpz {
         unsafe {
             let res = Mpz::new();
@@ -395,7 +395,7 @@ impl Mpz: Neg<Mpz> {
     }
 }
 
-impl Mpz: IntConvertible {
+impl IntConvertible for Mpz {
     pure fn to_int(&self) -> int {
         fail!(~"not implemented")
     }
@@ -412,7 +412,7 @@ impl Mpz: IntConvertible {
     }
 }
 
-impl Mpz: One {
+impl One for Mpz {
     static pure fn one() -> Mpz {
         unsafe {
             let mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
@@ -422,11 +422,11 @@ impl Mpz: One {
     }
 }
 
-impl Mpz: Zero {
+impl Zero for Mpz {
     static pure fn zero() -> Mpz { Mpz::new() }
 }
 
-impl Mpz: BitAnd<Mpz, Mpz> {
+impl BitAnd<Mpz, Mpz> for Mpz {
     pure fn bitand(&self, other: &Mpz) -> Mpz {
         unsafe {
             let res = Mpz::new();
@@ -436,7 +436,7 @@ impl Mpz: BitAnd<Mpz, Mpz> {
     }
 }
 
-impl Mpz: BitOr<Mpz, Mpz> {
+impl BitOr<Mpz, Mpz> for Mpz {
     pure fn bitor(&self, other: &Mpz) -> Mpz {
         unsafe {
             let res = Mpz::new();
@@ -446,7 +446,7 @@ impl Mpz: BitOr<Mpz, Mpz> {
     }
 }
 
-impl Mpz: BitXor<Mpz, Mpz> {
+impl BitXor<Mpz, Mpz> for Mpz {
     pure fn bitxor(&self, other: &Mpz) -> Mpz {
         unsafe {
             let res = Mpz::new();
@@ -456,7 +456,7 @@ impl Mpz: BitXor<Mpz, Mpz> {
     }
 }
 
-impl Mpz: Shl<c_ulong, Mpz> {
+impl Shl<c_ulong, Mpz> for Mpz {
     pure fn shl(&self, other: &c_ulong) -> Mpz {
         unsafe {
             let res = Mpz::new();
@@ -466,7 +466,7 @@ impl Mpz: Shl<c_ulong, Mpz> {
     }
 }
 
-impl Mpz: Shr<c_ulong, Mpz> {
+impl Shr<c_ulong, Mpz> for Mpz {
     pure fn shr(&self, other: &c_ulong) -> Mpz {
         unsafe {
             let res = Mpz::new();
@@ -476,13 +476,13 @@ impl Mpz: Shr<c_ulong, Mpz> {
     }
 }
 
-impl Mpz : FromStr {
+impl FromStr for Mpz {
     static pure fn from_str(s: &str) -> Option<Mpz> {
         Mpz::from_str_radix(s, 10)
     }
 }
 
-impl Mpz : to_str::ToStr {
+impl to_str::ToStr for Mpz {
     pure fn to_str(&self) -> ~str {
         self.to_str_radix(10)
     }
@@ -492,7 +492,7 @@ pub struct RandState {
     priv state: gmp_randstate_struct,
 }
 
-impl RandState: Drop {
+impl Drop for RandState {
     fn finalize(&self) {
         unsafe { __gmp_randclear(mut_addr_of(&self.state)) }
     }
@@ -562,7 +562,7 @@ impl RandState {
     }
 }
 
-impl RandState: Clone {
+impl Clone for RandState {
     pure fn clone(&self) -> RandState {
         unsafe {
             // TODO: switch to rusti::uninit when implemented
@@ -577,7 +577,7 @@ pub struct Mpq {
     priv mpq: mpq_struct,
 }
 
-impl Mpq: Drop {
+impl Drop for Mpq {
     fn finalize(&self) { unsafe { __gmpq_clear(mut_addr_of(&self.mpq)) } }
 }
 
@@ -643,7 +643,7 @@ impl Mpq {
     }
 }
 
-impl Mpq: Clone {
+impl Clone for Mpq {
     pure fn clone(&self) -> Mpq {
         unsafe {
             let mut res = Mpq::new();
@@ -653,7 +653,7 @@ impl Mpq: Clone {
     }
 }
 
-impl Mpq: cmp::Eq {
+impl cmp::Eq for Mpq {
     pure fn eq(&self, other: &Mpq) -> bool {
         unsafe { __gmpq_equal(addr_of(&self.mpq), addr_of(&other.mpq)) != 0 }
     }
@@ -662,7 +662,7 @@ impl Mpq: cmp::Eq {
     }
 }
 
-impl Mpq: cmp::Ord {
+impl cmp::Ord for Mpq {
     pure fn lt(&self, other: &Mpq) -> bool {
         unsafe { __gmpq_cmp(addr_of(&self.mpq), addr_of(&other.mpq)) < 0 }
     }
@@ -677,7 +677,7 @@ impl Mpq: cmp::Ord {
     }
 }
 
-impl Mpq: Add<Mpq, Mpq> {
+impl Add<Mpq, Mpq> for Mpq {
     pure fn add(&self, other: &Mpq) -> Mpq {
         unsafe {
             let res = Mpq::new();
@@ -687,7 +687,7 @@ impl Mpq: Add<Mpq, Mpq> {
     }
 }
 
-impl Mpq: Sub<Mpq, Mpq> {
+impl Sub<Mpq, Mpq> for Mpq {
     pure fn sub(&self, other: &Mpq) -> Mpq {
         unsafe {
             let res = Mpq::new();
@@ -697,7 +697,7 @@ impl Mpq: Sub<Mpq, Mpq> {
     }
 }
 
-impl Mpq: Mul<Mpq, Mpq> {
+impl Mul<Mpq, Mpq> for Mpq {
     pure fn mul(&self, other: &Mpq) -> Mpq {
         unsafe {
             let res = Mpq::new();
@@ -707,7 +707,7 @@ impl Mpq: Mul<Mpq, Mpq> {
     }
 }
 
-impl Mpq: Div<Mpq, Mpq> {
+impl Div<Mpq, Mpq> for Mpq {
     pure fn div(&self, other: &Mpq) -> Mpq {
         unsafe {
             if __gmpq_cmp_ui(addr_of(&self.mpq), 0, 1) == 0 {
@@ -721,7 +721,7 @@ impl Mpq: Div<Mpq, Mpq> {
     }
 }
 
-impl Mpq: Neg<Mpq> {
+impl Neg<Mpq> for Mpq {
     pure fn neg(&self) -> Mpq {
         unsafe {
             let res = Mpq::new();
@@ -731,7 +731,7 @@ impl Mpq: Neg<Mpq> {
     }
 }
 
-impl Mpq: IntConvertible {
+impl IntConvertible for Mpq {
     pure fn to_int(&self) -> int {
         fail!(~"not implemented")
     }
@@ -742,7 +742,7 @@ impl Mpq: IntConvertible {
     }
 }
 
-impl Mpq: One {
+impl One for Mpq {
     static pure fn one() -> Mpq {
         let res = Mpq::new();
         unsafe { __gmpq_set_ui(mut_addr_of(&res.mpq), 1, 1) } // purity
@@ -750,7 +750,7 @@ impl Mpq: One {
     }
 }
 
-impl Mpq: Zero {
+impl Zero for Mpq {
     static pure fn zero() -> Mpq { Mpq::new() }
 }
 
@@ -758,7 +758,7 @@ pub struct Mpf {
     priv mpf: mpf_struct,
 }
 
-impl Mpf: Drop {
+impl Drop for Mpf {
     fn finalize(&self) { unsafe { __gmpf_clear(mut_addr_of(&self.mpf)) } }
 }
 
@@ -825,7 +825,7 @@ impl Mpf {
     }
 }
 
-impl Mpf: Clone {
+impl Clone for Mpf {
     pure fn clone(&self) -> Mpf {
         unsafe {
             let mpf = rusti::init(); // TODO: switch to rusti::uninit when implemented
@@ -835,7 +835,7 @@ impl Mpf: Clone {
     }
 }
 
-impl Mpf: cmp::Eq {
+impl cmp::Eq for Mpf {
     pure fn eq(&self, other: &Mpf) -> bool {
         unsafe { __gmpf_cmp(addr_of(&self.mpf), addr_of(&other.mpf)) == 0 }
     }
@@ -846,7 +846,7 @@ impl Mpf: cmp::Eq {
 
 const fuzzy_epsilon: c_double = 1.0e-6;
 
-impl Mpf: std::cmp::FuzzyEq<Mpf> {
+impl std::cmp::FuzzyEq<Mpf> for Mpf {
     pure fn fuzzy_eq(&self, other: &Mpf) -> bool {
         let diff = self.reldiff(other);
         unsafe { __gmpf_cmp_d(addr_of(&diff.mpf), fuzzy_epsilon) < 0 }
@@ -857,7 +857,7 @@ impl Mpf: std::cmp::FuzzyEq<Mpf> {
     }
 }
 
-impl Mpf: cmp::Ord {
+impl cmp::Ord for Mpf {
     pure fn lt(&self, other: &Mpf) -> bool {
         unsafe { __gmpf_cmp(addr_of(&self.mpf), addr_of(&other.mpf)) < 0 }
     }
@@ -872,7 +872,7 @@ impl Mpf: cmp::Ord {
     }
 }
 
-impl Mpf: Add<Mpf, Mpf> {
+impl Add<Mpf, Mpf> for Mpf {
     pure fn add(&self, other: &Mpf) -> Mpf {
         unsafe {
             let res = Mpf::new(uint::max(self.get_prec() as uint,
@@ -883,7 +883,7 @@ impl Mpf: Add<Mpf, Mpf> {
     }
 }
 
-impl Mpf: Sub<Mpf, Mpf> {
+impl Sub<Mpf, Mpf> for Mpf {
     pure fn sub(&self, other: &Mpf) -> Mpf {
         unsafe {
             let res = Mpf::new(uint::max(self.get_prec() as uint,
@@ -894,7 +894,7 @@ impl Mpf: Sub<Mpf, Mpf> {
     }
 }
 
-impl Mpf: Mul<Mpf, Mpf> {
+impl Mul<Mpf, Mpf> for Mpf {
     pure fn mul(&self, other: &Mpf) -> Mpf {
         unsafe {
             let res = Mpf::new(uint::max(self.get_prec() as uint,
@@ -905,7 +905,7 @@ impl Mpf: Mul<Mpf, Mpf> {
     }
 }
 
-impl Mpf: Div<Mpf, Mpf> {
+impl Div<Mpf, Mpf> for Mpf {
     pure fn div(&self, other: &Mpf) -> Mpf {
         unsafe {
             if __gmpf_cmp_ui(addr_of(&self.mpf), 0) == 0 {
@@ -920,7 +920,7 @@ impl Mpf: Div<Mpf, Mpf> {
     }
 }
 
-impl Mpf: Neg<Mpf> {
+impl Neg<Mpf> for Mpf {
     pure fn neg(&self) -> Mpf {
         unsafe {
             let res = Mpf::new(self.get_prec());
