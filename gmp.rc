@@ -933,6 +933,10 @@ impl Neg<Mpf> for Mpf {
 #[cfg(test)]
 mod test_mpz {
     use super::*;
+    use core::num::IntConvertible::from_int;
+    use core::from_str::FromStr;
+    use core::num::{One, Zero};
+    use core::libc::c_ulong;
 
     #[test]
     fn test_set() {
@@ -1180,6 +1184,7 @@ mod test_mpz {
 #[cfg(test)]
 mod test_rand {
     use super::*;
+    use core::num::IntConvertible::from_int;
 
     #[test]
     fn test_randstate() {
@@ -1197,6 +1202,8 @@ mod test_rand {
 #[cfg(test)]
 mod test_mpq {
     use super::*;
+    use core::num::One;
+    use core::num::IntConvertible::from_int;
 
     #[test]
     fn test_one() {
