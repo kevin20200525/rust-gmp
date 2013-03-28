@@ -158,7 +158,7 @@ impl Drop for Mpz {
 }
 
 impl Mpz {
-    static fn new() -> Mpz {
+    fn new() -> Mpz {
         unsafe {
             let mut mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
             __gmpz_init(&mut mpz);
@@ -166,7 +166,7 @@ impl Mpz {
         }
     }
 
-    static fn new_reserve(n: c_ulong) -> Mpz {
+    fn new_reserve(n: c_ulong) -> Mpz {
         unsafe {
             let mut mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
             __gmpz_init2(&mut mpz, n);
@@ -180,7 +180,7 @@ impl Mpz {
         }
     }
 
-    static fn from_str_radix(s: &str, base: uint) -> Option<Mpz> {
+    fn from_str_radix(s: &str, base: uint) -> Option<Mpz> {
         unsafe {
             assert base == 0 || (base >= 2 && base <= 62);
             let mut mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
@@ -400,7 +400,7 @@ impl IntConvertible for Mpz {
     fn to_int(&self) -> int {
         fail!(~"not implemented")
     }
-    static fn from_int(&self, other: int) -> Mpz {
+    fn from_int(other: int) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_import(&mut res.mpz, 1, 1, int::bytes as size_t, 0, 0,
@@ -415,7 +415,7 @@ impl IntConvertible for Mpz {
 }
 
 impl One for Mpz {
-    static fn one() -> Mpz {
+    fn one() -> Mpz {
         unsafe {
             let mut mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
             __gmpz_init_set_ui(&mut mpz, 1);
@@ -425,7 +425,7 @@ impl One for Mpz {
 }
 
 impl Zero for Mpz {
-    static fn zero() -> Mpz { Mpz::new() }
+    fn zero() -> Mpz { Mpz::new() }
 }
 
 impl BitAnd<Mpz, Mpz> for Mpz {
@@ -479,7 +479,7 @@ impl Shr<c_ulong, Mpz> for Mpz {
 }
 
 impl FromStr for Mpz {
-    static fn from_str(s: &str) -> Option<Mpz> {
+    fn from_str(s: &str) -> Option<Mpz> {
         Mpz::from_str_radix(s, 10)
     }
 }
@@ -502,7 +502,7 @@ impl Drop for RandState {
 }
 
 impl RandState {
-    static fn new() -> RandState {
+    fn new() -> RandState {
         unsafe {
             // TODO: switch to rusti::uninit when implemented
             let mut state: gmp_randstate_struct = rusti::init();
@@ -511,7 +511,7 @@ impl RandState {
         }
     }
 
-    static fn new_mt() -> RandState {
+    fn new_mt() -> RandState {
         unsafe {
             // TODO: switch to rusti::uninit when implemented
             let mut state: gmp_randstate_struct = rusti::init();
@@ -520,7 +520,7 @@ impl RandState {
         }
     }
 
-    static fn new_lc_2exp(a: Mpz, c: c_ulong, m2exp: c_ulong) -> RandState {
+    fn new_lc_2exp(a: Mpz, c: c_ulong, m2exp: c_ulong) -> RandState {
         unsafe {
             // TODO: switch to rusti::uninit when implemented
             let mut state: gmp_randstate_struct = rusti::init();
@@ -529,7 +529,7 @@ impl RandState {
         }
     }
 
-    static fn new_lc_2exp_size(size: c_ulong) -> RandState {
+    fn new_lc_2exp_size(size: c_ulong) -> RandState {
         unsafe {
             // TODO: switch to rusti::uninit when implemented
             let mut state: gmp_randstate_struct = rusti::init();
@@ -586,7 +586,7 @@ impl Drop for Mpq {
 }
 
 impl Mpq {
-    static fn new() -> Mpq {
+    fn new() -> Mpq {
         unsafe {
             let mut mpq = rusti::init(); // TODO: switch to rusti::uninit when implemented
             __gmpq_init(&mut mpq);
@@ -739,7 +739,7 @@ impl IntConvertible for Mpq {
     fn to_int(&self) -> int {
         fail!(~"not implemented")
     }
-    static fn from_int(&self, other: int) -> Mpq {
+    fn from_int(other: int) -> Mpq {
         let mut res = Mpq::new();
         unsafe { res.set_z(&from_int(other)); } // purity workaround
         res
@@ -747,7 +747,7 @@ impl IntConvertible for Mpq {
 }
 
 impl One for Mpq {
-    static fn one() -> Mpq {
+    fn one() -> Mpq {
         let mut res = Mpq::new();
         unsafe { __gmpq_set_ui(&mut res.mpq, 1, 1) } // purity
         res
@@ -755,7 +755,7 @@ impl One for Mpq {
 }
 
 impl Zero for Mpq {
-    static fn zero() -> Mpq { Mpq::new() }
+    fn zero() -> Mpq { Mpq::new() }
 }
 
 pub struct Mpf {
@@ -768,7 +768,7 @@ impl Drop for Mpf {
 }
 
 impl Mpf {
-    static fn new(precision: c_ulong) -> Mpf {
+    fn new(precision: c_ulong) -> Mpf {
         unsafe {
             let mut mpf = rusti::init(); // TODO: switch to rusti::uninit when implemented
             __gmpf_init2(&mut mpf, precision);
