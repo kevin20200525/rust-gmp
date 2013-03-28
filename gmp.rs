@@ -69,9 +69,9 @@ extern "C" mod gmp {
     fn __gmpz_set(rop: mpz_ptr, op: mpz_srcptr);
     fn __gmpz_set_str(rop: mpz_ptr, str: *c_char, base: c_int) -> c_int;
     fn __gmpz_get_str(str: *c_char, base: c_int, op: mpz_srcptr) -> *c_char;
-    pure fn __gmpz_sizeinbase(op: mpz_srcptr, base: c_int) -> size_t;
-    pure fn __gmpz_cmp(op1: mpz_srcptr, op2: mpz_srcptr) -> c_int;
-    pure fn __gmpz_cmp_ui(op1: mpz_srcptr, op2: c_ulong) -> c_int;
+    fn __gmpz_sizeinbase(op: mpz_srcptr, base: c_int) -> size_t;
+    fn __gmpz_cmp(op1: mpz_srcptr, op2: mpz_srcptr) -> c_int;
+    fn __gmpz_cmp_ui(op1: mpz_srcptr, op2: c_ulong) -> c_int;
     fn __gmpz_add(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
     fn __gmpz_sub(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
     fn __gmpz_mul(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
@@ -85,12 +85,12 @@ extern "C" mod gmp {
     fn __gmpz_ior(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
     fn __gmpz_xor(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
     fn __gmpz_com(rop: mpz_ptr, op: mpz_srcptr);
-    pure fn __gmpz_popcount(op: mpz_srcptr) -> mp_bitcnt_t;
-    pure fn __gmpz_hamdist(op1: mpz_srcptr, op2: mpz_srcptr) -> mp_bitcnt_t;
+    fn __gmpz_popcount(op: mpz_srcptr) -> mp_bitcnt_t;
+    fn __gmpz_hamdist(op1: mpz_srcptr, op2: mpz_srcptr) -> mp_bitcnt_t;
     fn __gmpz_setbit(rop: mpz_ptr, bit_index: mp_bitcnt_t);
     fn __gmpz_clrbit(rop: mpz_ptr, bit_index: mp_bitcnt_t);
     fn __gmpz_combit(rop: mpz_ptr, bit_index: mp_bitcnt_t);
-    pure fn __gmpz_tstbit(rop: mpz_srcptr, bit_index: mp_bitcnt_t) -> c_int;
+    fn __gmpz_tstbit(rop: mpz_srcptr, bit_index: mp_bitcnt_t) -> c_int;
     fn __gmpz_gcd(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
     fn __gmpz_lcm(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
     fn __gmpz_invert(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr) -> c_int;
@@ -113,9 +113,9 @@ extern "C" mod gmp {
     fn __gmpq_set_ui(rop: mpq_ptr, op1: c_ulong, op2: c_ulong);
     fn __gmpq_set_d(rop: mpq_ptr, op: c_double);
     fn __gmpq_set_f(rop: mpq_ptr, op: mpf_srcptr);
-    pure fn __gmpq_cmp(op1: mpq_srcptr, op2: mpq_srcptr) -> c_int;
-    pure fn __gmpq_cmp_ui(op1: mpq_srcptr, num2: c_ulong, den2: c_ulong) -> c_int;
-    pure fn __gmpq_equal(op1: mpq_srcptr, op2: mpq_srcptr) -> c_int;
+    fn __gmpq_cmp(op1: mpq_srcptr, op2: mpq_srcptr) -> c_int;
+    fn __gmpq_cmp_ui(op1: mpq_srcptr, num2: c_ulong, den2: c_ulong) -> c_int;
+    fn __gmpq_equal(op1: mpq_srcptr, op2: mpq_srcptr) -> c_int;
     fn __gmpq_add(sum: mpq_ptr, addend1: mpq_srcptr, addend2: mpq_srcptr);
     fn __gmpq_sub(difference: mpq_ptr, minuend: mpq_srcptr, subtrahend: mpq_srcptr);
     fn __gmpq_mul(product: mpq_ptr, multiplier: mpq_srcptr, multiplicand: mpq_srcptr);
@@ -128,12 +128,12 @@ extern "C" mod gmp {
     fn __gmpf_init2(x: mpf_ptr, prec: mp_bitcnt_t);
     fn __gmpf_init_set(rop: mpf_ptr, op: mpf_srcptr);
     fn __gmpf_clear(x: mpf_ptr);
-    pure fn __gmpf_get_prec(op: mpf_srcptr) -> mp_bitcnt_t;
+    fn __gmpf_get_prec(op: mpf_srcptr) -> mp_bitcnt_t;
     fn __gmpf_set_prec(rop: mpf_srcptr, prec: mp_bitcnt_t);
     fn __gmpf_set(rop: mpf_ptr, op: mpf_srcptr);
-    pure fn __gmpf_cmp(op1: mpf_srcptr, op2: mpf_srcptr) -> c_int;
-    pure fn __gmpf_cmp_d(op1: mpf_srcptr, op2: c_double) -> c_int;
-    pure fn __gmpf_cmp_ui(op1: mpf_srcptr, op2: c_ulong) -> c_int;
+    fn __gmpf_cmp(op1: mpf_srcptr, op2: mpf_srcptr) -> c_int;
+    fn __gmpf_cmp_d(op1: mpf_srcptr, op2: c_double) -> c_int;
+    fn __gmpf_cmp_ui(op1: mpf_srcptr, op2: c_ulong) -> c_int;
     fn __gmpf_reldiff(rop: mpf_ptr, op1: mpf_srcptr, op2: mpf_srcptr);
     fn __gmpf_add(rop: mpf_ptr, op1: mpf_srcptr, op2: mpf_srcptr);
     fn __gmpf_sub(rop: mpf_ptr, op1: mpf_srcptr, op2: mpf_srcptr);
@@ -158,7 +158,7 @@ impl Drop for Mpz {
 }
 
 impl Mpz {
-    static pure fn new() -> Mpz {
+    static fn new() -> Mpz {
         unsafe {
             let mut mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
             __gmpz_init(&mut mpz);
@@ -166,7 +166,7 @@ impl Mpz {
         }
     }
 
-    static pure fn new_reserve(n: c_ulong) -> Mpz {
+    static fn new_reserve(n: c_ulong) -> Mpz {
         unsafe {
             let mut mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
             __gmpz_init2(&mut mpz, n);
@@ -180,7 +180,7 @@ impl Mpz {
         }
     }
 
-    static pure fn from_str_radix(s: &str, base: uint) -> Option<Mpz> {
+    static fn from_str_radix(s: &str, base: uint) -> Option<Mpz> {
         unsafe {
             assert base == 0 || (base >= 2 && base <= 62);
             let mut mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
@@ -209,7 +209,7 @@ impl Mpz {
     }
 
     // TODO: fail on an invalid base
-    pure fn to_str_radix(&self, base: int) -> ~str {
+    fn to_str_radix(&self, base: int) -> ~str {
         unsafe {
             let len = __gmpz_sizeinbase(addr_of(&self.mpz), base as c_int) as uint + 2;
             let dst = vec::from_elem(len, '0');
@@ -220,11 +220,11 @@ impl Mpz {
         }
     }
 
-    pure fn bit_length(&self) -> uint {
+    fn bit_length(&self) -> uint {
         unsafe { __gmpz_sizeinbase(addr_of(&self.mpz), 2) as uint }
     }
 
-    pure fn compl(&self) -> Mpz {
+    fn compl(&self) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_com(&mut res.mpz, addr_of(&self.mpz));
@@ -232,7 +232,7 @@ impl Mpz {
         }
     }
 
-    pure fn abs(&self) -> Mpz {
+    fn abs(&self) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_abs(&mut res.mpz, addr_of(&self.mpz));
@@ -240,7 +240,7 @@ impl Mpz {
         }
     }
 
-    pure fn gcd(&self, other: &Mpz) -> Mpz {
+    fn gcd(&self, other: &Mpz) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_gcd(&mut res.mpz, addr_of(&self.mpz), addr_of(&other.mpz));
@@ -248,7 +248,7 @@ impl Mpz {
         }
     }
 
-    pure fn lcm(&self, other: &Mpz) -> Mpz {
+    fn lcm(&self, other: &Mpz) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_lcm(&mut res.mpz, addr_of(&self.mpz), addr_of(&other.mpz));
@@ -257,7 +257,7 @@ impl Mpz {
     }
 
     // TODO: handle a zero modulo
-    pure fn invert(&self, modulo: &Mpz) -> Option<Mpz> {
+    fn invert(&self, modulo: &Mpz) -> Option<Mpz> {
         unsafe {
             let mut res = Mpz::new();
             if __gmpz_invert(&mut res.mpz, addr_of(&self.mpz),
@@ -269,11 +269,11 @@ impl Mpz {
         }
     }
 
-    pure fn popcount(&self) -> uint {
+    fn popcount(&self) -> uint {
         unsafe { __gmpz_popcount(addr_of(&self.mpz)) as uint }
     }
 
-    pure fn hamdist(&self, other: &Mpz) -> uint {
+    fn hamdist(&self, other: &Mpz) -> uint {
         unsafe { __gmpz_hamdist(addr_of(&self.mpz), addr_of(&other.mpz)) as uint }
     }
 
@@ -289,13 +289,13 @@ impl Mpz {
         unsafe { __gmpz_combit(&mut self.mpz, bit_index) }
     }
 
-    pure fn tstbit(&self, bit_index: c_ulong) -> bool {
+    fn tstbit(&self, bit_index: c_ulong) -> bool {
         unsafe { __gmpz_tstbit(&self.mpz, bit_index) == 1 }
     }
 }
 
 impl Clone for Mpz {
-    pure fn clone(&self) -> Mpz {
+    fn clone(&self) -> Mpz {
         unsafe {
             let mut mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
             __gmpz_init_set(&mut mpz, addr_of(&self.mpz));
@@ -305,31 +305,31 @@ impl Clone for Mpz {
 }
 
 impl cmp::Eq for Mpz {
-    pure fn eq(&self, other: &Mpz) -> bool {
+    fn eq(&self, other: &Mpz) -> bool {
         unsafe { __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) == 0 }
     }
-    pure fn ne(&self, other: &Mpz) -> bool {
+    fn ne(&self, other: &Mpz) -> bool {
         unsafe { __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) != 0 }
     }
 }
 
 impl cmp::Ord for Mpz {
-    pure fn lt(&self, other: &Mpz) -> bool {
+    fn lt(&self, other: &Mpz) -> bool {
         unsafe { __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) < 0 }
     }
-    pure fn le(&self, other: &Mpz) -> bool {
+    fn le(&self, other: &Mpz) -> bool {
         unsafe { __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) <= 0 }
     }
-    pure fn gt(&self, other: &Mpz) -> bool {
+    fn gt(&self, other: &Mpz) -> bool {
         unsafe { __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) > 0 }
     }
-    pure fn ge(&self, other: &Mpz) -> bool {
+    fn ge(&self, other: &Mpz) -> bool {
         unsafe { __gmpz_cmp(addr_of(&self.mpz), addr_of(&other.mpz)) >= 0 }
     }
 }
 
 impl Add<Mpz, Mpz> for Mpz {
-    pure fn add(&self, other: &Mpz) -> Mpz {
+    fn add(&self, other: &Mpz) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_add(&mut res.mpz, addr_of(&self.mpz), addr_of(&other.mpz));
@@ -339,7 +339,7 @@ impl Add<Mpz, Mpz> for Mpz {
 }
 
 impl Sub<Mpz, Mpz> for Mpz {
-    pure fn sub(&self, other: &Mpz) -> Mpz {
+    fn sub(&self, other: &Mpz) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_sub(&mut res.mpz, addr_of(&self.mpz), addr_of(&other.mpz));
@@ -349,7 +349,7 @@ impl Sub<Mpz, Mpz> for Mpz {
 }
 
 impl Mul<Mpz, Mpz> for Mpz {
-    pure fn mul(&self, other: &Mpz) -> Mpz {
+    fn mul(&self, other: &Mpz) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_mul(&mut res.mpz, addr_of(&self.mpz), addr_of(&other.mpz));
@@ -359,7 +359,7 @@ impl Mul<Mpz, Mpz> for Mpz {
 }
 
 impl Div<Mpz, Mpz> for Mpz {
-    pure fn div(&self, other: &Mpz) -> Mpz {
+    fn div(&self, other: &Mpz) -> Mpz {
         unsafe {
             if __gmpz_cmp_ui(addr_of(&self.mpz), 0) == 0 {
                 fail!(~"divide by zero")
@@ -373,7 +373,7 @@ impl Div<Mpz, Mpz> for Mpz {
 }
 
 impl Modulo<Mpz, Mpz> for Mpz {
-    pure fn modulo(&self, other: &Mpz) -> Mpz {
+    fn modulo(&self, other: &Mpz) -> Mpz {
         unsafe {
             if __gmpz_cmp_ui(addr_of(&self.mpz), 0) == 0 {
                 fail!(~"divide by zero")
@@ -387,7 +387,7 @@ impl Modulo<Mpz, Mpz> for Mpz {
 }
 
 impl Neg<Mpz> for Mpz {
-    pure fn neg(&self) -> Mpz {
+    fn neg(&self) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_neg(&mut res.mpz, addr_of(&self.mpz));
@@ -397,10 +397,10 @@ impl Neg<Mpz> for Mpz {
 }
 
 impl IntConvertible for Mpz {
-    pure fn to_int(&self) -> int {
+    fn to_int(&self) -> int {
         fail!(~"not implemented")
     }
-    static pure fn from_int(&self, other: int) -> Mpz {
+    static fn from_int(&self, other: int) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_import(&mut res.mpz, 1, 1, int::bytes as size_t, 0, 0,
@@ -415,7 +415,7 @@ impl IntConvertible for Mpz {
 }
 
 impl One for Mpz {
-    static pure fn one() -> Mpz {
+    static fn one() -> Mpz {
         unsafe {
             let mut mpz = rusti::init(); // TODO: switch to rusti::uninit when implemented
             __gmpz_init_set_ui(&mut mpz, 1);
@@ -425,11 +425,11 @@ impl One for Mpz {
 }
 
 impl Zero for Mpz {
-    static pure fn zero() -> Mpz { Mpz::new() }
+    static fn zero() -> Mpz { Mpz::new() }
 }
 
 impl BitAnd<Mpz, Mpz> for Mpz {
-    pure fn bitand(&self, other: &Mpz) -> Mpz {
+    fn bitand(&self, other: &Mpz) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_and(&mut res.mpz, addr_of(&self.mpz), addr_of(&other.mpz));
@@ -439,7 +439,7 @@ impl BitAnd<Mpz, Mpz> for Mpz {
 }
 
 impl BitOr<Mpz, Mpz> for Mpz {
-    pure fn bitor(&self, other: &Mpz) -> Mpz {
+    fn bitor(&self, other: &Mpz) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_ior(&mut res.mpz, addr_of(&self.mpz), addr_of(&other.mpz));
@@ -449,7 +449,7 @@ impl BitOr<Mpz, Mpz> for Mpz {
 }
 
 impl BitXor<Mpz, Mpz> for Mpz {
-    pure fn bitxor(&self, other: &Mpz) -> Mpz {
+    fn bitxor(&self, other: &Mpz) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_xor(&mut res.mpz, addr_of(&self.mpz), addr_of(&other.mpz));
@@ -459,7 +459,7 @@ impl BitXor<Mpz, Mpz> for Mpz {
 }
 
 impl Shl<c_ulong, Mpz> for Mpz {
-    pure fn shl(&self, other: &c_ulong) -> Mpz {
+    fn shl(&self, other: &c_ulong) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_mul_2exp(&mut res.mpz, addr_of(&self.mpz), *other);
@@ -469,7 +469,7 @@ impl Shl<c_ulong, Mpz> for Mpz {
 }
 
 impl Shr<c_ulong, Mpz> for Mpz {
-    pure fn shr(&self, other: &c_ulong) -> Mpz {
+    fn shr(&self, other: &c_ulong) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_fdiv_q_2exp(&mut res.mpz, addr_of(&self.mpz), *other);
@@ -479,13 +479,13 @@ impl Shr<c_ulong, Mpz> for Mpz {
 }
 
 impl FromStr for Mpz {
-    static pure fn from_str(s: &str) -> Option<Mpz> {
+    static fn from_str(s: &str) -> Option<Mpz> {
         Mpz::from_str_radix(s, 10)
     }
 }
 
 impl to_str::ToStr for Mpz {
-    pure fn to_str(&self) -> ~str {
+    fn to_str(&self) -> ~str {
         self.to_str_radix(10)
     }
 }
@@ -502,7 +502,7 @@ impl Drop for RandState {
 }
 
 impl RandState {
-    static pure fn new() -> RandState {
+    static fn new() -> RandState {
         unsafe {
             // TODO: switch to rusti::uninit when implemented
             let mut state: gmp_randstate_struct = rusti::init();
@@ -511,7 +511,7 @@ impl RandState {
         }
     }
 
-    static pure fn new_mt() -> RandState {
+    static fn new_mt() -> RandState {
         unsafe {
             // TODO: switch to rusti::uninit when implemented
             let mut state: gmp_randstate_struct = rusti::init();
@@ -520,7 +520,7 @@ impl RandState {
         }
     }
 
-    static pure fn new_lc_2exp(a: Mpz, c: c_ulong, m2exp: c_ulong) -> RandState {
+    static fn new_lc_2exp(a: Mpz, c: c_ulong, m2exp: c_ulong) -> RandState {
         unsafe {
             // TODO: switch to rusti::uninit when implemented
             let mut state: gmp_randstate_struct = rusti::init();
@@ -529,7 +529,7 @@ impl RandState {
         }
     }
 
-    static pure fn new_lc_2exp_size(size: c_ulong) -> RandState {
+    static fn new_lc_2exp_size(size: c_ulong) -> RandState {
         unsafe {
             // TODO: switch to rusti::uninit when implemented
             let mut state: gmp_randstate_struct = rusti::init();
@@ -566,7 +566,7 @@ impl RandState {
 }
 
 impl Clone for RandState {
-    pure fn clone(&self) -> RandState {
+    fn clone(&self) -> RandState {
         unsafe {
             // TODO: switch to rusti::uninit when implemented
             let mut state: gmp_randstate_struct = rusti::init();
@@ -586,7 +586,7 @@ impl Drop for Mpq {
 }
 
 impl Mpq {
-    static pure fn new() -> Mpq {
+    static fn new() -> Mpq {
         unsafe {
             let mut mpq = rusti::init(); // TODO: switch to rusti::uninit when implemented
             __gmpq_init(&mut mpq);
@@ -610,7 +610,7 @@ impl Mpq {
         unsafe { __gmpq_set_f(&mut self.mpq, addr_of(&other.mpf)) }
     }
 
-    pure fn get_num(&self) -> Mpz {
+    fn get_num(&self) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpq_get_num(&mut res.mpz, addr_of(&self.mpq));
@@ -618,7 +618,7 @@ impl Mpq {
         }
     }
 
-    pure fn get_den(&self) -> Mpz {
+    fn get_den(&self) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpq_get_den(&mut res.mpz, addr_of(&self.mpq));
@@ -626,7 +626,7 @@ impl Mpq {
         }
     }
 
-    pure fn abs(&self) -> Mpq {
+    fn abs(&self) -> Mpq {
         unsafe {
             let mut res = Mpq::new();
             __gmpq_abs(&mut res.mpq, addr_of(&self.mpq));
@@ -634,7 +634,7 @@ impl Mpq {
         }
     }
 
-    pure fn invert(&self) -> Mpq {
+    fn invert(&self) -> Mpq {
         unsafe {
             if __gmpq_cmp_ui(addr_of(&self.mpq), 0, 1) == 0 {
                 fail!(~"divide by zero")
@@ -648,7 +648,7 @@ impl Mpq {
 }
 
 impl Clone for Mpq {
-    pure fn clone(&self) -> Mpq {
+    fn clone(&self) -> Mpq {
         unsafe {
             let mut res = Mpq::new();
             res.set(self);
@@ -658,31 +658,31 @@ impl Clone for Mpq {
 }
 
 impl cmp::Eq for Mpq {
-    pure fn eq(&self, other: &Mpq) -> bool {
+    fn eq(&self, other: &Mpq) -> bool {
         unsafe { __gmpq_equal(addr_of(&self.mpq), addr_of(&other.mpq)) != 0 }
     }
-    pure fn ne(&self, other: &Mpq) -> bool {
+    fn ne(&self, other: &Mpq) -> bool {
         unsafe { __gmpq_equal(addr_of(&self.mpq), addr_of(&other.mpq)) == 0 }
     }
 }
 
 impl cmp::Ord for Mpq {
-    pure fn lt(&self, other: &Mpq) -> bool {
+    fn lt(&self, other: &Mpq) -> bool {
         unsafe { __gmpq_cmp(addr_of(&self.mpq), addr_of(&other.mpq)) < 0 }
     }
-    pure fn le(&self, other: &Mpq) -> bool {
+    fn le(&self, other: &Mpq) -> bool {
         unsafe { __gmpq_cmp(addr_of(&self.mpq), addr_of(&other.mpq)) <= 0 }
     }
-    pure fn gt(&self, other: &Mpq) -> bool {
+    fn gt(&self, other: &Mpq) -> bool {
         unsafe { __gmpq_cmp(addr_of(&self.mpq), addr_of(&other.mpq)) > 0 }
     }
-    pure fn ge(&self, other: &Mpq) -> bool {
+    fn ge(&self, other: &Mpq) -> bool {
         unsafe { __gmpq_cmp(addr_of(&self.mpq), addr_of(&other.mpq)) >= 0 }
     }
 }
 
 impl Add<Mpq, Mpq> for Mpq {
-    pure fn add(&self, other: &Mpq) -> Mpq {
+    fn add(&self, other: &Mpq) -> Mpq {
         unsafe {
             let mut res = Mpq::new();
             __gmpq_add(&mut res.mpq, addr_of(&self.mpq), addr_of(&other.mpq));
@@ -692,7 +692,7 @@ impl Add<Mpq, Mpq> for Mpq {
 }
 
 impl Sub<Mpq, Mpq> for Mpq {
-    pure fn sub(&self, other: &Mpq) -> Mpq {
+    fn sub(&self, other: &Mpq) -> Mpq {
         unsafe {
             let mut res = Mpq::new();
             __gmpq_sub(&mut res.mpq, addr_of(&self.mpq), addr_of(&other.mpq));
@@ -702,7 +702,7 @@ impl Sub<Mpq, Mpq> for Mpq {
 }
 
 impl Mul<Mpq, Mpq> for Mpq {
-    pure fn mul(&self, other: &Mpq) -> Mpq {
+    fn mul(&self, other: &Mpq) -> Mpq {
         unsafe {
             let mut res = Mpq::new();
             __gmpq_mul(&mut res.mpq, addr_of(&self.mpq), addr_of(&other.mpq));
@@ -712,7 +712,7 @@ impl Mul<Mpq, Mpq> for Mpq {
 }
 
 impl Div<Mpq, Mpq> for Mpq {
-    pure fn div(&self, other: &Mpq) -> Mpq {
+    fn div(&self, other: &Mpq) -> Mpq {
         unsafe {
             if __gmpq_cmp_ui(addr_of(&self.mpq), 0, 1) == 0 {
                 fail!(~"divide by zero")
@@ -726,7 +726,7 @@ impl Div<Mpq, Mpq> for Mpq {
 }
 
 impl Neg<Mpq> for Mpq {
-    pure fn neg(&self) -> Mpq {
+    fn neg(&self) -> Mpq {
         unsafe {
             let mut res = Mpq::new();
             __gmpq_neg(&mut res.mpq, addr_of(&self.mpq));
@@ -736,10 +736,10 @@ impl Neg<Mpq> for Mpq {
 }
 
 impl IntConvertible for Mpq {
-    pure fn to_int(&self) -> int {
+    fn to_int(&self) -> int {
         fail!(~"not implemented")
     }
-    static pure fn from_int(&self, other: int) -> Mpq {
+    static fn from_int(&self, other: int) -> Mpq {
         let mut res = Mpq::new();
         unsafe { res.set_z(&from_int(other)); } // purity workaround
         res
@@ -747,7 +747,7 @@ impl IntConvertible for Mpq {
 }
 
 impl One for Mpq {
-    static pure fn one() -> Mpq {
+    static fn one() -> Mpq {
         let mut res = Mpq::new();
         unsafe { __gmpq_set_ui(&mut res.mpq, 1, 1) } // purity
         res
@@ -755,7 +755,7 @@ impl One for Mpq {
 }
 
 impl Zero for Mpq {
-    static pure fn zero() -> Mpq { Mpq::new() }
+    static fn zero() -> Mpq { Mpq::new() }
 }
 
 pub struct Mpf {
@@ -768,7 +768,7 @@ impl Drop for Mpf {
 }
 
 impl Mpf {
-    static pure fn new(precision: c_ulong) -> Mpf {
+    static fn new(precision: c_ulong) -> Mpf {
         unsafe {
             let mut mpf = rusti::init(); // TODO: switch to rusti::uninit when implemented
             __gmpf_init2(&mut mpf, precision);
@@ -780,7 +780,7 @@ impl Mpf {
         unsafe { __gmpf_set(&mut self.mpf, addr_of(&other.mpf)) }
     }
 
-    pure fn get_prec(&self) -> c_ulong {
+    fn get_prec(&self) -> c_ulong {
         unsafe { __gmpf_get_prec(addr_of(&self.mpf)) }
     }
 
@@ -788,7 +788,7 @@ impl Mpf {
         unsafe { __gmpf_set_prec(&mut self.mpf, precision) }
     }
 
-    pure fn abs(&self) -> Mpf {
+    fn abs(&self) -> Mpf {
         unsafe {
             let mut res = Mpf::new(self.get_prec());
             __gmpf_abs(&mut res.mpf, addr_of(&self.mpf));
@@ -796,7 +796,7 @@ impl Mpf {
         }
     }
 
-    pure fn ceil(&self) -> Mpf {
+    fn ceil(&self) -> Mpf {
         unsafe {
             let mut res = Mpf::new(self.get_prec());
             __gmpf_ceil(&mut res.mpf, addr_of(&self.mpf));
@@ -804,7 +804,7 @@ impl Mpf {
         }
     }
 
-    pure fn floor(&self) -> Mpf {
+    fn floor(&self) -> Mpf {
         unsafe {
             let mut res = Mpf::new(self.get_prec());
             __gmpf_floor(&mut res.mpf, addr_of(&self.mpf));
@@ -812,7 +812,7 @@ impl Mpf {
         }
     }
 
-    pure fn trunc(&self) -> Mpf {
+    fn trunc(&self) -> Mpf {
         unsafe {
             let mut res = Mpf::new(self.get_prec());
             __gmpf_trunc(&mut res.mpf, addr_of(&self.mpf));
@@ -820,7 +820,7 @@ impl Mpf {
         }
     }
 
-    pure fn reldiff(&self, other: &Mpf) -> Mpf {
+    fn reldiff(&self, other: &Mpf) -> Mpf {
         unsafe {
             let mut res = Mpf::new(uint::max(self.get_prec() as uint,
                                          other.get_prec() as uint) as c_ulong);
@@ -831,7 +831,7 @@ impl Mpf {
 }
 
 impl Clone for Mpf {
-    pure fn clone(&self) -> Mpf {
+    fn clone(&self) -> Mpf {
         unsafe {
             let mut mpf = rusti::init(); // TODO: switch to rusti::uninit when implemented
             __gmpf_init_set(&mut mpf, addr_of(&self.mpf));
@@ -841,10 +841,10 @@ impl Clone for Mpf {
 }
 
 impl cmp::Eq for Mpf {
-    pure fn eq(&self, other: &Mpf) -> bool {
+    fn eq(&self, other: &Mpf) -> bool {
         unsafe { __gmpf_cmp(addr_of(&self.mpf), addr_of(&other.mpf)) == 0 }
     }
-    pure fn ne(&self, other: &Mpf) -> bool {
+    fn ne(&self, other: &Mpf) -> bool {
         unsafe { __gmpf_cmp(addr_of(&self.mpf), addr_of(&other.mpf)) != 0 }
     }
 }
@@ -852,33 +852,33 @@ impl cmp::Eq for Mpf {
 const fuzzy_epsilon: c_double = 1.0e-6;
 
 impl std::cmp::FuzzyEq<Mpf> for Mpf {
-    pure fn fuzzy_eq(&self, other: &Mpf) -> bool {
+    fn fuzzy_eq(&self, other: &Mpf) -> bool {
         let diff = self.reldiff(other);
         unsafe { __gmpf_cmp_d(addr_of(&diff.mpf), fuzzy_epsilon) < 0 }
     }
 
-    pure fn fuzzy_eq_eps(&self, other: &Mpf, epsilon: &Mpf) -> bool {
+    fn fuzzy_eq_eps(&self, other: &Mpf, epsilon: &Mpf) -> bool {
         self.reldiff(other) < *epsilon
     }
 }
 
 impl cmp::Ord for Mpf {
-    pure fn lt(&self, other: &Mpf) -> bool {
+    fn lt(&self, other: &Mpf) -> bool {
         unsafe { __gmpf_cmp(addr_of(&self.mpf), addr_of(&other.mpf)) < 0 }
     }
-    pure fn le(&self, other: &Mpf) -> bool {
+    fn le(&self, other: &Mpf) -> bool {
         unsafe { __gmpf_cmp(addr_of(&self.mpf), addr_of(&other.mpf)) <= 0 }
     }
-    pure fn gt(&self, other: &Mpf) -> bool {
+    fn gt(&self, other: &Mpf) -> bool {
         unsafe { __gmpf_cmp(addr_of(&self.mpf), addr_of(&other.mpf)) > 0 }
     }
-    pure fn ge(&self, other: &Mpf) -> bool {
+    fn ge(&self, other: &Mpf) -> bool {
         unsafe { __gmpf_cmp(addr_of(&self.mpf), addr_of(&other.mpf)) >= 0 }
     }
 }
 
 impl Add<Mpf, Mpf> for Mpf {
-    pure fn add(&self, other: &Mpf) -> Mpf {
+    fn add(&self, other: &Mpf) -> Mpf {
         unsafe {
             let mut res = Mpf::new(uint::max(self.get_prec() as uint,
                                              other.get_prec() as uint) as c_ulong);
@@ -889,7 +889,7 @@ impl Add<Mpf, Mpf> for Mpf {
 }
 
 impl Sub<Mpf, Mpf> for Mpf {
-    pure fn sub(&self, other: &Mpf) -> Mpf {
+    fn sub(&self, other: &Mpf) -> Mpf {
         unsafe {
             let mut res = Mpf::new(uint::max(self.get_prec() as uint,
                                              other.get_prec() as uint) as c_ulong);
@@ -900,7 +900,7 @@ impl Sub<Mpf, Mpf> for Mpf {
 }
 
 impl Mul<Mpf, Mpf> for Mpf {
-    pure fn mul(&self, other: &Mpf) -> Mpf {
+    fn mul(&self, other: &Mpf) -> Mpf {
         unsafe {
             let mut res = Mpf::new(uint::max(self.get_prec() as uint,
                                              other.get_prec() as uint) as c_ulong);
@@ -911,7 +911,7 @@ impl Mul<Mpf, Mpf> for Mpf {
 }
 
 impl Div<Mpf, Mpf> for Mpf {
-    pure fn div(&self, other: &Mpf) -> Mpf {
+    fn div(&self, other: &Mpf) -> Mpf {
         unsafe {
             if __gmpf_cmp_ui(addr_of(&self.mpf), 0) == 0 {
                 fail!(~"divide by zero")
@@ -926,7 +926,7 @@ impl Div<Mpf, Mpf> for Mpf {
 }
 
 impl Neg<Mpf> for Mpf {
-    pure fn neg(&self) -> Mpf {
+    fn neg(&self) -> Mpf {
         unsafe {
             let mut res = Mpf::new(self.get_prec());
             __gmpf_neg(&mut res.mpf, addr_of(&self.mpf));
