@@ -58,7 +58,8 @@ type mpf_srcptr = *const mpf_struct;
 type mpf_ptr = *mut mpf_struct;
 type gmp_randstate_t = *mut gmp_randstate_struct;
 
-extern "C" mod gmp {
+#[link_args = "-lgmp"]
+extern "C" {
     fn __gmpz_init(x: mpz_ptr);
     fn __gmpz_init2(x: mpz_ptr, n: mp_bitcnt_t);
     fn __gmpz_init_set(rop: mpz_ptr, op: mpz_srcptr);
