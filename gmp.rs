@@ -9,11 +9,6 @@
 
 extern mod std;
 
-#[abi = "rust-intrinsic"]
-extern mod rusti {
-  fn init<T>() -> T;
-}
-
 use core::clone::Clone;
 use core::from_str::FromStr;
 use core::libc::{c_char, c_double, c_int, c_long, c_ulong, c_void, size_t};
@@ -22,6 +17,11 @@ use core::num::IntConvertible::from_int;
 use core::ptr::{addr_of, to_mut_unsafe_ptr};
 use core::str::as_c_str;
 use core::vec;
+
+#[abi = "rust-intrinsic"]
+extern mod rusti {
+  fn init<T>() -> T;
+}
 
 struct mpz_struct {
     _mp_alloc: c_int,
@@ -145,8 +145,6 @@ extern "C" mod gmp {
     fn __gmpf_floor(rop: mpf_ptr, op: mpf_srcptr);
     fn __gmpf_trunc(rop: mpf_ptr, op: mpf_srcptr);
 }
-
-use gmp::*;
 
 pub struct Mpz {
     priv mpz: mpz_struct,
