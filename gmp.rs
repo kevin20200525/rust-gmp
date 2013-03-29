@@ -847,7 +847,7 @@ impl cmp::Eq for Mpf {
     }
 }
 
-const fuzzy_epsilon: c_double = 1.0e-6;
+static fuzzy_epsilon: c_double = 1.0e-6;
 
 impl std::cmp::FuzzyEq<Mpf> for Mpf {
     fn fuzzy_eq(&self, other: &Mpf) -> bool {
