@@ -173,7 +173,7 @@ impl Mpz {
     }
 
     fn reserve(&mut self, n: c_ulong) {
-        if (self.bit_length() as c_ulong < n) {
+        if ((self.bit_length() as c_ulong) < n) {
             unsafe { __gmpz_realloc2(&mut self.mpz, n) }
         }
     }
