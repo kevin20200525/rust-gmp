@@ -369,8 +369,9 @@ impl Div<Mpz, Mpz> for Mpz {
     }
 }
 
-impl Modulo<Mpz, Mpz> for Mpz {
-    fn modulo(&self, other: &Mpz) -> Mpz {
+impl Rem<Mpz, Mpz> for Mpz {
+    // FIXME: this should be rem, not mod
+    fn rem(&self, other: &Mpz) -> Mpz {
         unsafe {
             if __gmpz_cmp_ui(&self.mpz, 0) == 0 {
                 fail!(~"divide by zero")
