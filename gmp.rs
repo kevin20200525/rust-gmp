@@ -641,11 +641,9 @@ impl Mpq {
 
 impl Clone for Mpq {
     fn clone(&self) -> Mpq {
-        unsafe {
-            let mut res = Mpq::new();
-            res.set(self);
-            res
-        }
+        let mut res = Mpq::new();
+        res.set(self);
+        res
     }
 }
 
@@ -733,7 +731,7 @@ impl IntConvertible for Mpq {
     }
     fn from_int(other: int) -> Mpq {
         let mut res = Mpq::new();
-        unsafe { res.set_z(&from_int(other)); } // purity workaround
+        res.set_z(&from_int(other));
         res
     }
 }
@@ -741,7 +739,7 @@ impl IntConvertible for Mpq {
 impl One for Mpq {
     fn one() -> Mpq {
         let mut res = Mpq::new();
-        unsafe { __gmpq_set_ui(&mut res.mpq, 1, 1) } // purity
+        unsafe { __gmpq_set_ui(&mut res.mpq, 1, 1) }
         res
     }
 }
