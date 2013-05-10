@@ -14,7 +14,6 @@ use core::from_str::FromStr;
 use core::libc::{c_char, c_double, c_int, c_long, c_ulong, c_void, size_t};
 use core::num::{IntConvertible, One, Zero};
 use core::num::IntConvertible::from_int;
-use core::ptr::to_mut_unsafe_ptr;
 use core::str::as_c_str;
 use core::vec;
 use core::unstable::intrinsics::uninit;
@@ -179,12 +178,11 @@ impl Mpz {
         unsafe {
             assert!(base == 0 || (base >= 2 && base <= 62));
             let mut mpz = uninit();
-            let mpz_ptr = to_mut_unsafe_ptr(&mut mpz);
-            let r = as_c_str(s, { |s| __gmpz_init_set_str(mpz_ptr, s, base as c_int) });
+            let r = as_c_str(s, { |s| __gmpz_init_set_str(&mut mpz, s, base as c_int) });
             if r == 0 {
                 Some(Mpz { mpz: mpz })
             } else {
-                __gmpz_clear(mpz_ptr);
+                __gmpz_clear(&mut mpz);
                 None
             }
         }
@@ -198,8 +196,7 @@ impl Mpz {
     fn set_from_str_radix(&mut self, s: &str, base: uint) -> bool {
         assert!(base == 0 || (base >= 2 && base <= 62));
         unsafe {
-            let mpz = to_mut_unsafe_ptr(&mut self.mpz);
-            as_c_str(s, { |s| __gmpz_set_str(mpz, s, base as c_int) }) == 0
+            as_c_str(s, { |s| __gmpz_set_str(&mut self.mpz, s, base as c_int) }) == 0
         }
     }
 
@@ -400,8 +397,7 @@ impl IntConvertible for Mpz {
             __gmpz_import(&mut res.mpz, 1, 1, int::bytes as size_t, 0, 0,
                           core::util::id::<*int>(&int::abs(other)) as *c_void);
             if other.is_negative() {
-                let mpz_ptr = to_mut_unsafe_ptr(&mut res.mpz);
-                __gmpz_neg(mpz_ptr, mpz_ptr)
+                __gmpz_neg(&mut res.mpz, &mut res.mpz)
             }
             res
         }
