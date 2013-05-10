@@ -354,7 +354,7 @@ impl Mul<Mpz, Mpz> for Mpz {
 impl Div<Mpz, Mpz> for Mpz {
     fn div(&self, other: &Mpz) -> Mpz {
         unsafe {
-            if __gmpz_cmp_ui(&self.mpz, 0) == 0 {
+            if self.is_zero() {
                 fail!(~"divide by zero")
             }
 
@@ -369,7 +369,7 @@ impl Rem<Mpz, Mpz> for Mpz {
     // FIXME: this should be rem, not mod
     fn rem(&self, other: &Mpz) -> Mpz {
         unsafe {
-            if __gmpz_cmp_ui(&self.mpz, 0) == 0 {
+            if self.is_zero() {
                 fail!(~"divide by zero")
             }
 
@@ -420,6 +420,9 @@ impl One for Mpz {
 
 impl Zero for Mpz {
     fn zero() -> Mpz { Mpz::new() }
+    fn is_zero(&self) -> bool {
+        unsafe { __gmpz_cmp_ui(&self.mpz, 0) == 0 }
+    }
 }
 
 impl BitAnd<Mpz, Mpz> for Mpz {
@@ -625,7 +628,7 @@ impl Mpq {
 
     fn invert(&self) -> Mpq {
         unsafe {
-            if __gmpq_cmp_ui(&self.mpq, 0, 1) == 0 {
+            if self.is_zero() {
                 fail!(~"divide by zero")
             }
 
@@ -703,7 +706,7 @@ impl Mul<Mpq, Mpq> for Mpq {
 impl Div<Mpq, Mpq> for Mpq {
     fn div(&self, other: &Mpq) -> Mpq {
         unsafe {
-            if __gmpq_cmp_ui(&self.mpq, 0, 1) == 0 {
+            if self.is_zero() {
                 fail!(~"divide by zero")
             }
 
@@ -745,6 +748,9 @@ impl One for Mpq {
 
 impl Zero for Mpq {
     fn zero() -> Mpq { Mpq::new() }
+    fn is_zero(&self) -> bool {
+        unsafe { __gmpq_cmp_ui(&self.mpq, 0, 1) == 0 }
+    }
 }
 
 pub struct Mpf {
@@ -916,7 +922,7 @@ mod test_mpz {
     use super::*;
     use core::num::IntConvertible::from_int;
     use core::from_str::FromStr;
-    use core::num::{One, Zero};
+    use core::num::{One};
     use core::libc::c_ulong;
 
     #[test]
