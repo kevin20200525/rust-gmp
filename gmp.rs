@@ -398,7 +398,7 @@ impl IntConvertible for Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_import(&mut res.mpz, 1, 1, int::bytes as size_t, 0, 0,
-                          &int::abs(other) as *c_void);
+                          core::util::id::<*int>(&int::abs(other)) as *c_void);
             if other.is_negative() {
                 let mpz_ptr = to_mut_unsafe_ptr(&mut res.mpz);
                 __gmpz_neg(mpz_ptr, mpz_ptr)
