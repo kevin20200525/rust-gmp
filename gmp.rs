@@ -9,13 +9,11 @@
 
 extern mod std;
 
-use core::clone::Clone;
 use core::from_str::FromStr;
 use core::libc::{c_char, c_double, c_int, c_long, c_ulong, c_void, size_t};
 use core::num::{IntConvertible, One, Zero};
 use core::num::IntConvertible::from_int;
 use core::str::as_c_str;
-use core::vec;
 use core::unstable::intrinsics::uninit;
 
 struct mpz_struct {
