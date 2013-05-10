@@ -846,19 +846,6 @@ impl cmp::Eq for Mpf {
     }
 }
 
-static fuzzy_epsilon: c_double = 1.0e-6;
-
-impl std::cmp::FuzzyEq<Mpf> for Mpf {
-    fn fuzzy_eq(&self, other: &Mpf) -> bool {
-        let diff = self.reldiff(other);
-        unsafe { __gmpf_cmp_d(&diff.mpf, fuzzy_epsilon) < 0 }
-    }
-
-    fn fuzzy_eq_eps(&self, other: &Mpf, epsilon: &Mpf) -> bool {
-        self.reldiff(other) < *epsilon
-    }
-}
-
 impl cmp::Ord for Mpf {
     fn lt(&self, other: &Mpf) -> bool {
         unsafe { __gmpf_cmp(&self.mpf, &other.mpf) < 0 }
