@@ -73,6 +73,7 @@ extern "C" {
     fn __gmpz_neg(rop: mpz_ptr, op: mpz_srcptr);
     fn __gmpz_abs(rop: mpz_ptr, op: mpz_srcptr);
     fn __gmpz_tdiv_q(q: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
+    fn __gmpz_tdiv_r(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
     fn __gmpz_fdiv_q_2exp(q: mpz_ptr, n: mpz_srcptr, b: mp_bitcnt_t);
     fn __gmpz_mod(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
     fn __gmpz_and(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
@@ -361,7 +362,6 @@ impl Div<Mpz, Mpz> for Mpz {
 }
 
 impl Rem<Mpz, Mpz> for Mpz {
-    // FIXME: this should be rem, not mod
     fn rem(&self, other: &Mpz) -> Mpz {
         unsafe {
             if self.is_zero() {
@@ -369,7 +369,7 @@ impl Rem<Mpz, Mpz> for Mpz {
             }
 
             let mut res = Mpz::new();
-            __gmpz_mod(&mut res.mpz, &self.mpz, &other.mpz);
+            __gmpz_tdiv_r(&mut res.mpz, &self.mpz, &other.mpz);
             res
         }
     }
@@ -994,7 +994,7 @@ mod test_mpz {
 
     #[test]
     #[should_fail]
-    fn test_modulo_zero() {
+    fn test_rem_zero() {
         let x = Mpz::new();
         x % x;
     }
@@ -1005,6 +1005,15 @@ mod test_mpz {
         let y: Mpz = from_int(3);
         assert!((x / y).to_str() == (2i / 3).to_str());
         assert!((x / -y).to_str() == (2i / -3).to_str());
+    }
+
+    #[test]
+    fn test_rem() {
+        let x: Mpz = from_int(20);
+        let y: Mpz = from_int(3);
+        assert!((x % y).to_str() == (20i % 3).to_str());
+        assert!((x % -y).to_str() == (20i % -3).to_str());
+        assert!((-x % y).to_str() == (-20i % 3).to_str());
     }
 
     #[test]
