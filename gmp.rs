@@ -9,12 +9,12 @@
 
 extern mod std;
 
-use core::from_str::FromStr;
-use core::libc::{c_char, c_double, c_int, c_long, c_ulong, c_void, size_t};
-use core::num::{IntConvertible, One, Zero};
-use core::num::IntConvertible::from_int;
-use core::str::as_c_str;
-use core::unstable::intrinsics::uninit;
+use std::from_str::FromStr;
+use std::libc::{c_char, c_double, c_int, c_long, c_ulong, c_void, size_t};
+use std::num::{IntConvertible, One, Zero};
+use std::num::IntConvertible::from_int;
+use std::str::as_c_str;
+use std::unstable::intrinsics::uninit;
 
 struct mpz_struct {
     _mp_alloc: c_int,
@@ -393,7 +393,7 @@ impl IntConvertible for Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_import(&mut res.mpz, 1, 1, int::bytes as size_t, 0, 0,
-                          core::util::id::<*int>(&int::abs(other)) as *c_void);
+                          std::util::id::<*int>(&int::abs(other)) as *c_void);
             if other.is_negative() {
                 __gmpz_neg(&mut res.mpz, &mut res.mpz)
             }
@@ -912,10 +912,10 @@ impl Neg<Mpf> for Mpf {
 #[cfg(test)]
 mod test_mpz {
     use super::*;
-    use core::num::IntConvertible::from_int;
-    use core::from_str::FromStr;
-    use core::num::{One};
-    use core::libc::c_ulong;
+    use std::num::IntConvertible::from_int;
+    use std::from_str::FromStr;
+    use std::num::{One};
+    use std::libc::c_ulong;
 
     #[test]
     fn test_set() {
@@ -1172,7 +1172,7 @@ mod test_mpz {
 #[cfg(test)]
 mod test_rand {
     use super::*;
-    use core::num::IntConvertible::from_int;
+    use std::num::IntConvertible::from_int;
 
     #[test]
     fn test_randstate() {
@@ -1190,8 +1190,8 @@ mod test_rand {
 #[cfg(test)]
 mod test_mpq {
     use super::*;
-    use core::num::One;
-    use core::num::IntConvertible::from_int;
+    use std::num::One;
+    use std::num::IntConvertible::from_int;
 
     #[test]
     fn test_one() {
