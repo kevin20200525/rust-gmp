@@ -12,9 +12,9 @@ extern mod std;
 use std::from_str::FromStr;
 use std::libc::{c_char, c_double, c_int, c_long, c_ulong, c_void, size_t};
 use std::num::{IntConvertible, One, Zero};
-use std::num::IntConvertible::from_int;
 use std::str::as_c_str;
 use std::unstable::intrinsics::uninit;
+use std::{cast, cmp, int, str, to_str, uint, vec};
 
 struct mpz_struct {
     _mp_alloc: c_int,
@@ -725,7 +725,7 @@ impl IntConvertible for Mpq {
     }
     fn from_int(other: int) -> Mpq {
         let mut res = Mpq::new();
-        res.set_z(&from_int(other));
+        res.set_z(&IntConvertible::from_int(other));
         res
     }
 }
@@ -912,15 +912,15 @@ impl Neg<Mpf> for Mpf {
 #[cfg(test)]
 mod test_mpz {
     use super::*;
-    use std::num::IntConvertible::from_int;
     use std::from_str::FromStr;
-    use std::num::{One};
+    use std::num::{One, IntConvertible};
     use std::libc::c_ulong;
+    use std::{uint, vec};
 
     #[test]
     fn test_set() {
-        let mut x: Mpz = from_int(1000);
-        let y: Mpz = from_int(5000);
+        let mut x: Mpz = IntConvertible::from_int(1000);
+        let y: Mpz = IntConvertible::from_int(5000);
         assert!(x != y);
         x.set(&y);
         assert!(x == y);
@@ -928,8 +928,8 @@ mod test_mpz {
 
     #[test]
     fn test_set_from_str_radix() {
-        let mut x: Mpz = from_int(1000);
-        let y: Mpz = from_int(5000);
+        let mut x: Mpz = IntConvertible::from_int(1000);
+        let y: Mpz = IntConvertible::from_int(5000);
         assert!(x != y);
         assert!(x.set_from_str_radix("5000", 10));
         assert!(x == y);
@@ -964,9 +964,9 @@ mod test_mpz {
 
     #[test]
     fn test_eq() {
-        let x: Mpz = from_int(4242142195);
-        let y: Mpz = from_int(4242142195);
-        let z: Mpz = from_int(4242142196);
+        let x: Mpz = IntConvertible::from_int(4242142195);
+        let y: Mpz = IntConvertible::from_int(4242142195);
+        let z: Mpz = IntConvertible::from_int(4242142196);
 
         assert!(x == y);
         assert!(x != z);
@@ -1001,16 +1001,16 @@ mod test_mpz {
 
     #[test]
     fn test_div_round() {
-        let x: Mpz = from_int(2);
-        let y: Mpz = from_int(3);
+        let x: Mpz = IntConvertible::from_int(2);
+        let y: Mpz = IntConvertible::from_int(3);
         assert!((x / y).to_str() == (2i / 3).to_str());
         assert!((x / -y).to_str() == (2i / -3).to_str());
     }
 
     #[test]
     fn test_rem() {
-        let x: Mpz = from_int(20);
-        let y: Mpz = from_int(3);
+        let x: Mpz = IntConvertible::from_int(20);
+        let y: Mpz = IntConvertible::from_int(3);
         assert!((x % y).to_str() == (20i % 3).to_str());
         assert!((x % -y).to_str() == (20i % -3).to_str());
         assert!((-x % y).to_str() == (-20i % 3).to_str());
@@ -1018,7 +1018,7 @@ mod test_mpz {
 
     #[test]
     fn test_to_str_radix() {
-        let x: Mpz = from_int(255);
+        let x: Mpz = IntConvertible::from_int(255);
         assert!(x.to_str_radix(16) == ~"ff");
     }
 
@@ -1035,23 +1035,23 @@ mod test_mpz {
 
     #[test]
     fn test_clone() {
-        let a = from_int::<Mpz>(100);
+        let a = IntConvertible::from_int::<Mpz>(100);
         let b = a.clone();
         assert!(b == a);
-        assert!(a + b == from_int::<Mpz>(200));
+        assert!(a + b == IntConvertible::from_int::<Mpz>(200));
     }
 
     #[test]
     fn test_from_int() {
-        let x: Mpz = from_int(150);
+        let x: Mpz = IntConvertible::from_int(150);
         assert!(x.to_str() == ~"150");
         assert!(x == FromStr::from_str("150").unwrap());
     }
 
     #[test]
     fn test_abs() {
-        let x: Mpz = from_int(1000);
-        let y: Mpz = from_int(-1000);
+        let x: Mpz = IntConvertible::from_int(1000);
+        let y: Mpz = IntConvertible::from_int(-1000);
         assert!(-x == y);
         assert!(x == -y);
         assert!(x == y.abs());
@@ -1062,27 +1062,30 @@ mod test_mpz {
     fn test_bitand() {
         let a = 0b1001_0111;
         let b = 0b1100_0100;
-        assert!(from_int::<Mpz>(a) & from_int::<Mpz>(b) == from_int::<Mpz>(a & b));
+        assert!(IntConvertible::from_int::<Mpz>(a) & IntConvertible::from_int::<Mpz>(b)
+                == IntConvertible::from_int::<Mpz>(a & b));
     }
 
     #[test]
     fn test_bitor() {
         let a = 0b1001_0111;
         let b = 0b1100_0100;
-        assert!(from_int::<Mpz>(a) | from_int::<Mpz>(b) == from_int::<Mpz>(a | b));
+        assert!(IntConvertible::from_int::<Mpz>(a) | IntConvertible::from_int::<Mpz>(b)
+                == IntConvertible::from_int::<Mpz>(a | b));
     }
 
     #[test]
     fn test_bitxor() {
         let a = 0b1001_0111;
         let b = 0b1100_0100;
-        assert!(from_int::<Mpz>(a) ^ from_int::<Mpz>(b) == from_int::<Mpz>(a ^ b));
+        assert!(IntConvertible::from_int::<Mpz>(a) ^ IntConvertible::from_int::<Mpz>(b)
+                == IntConvertible::from_int::<Mpz>(a ^ b));
     }
 
     #[test]
     fn test_shifts() {
         let i = 227;
-        let j: Mpz = from_int(i);
+        let j: Mpz = IntConvertible::from_int(i);
         assert!((i << 4).to_str() == (j << 4).to_str());
         assert!((-i << 4).to_str() == (-j << 4).to_str());
         assert!((i >> 4).to_str() == (j >> 4).to_str());
@@ -1091,8 +1094,8 @@ mod test_mpz {
 
     #[test]
     fn test_compl() {
-        assert!(from_int::<Mpz>(13).compl().to_str() == (!13i).to_str());
-        assert!(from_int::<Mpz>(-442).compl().to_str() == (!-442i).to_str());
+        assert!(IntConvertible::from_int::<Mpz>(13).compl().to_str() == (!13i).to_str());
+        assert!(IntConvertible::from_int::<Mpz>(-442).compl().to_str() == (!-442i).to_str());
     }
 
     #[test]
@@ -1102,47 +1105,58 @@ mod test_mpz {
 
     #[test]
     fn test_hamdist() {
-        assert!(from_int::<Mpz>(0b1011_0001).hamdist(&from_int(0b0010_1011)) == 4);
+        assert!(IntConvertible::from_int::<Mpz>(0b1011_0001).hamdist(&IntConvertible::from_int(0b0010_1011)) == 4);
     }
 
     #[test]
     fn test_bit_length() {
-        assert!(from_int::<Mpz>(0b1011_0000_0001_0000).bit_length() == 16);
-        assert!(from_int::<Mpz>(0b101).bit_length() == 3);
+        assert!(IntConvertible::from_int::<Mpz>(0b1011_0000_0001_0000).bit_length() == 16);
+        assert!(IntConvertible::from_int::<Mpz>(0b101).bit_length() == 3);
     }
 
     #[test]
     fn test_gcd() {
-        assert!(from_int::<Mpz>(0).gcd(&from_int(0)) == from_int(0));
-        assert!(from_int::<Mpz>(3).gcd(&from_int(6)) == from_int(3));
-        assert!(from_int::<Mpz>(18).gcd(&from_int(24)) == from_int(6));
+        assert!(IntConvertible::from_int::<Mpz>(0).gcd(&IntConvertible::from_int(0))
+                == IntConvertible::from_int(0));
+        assert!(IntConvertible::from_int::<Mpz>(3).gcd(&IntConvertible::from_int(6))
+                == IntConvertible::from_int(3));
+        assert!(IntConvertible::from_int::<Mpz>(18).gcd(&IntConvertible::from_int(24))
+                == IntConvertible::from_int(6));
     }
 
     #[test]
     fn test_lcm() {
-        assert!(from_int::<Mpz>(0).lcm(&from_int(5)) == from_int(0));
-        assert!(from_int::<Mpz>(5).lcm(&from_int(0)) == from_int(0));
-        assert!(from_int::<Mpz>(3).lcm(&from_int(6)) == from_int(6));
-        assert!(from_int::<Mpz>(18).lcm(&from_int(24)) == from_int(72));
+        assert!(IntConvertible::from_int::<Mpz>(0).lcm(&IntConvertible::from_int(5))
+                == IntConvertible::from_int(0));
+        assert!(IntConvertible::from_int::<Mpz>(5).lcm(&IntConvertible::from_int(0))
+                == IntConvertible::from_int(0));
+        assert!(IntConvertible::from_int::<Mpz>(3).lcm(&IntConvertible::from_int(6))
+                == IntConvertible::from_int(6));
+        assert!(IntConvertible::from_int::<Mpz>(18).lcm(&IntConvertible::from_int(24))
+                == IntConvertible::from_int(72));
     }
 
     #[test]
     fn test_invert() {
-        assert!(from_int::<Mpz>(3).invert(&from_int(11)) == Some(from_int(4)));
-        assert!(from_int::<Mpz>(4).invert(&from_int(11)) == Some(from_int(3)));
-        assert!(from_int::<Mpz>(2).invert(&from_int(5)) == Some(from_int(3)));
-        assert!(from_int::<Mpz>(3).invert(&from_int(5)) == Some(from_int(2)));
-        assert!(from_int::<Mpz>(2).invert(&from_int(4)).is_none());
+        assert!(IntConvertible::from_int::<Mpz>(3).invert(&IntConvertible::from_int(11))
+                == Some(IntConvertible::from_int(4)));
+        assert!(IntConvertible::from_int::<Mpz>(4).invert(&IntConvertible::from_int(11))
+                == Some(IntConvertible::from_int(3)));
+        assert!(IntConvertible::from_int::<Mpz>(2).invert(&IntConvertible::from_int(5))
+                == Some(IntConvertible::from_int(3)));
+        assert!(IntConvertible::from_int::<Mpz>(3).invert(&IntConvertible::from_int(5))
+                == Some(IntConvertible::from_int(2)));
+        assert!(IntConvertible::from_int::<Mpz>(2).invert(&IntConvertible::from_int(4)).is_none());
     }
 
     #[test]
     fn test_one() {
-        assert!(One::one::<Mpz>() == from_int(1));
+        assert!(One::one::<Mpz>() == IntConvertible::from_int(1));
     }
 
     #[test]
     fn test_bit_fiddling() {
-        let mut xs = from_int::<Mpz>(0b1010_1000_0010_0011);
+        let mut xs = IntConvertible::from_int::<Mpz>(0b1010_1000_0010_0011);
         assert!(xs.bit_length() == 16);
         let mut ys = vec::reversed([true, false, true, false,
                                    true, false, false, false,
@@ -1172,7 +1186,8 @@ mod test_mpz {
 #[cfg(test)]
 mod test_rand {
     use super::*;
-    use std::num::IntConvertible::from_int;
+    use std::num::IntConvertible;
+    use std::{int, uint};
 
     #[test]
     fn test_randstate() {
@@ -1180,7 +1195,7 @@ mod test_rand {
         state.seed_ui(42);
         for uint::range(1, 1000) |_| {
             for int::range(1, 10) |x| {
-                let upper = from_int(x);
+                let upper = IntConvertible::from_int(x);
                 assert!(state.urandom(&upper) < upper);
             }
         }
@@ -1191,11 +1206,11 @@ mod test_rand {
 mod test_mpq {
     use super::*;
     use std::num::One;
-    use std::num::IntConvertible::from_int;
+    use std::num::IntConvertible;
 
     #[test]
     fn test_one() {
-        assert!(One::one::<Mpq>() == from_int(1));
+        assert!(One::one::<Mpq>() == IntConvertible::from_int(1));
     }
 
     #[test]
