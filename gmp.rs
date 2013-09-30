@@ -12,7 +12,6 @@ extern mod std;
 use std::from_str::FromStr;
 use std::libc::{c_char, c_double, c_int, c_long, c_ulong, c_void, size_t};
 use std::num::{IntConvertible, One, Zero};
-use std::str::as_c_str;
 use std::unstable::intrinsics::uninit;
 use std::{cast, cmp, int, str, to_str, uint, vec};
 
@@ -177,7 +176,9 @@ impl Mpz {
         unsafe {
             assert!(base == 0 || (base >= 2 && base <= 62));
             let mut mpz = uninit();
-            let r = as_c_str(s, { |s| __gmpz_init_set_str(&mut mpz, s, base as c_int) });
+            let r = do s.with_c_str |s| {
+                unsafe { __gmpz_init_set_str(&mut mpz, s, base as c_int) }
+            };
             if r == 0 {
                 Some(Mpz { mpz: mpz })
             } else {
@@ -194,8 +195,8 @@ impl Mpz {
     // TODO: too easy to forget to check this return value - rename?
     fn set_from_str_radix(&mut self, s: &str, base: uint) -> bool {
         assert!(base == 0 || (base >= 2 && base <= 62));
-        unsafe {
-            as_c_str(s, { |s| __gmpz_set_str(&mut self.mpz, s, base as c_int) }) == 0
+        do s.with_c_str |s| {
+            unsafe { __gmpz_set_str(&mut self.mpz, s, base as c_int) == 0 }
         }
     }
 
