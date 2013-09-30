@@ -43,11 +43,11 @@ struct gmp_randstate_struct {
 }
 
 type mp_bitcnt_t = c_ulong;
-type mpz_srcptr = *const mpz_struct;
+type mpz_srcptr = *mpz_struct;
 type mpz_ptr = *mut mpz_struct;
-type mpq_srcptr = *const mpq_struct;
+type mpq_srcptr = *mpq_struct;
 type mpq_ptr = *mut mpq_struct;
-type mpf_srcptr = *const mpf_struct;
+type mpf_srcptr = *mpf_struct;
 type mpf_ptr = *mut mpf_struct;
 type gmp_randstate_t = *mut gmp_randstate_struct;
 
@@ -90,12 +90,12 @@ extern "C" {
     fn __gmpz_lcm(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
     fn __gmpz_invert(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr) -> c_int;
     fn __gmpz_import(rop: mpz_ptr, count: size_t, order: c_int, size: size_t,
-                     endian: c_int, nails: size_t, op: *const c_void);
+                     endian: c_int, nails: size_t, op: *c_void);
     fn __gmp_randinit_default(state: gmp_randstate_t);
     fn __gmp_randinit_mt(state: gmp_randstate_t);
     fn __gmp_randinit_lc_2exp(state: gmp_randstate_t, a: mpz_srcptr, c: c_ulong, m2exp: mp_bitcnt_t);
     fn __gmp_randinit_lc_2exp_size(state: gmp_randstate_t, size: mp_bitcnt_t);
-    fn __gmp_randinit_set(state: gmp_randstate_t, op: *const gmp_randstate_struct);
+    fn __gmp_randinit_set(state: gmp_randstate_t, op: *gmp_randstate_struct);
     fn __gmp_randclear(state: gmp_randstate_t);
     fn __gmp_randseed(state: gmp_randstate_t, seed: mpz_srcptr);
     fn __gmp_randseed_ui(state: gmp_randstate_t, seed: c_ulong);
