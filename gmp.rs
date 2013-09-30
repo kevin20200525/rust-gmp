@@ -1162,7 +1162,7 @@ mod test_mpz {
                                    true, false, false, false,
                                    false, false, true, false,
                                    false, false, true, true]);
-        for uint::range(0, xs.bit_length()) |i| {
+        for i in range(0, xs.bit_length()) {
             assert!(xs.tstbit(i as c_ulong) == ys[i]);
         }
         xs.setbit(0);
@@ -1177,7 +1177,7 @@ mod test_mpz {
         ys[14] = !ys[14];
         xs.combit(15);
         ys[15] = !ys[15];
-        for uint::range(0, xs.bit_length()) |i| {
+        for i in range(0, xs.bit_length()) {
             assert!(xs.tstbit(i as c_ulong) == ys[i]);
         }
     }
@@ -1193,8 +1193,8 @@ mod test_rand {
     fn test_randstate() {
         let mut state = RandState::new();
         state.seed_ui(42);
-        for uint::range(1, 1000) |_| {
-            for int::range(1, 10) |x| {
+        for _ in range(1u, 1000) {
+            for x in range(1i, 10) {
                 let upper = IntConvertible::from_int(x);
                 assert!(state.urandom(&upper) < upper);
             }
