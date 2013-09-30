@@ -123,7 +123,7 @@ extern "C" {
     fn __gmpf_init_set(rop: mpf_ptr, op: mpf_srcptr);
     fn __gmpf_clear(x: mpf_ptr);
     fn __gmpf_get_prec(op: mpf_srcptr) -> mp_bitcnt_t;
-    fn __gmpf_set_prec(rop: mpf_srcptr, prec: mp_bitcnt_t);
+    fn __gmpf_set_prec(rop: mpf_ptr, prec: mp_bitcnt_t);
     fn __gmpf_set(rop: mpf_ptr, op: mpf_srcptr);
     fn __gmpf_cmp(op1: mpf_srcptr, op2: mpf_srcptr) -> c_int;
     fn __gmpf_cmp_d(op1: mpf_srcptr, op2: c_double) -> c_int;
@@ -395,7 +395,7 @@ impl IntConvertible for Mpz {
             __gmpz_import(&mut res.mpz, 1, 1, int::bytes as size_t, 0, 0,
                           std::util::id::<*int>(&other.abs()) as *c_void);
             if other.is_negative() {
-                __gmpz_neg(&mut res.mpz, &mut res.mpz)
+                __gmpz_neg(&mut res.mpz, &res.mpz)
             }
             res
         }
