@@ -145,8 +145,7 @@ pub struct Mpz {
 }
 
 impl Drop for Mpz {
-    // FIXME: #4514, avoid transmute
-    fn finalize(&self) { unsafe { __gmpz_clear(cast::transmute(&self.mpz)) } }
+    fn drop(&mut self) { unsafe { __gmpz_clear(&mut self.mpz) } }
 }
 
 impl Mpz {
@@ -487,9 +486,8 @@ pub struct RandState {
 }
 
 impl Drop for RandState {
-    fn finalize(&self) {
-        // FIXME: #4514, avoid transmute
-        unsafe { __gmp_randclear(cast::transmute(&self.state)) }
+    fn drop(&mut self) {
+        unsafe { __gmp_randclear(&mut self.state) }
     }
 }
 
@@ -568,8 +566,7 @@ pub struct Mpq {
 }
 
 impl Drop for Mpq {
-    // FIXME: #4514, avoid transmute
-    fn finalize(&self) { unsafe { __gmpq_clear(cast::transmute(&self.mpq)) } }
+    fn drop(&mut self) { unsafe { __gmpq_clear(&mut self.mpq) } }
 }
 
 impl Mpq {
@@ -751,8 +748,7 @@ pub struct Mpf {
 }
 
 impl Drop for Mpf {
-    // FIXME: #4514, avoid transmute
-    fn finalize(&self) { unsafe { __gmpf_clear(cast::transmute(&self.mpf)) } }
+    fn drop(&mut self) { unsafe { __gmpf_clear(&mut self.mpf) } }
 }
 
 impl Mpf {
