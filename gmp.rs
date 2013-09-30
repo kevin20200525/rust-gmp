@@ -13,7 +13,7 @@ use std::from_str::FromStr;
 use std::libc::{c_char, c_double, c_int, c_long, c_ulong, c_void, size_t};
 use std::num::{IntConvertible, One, Zero};
 use std::unstable::intrinsics::uninit;
-use std::{cast, cmp, int, str, to_str, uint, vec};
+use std::{cmp, int, str, to_str, uint, vec};
 
 struct mpz_struct {
     _mp_alloc: c_int,
@@ -181,7 +181,7 @@ impl Mpz {
             assert!(base == 0 || (base >= 2 && base <= 62));
             let mut mpz = uninit();
             let r = do s.with_c_str |s| {
-                unsafe { __gmpz_init_set_str(&mut mpz, s, base as c_int) }
+                __gmpz_init_set_str(&mut mpz, s, base as c_int)
             };
             if r == 0 {
                 Some(Mpz { mpz: mpz })
