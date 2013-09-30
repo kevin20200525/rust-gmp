@@ -151,7 +151,7 @@ impl Drop for Mpz {
 
 impl Mpz {
     #[fixed_stack_segment]
-    fn new() -> Mpz {
+    pub fn new() -> Mpz {
         unsafe {
             let mut mpz = uninit();
             __gmpz_init(&mut mpz);
@@ -160,7 +160,7 @@ impl Mpz {
     }
 
     #[fixed_stack_segment]
-    fn new_reserve(n: c_ulong) -> Mpz {
+    pub fn new_reserve(n: c_ulong) -> Mpz {
         unsafe {
             let mut mpz = uninit();
             __gmpz_init2(&mut mpz, n);
@@ -169,14 +169,14 @@ impl Mpz {
     }
 
     #[fixed_stack_segment]
-    fn reserve(&mut self, n: c_ulong) {
+    pub fn reserve(&mut self, n: c_ulong) {
         if ((self.bit_length() as c_ulong) < n) {
             unsafe { __gmpz_realloc2(&mut self.mpz, n) }
         }
     }
 
     #[fixed_stack_segment]
-    fn from_str_radix(s: &str, base: uint) -> Option<Mpz> {
+    pub fn from_str_radix(s: &str, base: uint) -> Option<Mpz> {
         unsafe {
             assert!(base == 0 || (base >= 2 && base <= 62));
             let mut mpz = uninit();
@@ -193,13 +193,13 @@ impl Mpz {
     }
 
     #[fixed_stack_segment]
-    fn set(&mut self, other: &Mpz) {
+    pub fn set(&mut self, other: &Mpz) {
         unsafe { __gmpz_set(&mut self.mpz, &other.mpz) }
     }
 
     // TODO: too easy to forget to check this return value - rename?
     #[fixed_stack_segment]
-    fn set_from_str_radix(&mut self, s: &str, base: uint) -> bool {
+    pub fn set_from_str_radix(&mut self, s: &str, base: uint) -> bool {
         assert!(base == 0 || (base >= 2 && base <= 62));
         do s.with_c_str |s| {
             unsafe { __gmpz_set_str(&mut self.mpz, s, base as c_int) == 0 }
@@ -208,7 +208,7 @@ impl Mpz {
 
     // TODO: fail on an invalid base
     #[fixed_stack_segment]
-    fn to_str_radix(&self, base: int) -> ~str {
+    pub fn to_str_radix(&self, base: int) -> ~str {
         unsafe {
             let len = __gmpz_sizeinbase(&self.mpz, base as c_int) as uint + 2;
             let dst = vec::from_elem(len, '0');
@@ -219,12 +219,12 @@ impl Mpz {
     }
 
     #[fixed_stack_segment]
-    fn bit_length(&self) -> uint {
+    pub fn bit_length(&self) -> uint {
         unsafe { __gmpz_sizeinbase(&self.mpz, 2) as uint }
     }
 
     #[fixed_stack_segment]
-    fn compl(&self) -> Mpz {
+    pub fn compl(&self) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_com(&mut res.mpz, &self.mpz);
@@ -233,7 +233,7 @@ impl Mpz {
     }
 
     #[fixed_stack_segment]
-    fn abs(&self) -> Mpz {
+    pub fn abs(&self) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_abs(&mut res.mpz, &self.mpz);
@@ -242,7 +242,7 @@ impl Mpz {
     }
 
     #[fixed_stack_segment]
-    fn gcd(&self, other: &Mpz) -> Mpz {
+    pub fn gcd(&self, other: &Mpz) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_gcd(&mut res.mpz, &self.mpz, &other.mpz);
@@ -251,7 +251,7 @@ impl Mpz {
     }
 
     #[fixed_stack_segment]
-    fn lcm(&self, other: &Mpz) -> Mpz {
+    pub fn lcm(&self, other: &Mpz) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_lcm(&mut res.mpz, &self.mpz, &other.mpz);
@@ -261,7 +261,7 @@ impl Mpz {
 
     // TODO: handle a zero modulo
     #[fixed_stack_segment]
-    fn invert(&self, modulo: &Mpz) -> Option<Mpz> {
+    pub fn invert(&self, modulo: &Mpz) -> Option<Mpz> {
         unsafe {
             let mut res = Mpz::new();
             if __gmpz_invert(&mut res.mpz, &self.mpz, &modulo.mpz) == 0 {
@@ -273,32 +273,32 @@ impl Mpz {
     }
 
     #[fixed_stack_segment]
-    fn popcount(&self) -> uint {
+    pub fn popcount(&self) -> uint {
         unsafe { __gmpz_popcount(&self.mpz) as uint }
     }
 
     #[fixed_stack_segment]
-    fn hamdist(&self, other: &Mpz) -> uint {
+    pub fn hamdist(&self, other: &Mpz) -> uint {
         unsafe { __gmpz_hamdist(&self.mpz, &other.mpz) as uint }
     }
 
     #[fixed_stack_segment]
-    fn setbit(&mut self, bit_index: c_ulong) {
+    pub fn setbit(&mut self, bit_index: c_ulong) {
         unsafe { __gmpz_setbit(&mut self.mpz, bit_index) }
     }
 
     #[fixed_stack_segment]
-    fn clrbit(&mut self, bit_index: c_ulong) {
+    pub fn clrbit(&mut self, bit_index: c_ulong) {
         unsafe { __gmpz_clrbit(&mut self.mpz, bit_index) }
     }
 
     #[fixed_stack_segment]
-    fn combit(&mut self, bit_index: c_ulong) {
+    pub fn combit(&mut self, bit_index: c_ulong) {
         unsafe { __gmpz_combit(&mut self.mpz, bit_index) }
     }
 
     #[fixed_stack_segment]
-    fn tstbit(&self, bit_index: c_ulong) -> bool {
+    pub fn tstbit(&self, bit_index: c_ulong) -> bool {
         unsafe { __gmpz_tstbit(&self.mpz, bit_index) == 1 }
     }
 }
@@ -538,7 +538,7 @@ impl Drop for RandState {
 
 impl RandState {
     #[fixed_stack_segment]
-    fn new() -> RandState {
+    pub fn new() -> RandState {
         unsafe {
             let mut state: gmp_randstate_struct = uninit();
             __gmp_randinit_default(&mut state);
@@ -547,7 +547,7 @@ impl RandState {
     }
 
     #[fixed_stack_segment]
-    fn new_mt() -> RandState {
+    pub fn new_mt() -> RandState {
         unsafe {
             let mut state: gmp_randstate_struct = uninit();
             __gmp_randinit_mt(&mut state);
@@ -556,7 +556,7 @@ impl RandState {
     }
 
     #[fixed_stack_segment]
-    fn new_lc_2exp(a: Mpz, c: c_ulong, m2exp: c_ulong) -> RandState {
+    pub fn new_lc_2exp(a: Mpz, c: c_ulong, m2exp: c_ulong) -> RandState {
         unsafe {
             let mut state: gmp_randstate_struct = uninit();
             __gmp_randinit_lc_2exp(&mut state, &a.mpz, c, m2exp);
@@ -565,7 +565,7 @@ impl RandState {
     }
 
     #[fixed_stack_segment]
-    fn new_lc_2exp_size(size: c_ulong) -> RandState {
+    pub fn new_lc_2exp_size(size: c_ulong) -> RandState {
         unsafe {
             let mut state: gmp_randstate_struct = uninit();
             __gmp_randinit_lc_2exp_size(&mut state, size);
@@ -574,18 +574,18 @@ impl RandState {
     }
 
     #[fixed_stack_segment]
-    fn seed(&mut self, seed: Mpz) {
+    pub fn seed(&mut self, seed: Mpz) {
         unsafe { __gmp_randseed(&mut self.state, &seed.mpz) }
     }
 
     #[fixed_stack_segment]
-    fn seed_ui(&mut self, seed: c_ulong) {
+    pub fn seed_ui(&mut self, seed: c_ulong) {
         unsafe { __gmp_randseed_ui(&mut self.state, seed) }
     }
 
     /// Generate a uniform random integer in the range 0 to n-1, inclusive
     #[fixed_stack_segment]
-    fn urandom(&mut self, n: &Mpz) -> Mpz {
+    pub fn urandom(&mut self, n: &Mpz) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_urandomm(&mut res.mpz, &mut self.state, &n.mpz);
@@ -595,7 +595,7 @@ impl RandState {
 
     /// Generate a uniformly distributed random integer in the range 0 to 2^n−1, inclusive.
     #[fixed_stack_segment]
-    fn urandom_2exp(&mut self, n: c_ulong) -> Mpz {
+    pub fn urandom_2exp(&mut self, n: c_ulong) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_urandomb(&mut res.mpz, &mut self.state, n);
@@ -626,7 +626,7 @@ impl Drop for Mpq {
 
 impl Mpq {
     #[fixed_stack_segment]
-    fn new() -> Mpq {
+    pub fn new() -> Mpq {
         unsafe {
             let mut mpq = uninit();
             __gmpq_init(&mut mpq);
@@ -635,27 +635,27 @@ impl Mpq {
     }
 
     #[fixed_stack_segment]
-    fn set(&mut self, other: &Mpq) {
+    pub fn set(&mut self, other: &Mpq) {
         unsafe { __gmpq_set(&mut self.mpq, &other.mpq) }
     }
 
     #[fixed_stack_segment]
-    fn set_z(&mut self, other: &Mpz) {
+    pub fn set_z(&mut self, other: &Mpz) {
         unsafe { __gmpq_set_z(&mut self.mpq, &other.mpz) }
     }
 
     #[fixed_stack_segment]
-    fn set_d(&mut self, other: f64) {
+    pub fn set_d(&mut self, other: f64) {
         unsafe { __gmpq_set_d(&mut self.mpq, other) }
     }
 
     #[fixed_stack_segment]
-    fn set_f(&mut self, other: &Mpf) {
+    pub fn set_f(&mut self, other: &Mpf) {
         unsafe { __gmpq_set_f(&mut self.mpq, &other.mpf) }
     }
 
     #[fixed_stack_segment]
-    fn get_num(&self) -> Mpz {
+    pub fn get_num(&self) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpq_get_num(&mut res.mpz, &self.mpq);
@@ -664,7 +664,7 @@ impl Mpq {
     }
 
     #[fixed_stack_segment]
-    fn get_den(&self) -> Mpz {
+    pub fn get_den(&self) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpq_get_den(&mut res.mpz, &self.mpq);
@@ -673,7 +673,7 @@ impl Mpq {
     }
 
     #[fixed_stack_segment]
-    fn abs(&self) -> Mpq {
+    pub fn abs(&self) -> Mpq {
         unsafe {
             let mut res = Mpq::new();
             __gmpq_abs(&mut res.mpq, &self.mpq);
@@ -682,7 +682,7 @@ impl Mpq {
     }
 
     #[fixed_stack_segment]
-    fn invert(&self) -> Mpq {
+    pub fn invert(&self) -> Mpq {
         unsafe {
             if self.is_zero() {
                 fail!(~"divide by zero")
@@ -833,7 +833,7 @@ impl Drop for Mpf {
 
 impl Mpf {
     #[fixed_stack_segment]
-    fn new(precision: c_ulong) -> Mpf {
+    pub fn new(precision: c_ulong) -> Mpf {
         unsafe {
             let mut mpf = uninit();
             __gmpf_init2(&mut mpf, precision);
@@ -842,22 +842,22 @@ impl Mpf {
     }
 
     #[fixed_stack_segment]
-    fn set(&mut self, other: &Mpf) {
+    pub fn set(&mut self, other: &Mpf) {
         unsafe { __gmpf_set(&mut self.mpf, &other.mpf) }
     }
 
     #[fixed_stack_segment]
-    fn get_prec(&self) -> c_ulong {
+    pub fn get_prec(&self) -> c_ulong {
         unsafe { __gmpf_get_prec(&self.mpf) }
     }
 
     #[fixed_stack_segment]
-    fn set_prec(&mut self, precision: c_ulong) {
+    pub fn set_prec(&mut self, precision: c_ulong) {
         unsafe { __gmpf_set_prec(&mut self.mpf, precision) }
     }
 
     #[fixed_stack_segment]
-    fn abs(&self) -> Mpf {
+    pub fn abs(&self) -> Mpf {
         unsafe {
             let mut res = Mpf::new(self.get_prec());
             __gmpf_abs(&mut res.mpf, &self.mpf);
@@ -866,7 +866,7 @@ impl Mpf {
     }
 
     #[fixed_stack_segment]
-    fn ceil(&self) -> Mpf {
+    pub fn ceil(&self) -> Mpf {
         unsafe {
             let mut res = Mpf::new(self.get_prec());
             __gmpf_ceil(&mut res.mpf, &self.mpf);
@@ -875,7 +875,7 @@ impl Mpf {
     }
 
     #[fixed_stack_segment]
-    fn floor(&self) -> Mpf {
+    pub fn floor(&self) -> Mpf {
         unsafe {
             let mut res = Mpf::new(self.get_prec());
             __gmpf_floor(&mut res.mpf, &self.mpf);
@@ -884,7 +884,7 @@ impl Mpf {
     }
 
     #[fixed_stack_segment]
-    fn trunc(&self) -> Mpf {
+    pub fn trunc(&self) -> Mpf {
         unsafe {
             let mut res = Mpf::new(self.get_prec());
             __gmpf_trunc(&mut res.mpf, &self.mpf);
@@ -893,7 +893,7 @@ impl Mpf {
     }
 
     #[fixed_stack_segment]
-    fn reldiff(&self, other: &Mpf) -> Mpf {
+    pub fn reldiff(&self, other: &Mpf) -> Mpf {
         unsafe {
             let mut res = Mpf::new(uint::max(self.get_prec() as uint,
                                          other.get_prec() as uint) as c_ulong);
