@@ -12,8 +12,9 @@ extern mod std;
 
 use std::from_str::FromStr;
 use std::libc::{c_char, c_double, c_int, c_long, c_ulong, c_void, size_t};
-use std::num::{IntConvertible, One, Zero};
+use std::num::{One, Zero};
 use std::unstable::intrinsics::uninit;
+use std::mem::size_of;
 use std::{cmp, int, str, to_str, uint, vec};
 
 struct mpz_struct {
@@ -419,20 +420,34 @@ impl Neg<Mpz> for Mpz {
     }
 }
 
-impl IntConvertible for Mpz {
-    fn to_int(&self) -> int {
+impl ToPrimitive for Mpz {
+    fn to_i64(&self) -> Option<i64> {
         fail!(~"not implemented")
     }
+    fn to_u64(&self) -> Option<u64> {
+        fail!(~"not implemented")
+    }
+}
+
+impl FromPrimitive for Mpz {
     #[fixed_stack_segment]
-    fn from_int(other: int) -> Mpz {
+    fn from_u64(other: u64) -> Option<Mpz> {
         unsafe {
             let mut res = Mpz::new();
-            __gmpz_import(&mut res.mpz, 1, 1, int::bytes as size_t, 0, 0,
-                          std::util::id::<*int>(&other.abs()) as *c_void);
+            __gmpz_import(&mut res.mpz, 1, 1, size_of::<u64>() as size_t, 0, 0,
+                          std::util::id::<*u64>(&other) as *c_void);
+            Some(res)
+        }
+    }
+    fn from_i64(other: i64) -> Option<Mpz> {
+        unsafe {
+            let mut res = Mpz::new();
+            __gmpz_import(&mut res.mpz, 1, 1, size_of::<i64>() as size_t, 0, 0,
+                          std::util::id::<*i64>(&other.abs()) as *c_void);
             if other.is_negative() {
                 __gmpz_neg(&mut res.mpz, &res.mpz)
             }
-            res
+            Some(res)
         }
     }
 }
@@ -794,14 +809,25 @@ impl Neg<Mpq> for Mpq {
     }
 }
 
-impl IntConvertible for Mpq {
-    fn to_int(&self) -> int {
+impl ToPrimitive for Mpq {
+    fn to_i64(&self) -> Option<i64> {
         fail!(~"not implemented")
     }
-    fn from_int(other: int) -> Mpq {
+    fn to_u64(&self) -> Option<u64> {
+        fail!(~"not implemented")
+    }
+}
+
+impl FromPrimitive for Mpq {
+    fn from_i64(other: i64) -> Option<Mpq> {
         let mut res = Mpq::new();
-        res.set_z(&IntConvertible::from_int(other));
-        res
+        res.set_z(&FromPrimitive::from_i64(other).unwrap());
+        Some(res)
+    }
+    fn from_u64(other: u64) -> Option<Mpq> {
+        let mut res = Mpq::new();
+        res.set_z(&FromPrimitive::from_u64(other).unwrap());
+        Some(res)
     }
 }
 
