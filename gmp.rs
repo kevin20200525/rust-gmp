@@ -1,21 +1,16 @@
-#[feature(globs)];
-#[link(name = "gmp",
-       vers = "0.1.0",
-       uuid = "a92b7244-82a4-4825-9951-1d475b1296f9",
-       url = "https://github.com/thestinger/rust-gmp")];
+#[crate_id = "gmp#0.1.0"];
 
 #[comment = "gmp bindings"];
 #[license = "MIT"];
 #[crate_type = "lib"];
 
-extern mod std;
+#[feature(globs)];
+#[allow(non_camel_case_types)];
 
-use std::from_str::FromStr;
 use std::libc::{c_char, c_double, c_int, c_long, c_ulong, c_void, size_t};
 use std::num::{One, Zero};
-use std::unstable::intrinsics::uninit;
-use std::mem::size_of;
-use std::{cmp, str, to_str, vec, num};
+use std::mem::{uninit,size_of};
+use std::{cmp, str, vec, cast, fmt};
 
 struct mpz_struct {
     _mp_alloc: c_int,
@@ -168,7 +163,7 @@ impl Mpz {
     }
 
     pub fn reserve(&mut self, n: c_ulong) {
-        if ((self.bit_length() as c_ulong) < n) {
+        if (self.bit_length() as c_ulong) < n {
             unsafe { __gmpz_realloc2(&mut self.mpz, n) }
         }
     }
@@ -205,8 +200,7 @@ impl Mpz {
     pub fn to_str_radix(&self, base: int) -> ~str {
         unsafe {
             let len = __gmpz_sizeinbase(&self.mpz, base as c_int) as uint + 2;
-            let dst = vec::from_elem(len, '0');
-            let pdst = vec::raw::to_ptr(dst);
+            let pdst = vec::from_elem(len, '0').as_ptr();
 
             str::raw::from_c_str(__gmpz_get_str(pdst as *c_char, base as c_int, &self.mpz))
         }
@@ -401,7 +395,7 @@ impl FromPrimitive for Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_import(&mut res.mpz, 1, 1, size_of::<u64>() as size_t, 0, 0,
-                          std::util::id::<*u64>(&other) as *c_void);
+                          &other as *u64 as *c_void);
             Some(res)
         }
     }
@@ -409,7 +403,7 @@ impl FromPrimitive for Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_import(&mut res.mpz, 1, 1, size_of::<i64>() as size_t, 0, 0,
-                          std::util::id::<*i64>(&other.abs()) as *c_void);
+                          &other.abs() as *i64 as *c_void);
             if other.is_negative() {
                 __gmpz_neg(&mut res.mpz, &res.mpz)
             }
@@ -491,9 +485,9 @@ impl FromStr for Mpz {
     }
 }
 
-impl to_str::ToStr for Mpz {
-    fn to_str(&self) -> ~str {
-        self.to_str_radix(10)
+impl fmt::Show for Mpz {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f.buf, "{}", self.to_str_radix(10))
     }
 }
 
@@ -833,7 +827,7 @@ impl Mpf {
 
     pub fn reldiff(&self, other: &Mpf) -> Mpf {
         unsafe {
-            let mut res = Mpf::new(num::max(self.get_prec() as uint,
+            let mut res = Mpf::new(cmp::max(self.get_prec() as uint,
                                          other.get_prec() as uint) as c_ulong);
             __gmpf_reldiff(&mut res.mpf, &self.mpf, &other.mpf);
             res
@@ -878,7 +872,7 @@ impl cmp::Ord for Mpf {
 impl Add<Mpf, Mpf> for Mpf {
     fn add(&self, other: &Mpf) -> Mpf {
         unsafe {
-            let mut res = Mpf::new(num::max(self.get_prec() as uint,
+            let mut res = Mpf::new(cmp::max(self.get_prec() as uint,
                                              other.get_prec() as uint) as c_ulong);
             __gmpf_add(&mut res.mpf, &self.mpf, &other.mpf);
             res
@@ -889,7 +883,7 @@ impl Add<Mpf, Mpf> for Mpf {
 impl Sub<Mpf, Mpf> for Mpf {
     fn sub(&self, other: &Mpf) -> Mpf {
         unsafe {
-            let mut res = Mpf::new(num::max(self.get_prec() as uint,
+            let mut res = Mpf::new(cmp::max(self.get_prec() as uint,
                                              other.get_prec() as uint) as c_ulong);
             __gmpf_sub(&mut res.mpf, &self.mpf, &other.mpf);
             res
@@ -900,7 +894,7 @@ impl Sub<Mpf, Mpf> for Mpf {
 impl Mul<Mpf, Mpf> for Mpf {
     fn mul(&self, other: &Mpf) -> Mpf {
         unsafe {
-            let mut res = Mpf::new(num::max(self.get_prec() as uint,
+            let mut res = Mpf::new(cmp::max(self.get_prec() as uint,
                                              other.get_prec() as uint) as c_ulong);
             __gmpf_mul(&mut res.mpf, &self.mpf, &other.mpf);
             res
@@ -915,7 +909,7 @@ impl Div<Mpf, Mpf> for Mpf {
                 fail!(~"divide by zero")
             }
 
-            let mut res = Mpf::new(num::max(self.get_prec() as uint,
+            let mut res = Mpf::new(cmp::max(self.get_prec() as uint,
                                              other.get_prec() as uint) as c_ulong);
             __gmpf_div(&mut res.mpf, &self.mpf, &other.mpf);
             res
@@ -937,14 +931,13 @@ impl Neg<Mpf> for Mpf {
 mod test_mpz {
     use super::*;
     use std::from_str::FromStr;
-    use std::num::{One, IntConvertible};
+    use std::num::One;
     use std::libc::c_ulong;
-    use std::{uint, vec};
 
     #[test]
     fn test_set() {
-        let mut x: Mpz = IntConvertible::from_int(1000);
-        let y: Mpz = IntConvertible::from_int(5000);
+        let mut x: Mpz = FromPrimitive::from_int(1000).unwrap();
+        let y: Mpz = FromPrimitive::from_int(5000).unwrap();
         assert!(x != y);
         x.set(&y);
         assert!(x == y);
@@ -952,8 +945,8 @@ mod test_mpz {
 
     #[test]
     fn test_set_from_str_radix() {
-        let mut x: Mpz = IntConvertible::from_int(1000);
-        let y: Mpz = IntConvertible::from_int(5000);
+        let mut x: Mpz = FromPrimitive::from_int(1000).unwrap();
+        let y: Mpz = FromPrimitive::from_int(5000).unwrap();
         assert!(x != y);
         assert!(x.set_from_str_radix("5000", 10));
         assert!(x == y);
@@ -988,9 +981,9 @@ mod test_mpz {
 
     #[test]
     fn test_eq() {
-        let x: Mpz = IntConvertible::from_int(4242142195);
-        let y: Mpz = IntConvertible::from_int(4242142195);
-        let z: Mpz = IntConvertible::from_int(4242142196);
+        let x: Mpz = FromPrimitive::from_int(4242142195).unwrap();
+        let y: Mpz = FromPrimitive::from_int(4242142195).unwrap();
+        let z: Mpz = FromPrimitive::from_int(4242142196).unwrap();
 
         assert!(x == y);
         assert!(x != z);
@@ -1025,16 +1018,16 @@ mod test_mpz {
 
     #[test]
     fn test_div_round() {
-        let x: Mpz = IntConvertible::from_int(2);
-        let y: Mpz = IntConvertible::from_int(3);
+        let x: Mpz = FromPrimitive::from_int(2).unwrap();
+        let y: Mpz = FromPrimitive::from_int(3).unwrap();
         assert!((x / y).to_str() == (2i / 3).to_str());
         assert!((x / -y).to_str() == (2i / -3).to_str());
     }
 
     #[test]
     fn test_rem() {
-        let x: Mpz = IntConvertible::from_int(20);
-        let y: Mpz = IntConvertible::from_int(3);
+        let x: Mpz = FromPrimitive::from_int(20).unwrap();
+        let y: Mpz = FromPrimitive::from_int(3).unwrap();
         assert!((x % y).to_str() == (20i % 3).to_str());
         assert!((x % -y).to_str() == (20i % -3).to_str());
         assert!((-x % y).to_str() == (-20i % 3).to_str());
@@ -1042,7 +1035,7 @@ mod test_mpz {
 
     #[test]
     fn test_to_str_radix() {
-        let x: Mpz = IntConvertible::from_int(255);
+        let x: Mpz = FromPrimitive::from_int(255).unwrap();
         assert!(x.to_str_radix(16) == ~"ff");
     }
 
@@ -1054,28 +1047,30 @@ mod test_mpz {
 
     #[test]
     fn test_invalid_str() {
-        assert!(FromStr::from_str::<Mpz>("foobar").is_none());
+        let x: Option<Mpz> = FromStr::from_str("foobar");
+        assert!(x.is_none());
     }
 
     #[test]
     fn test_clone() {
-        let a = IntConvertible::from_int::<Mpz>(100);
+        let a: Mpz = FromPrimitive::from_int(100).unwrap();
         let b = a.clone();
+        let aplusb: Mpz = FromPrimitive::from_int(200).unwrap();
         assert!(b == a);
-        assert!(a + b == IntConvertible::from_int::<Mpz>(200));
+        assert!(a + b == aplusb);
     }
 
     #[test]
     fn test_from_int() {
-        let x: Mpz = IntConvertible::from_int(150);
+        let x: Mpz = FromPrimitive::from_int(150).unwrap();
         assert!(x.to_str() == ~"150");
         assert!(x == FromStr::from_str("150").unwrap());
     }
 
     #[test]
     fn test_abs() {
-        let x: Mpz = IntConvertible::from_int(1000);
-        let y: Mpz = IntConvertible::from_int(-1000);
+        let x: Mpz = FromPrimitive::from_int(1000).unwrap();
+        let y: Mpz = FromPrimitive::from_int(-1000).unwrap();
         assert!(-x == y);
         assert!(x == -y);
         assert!(x == y.abs());
@@ -1086,30 +1081,36 @@ mod test_mpz {
     fn test_bitand() {
         let a = 0b1001_0111;
         let b = 0b1100_0100;
-        assert!(IntConvertible::from_int::<Mpz>(a) & IntConvertible::from_int::<Mpz>(b)
-                == IntConvertible::from_int::<Mpz>(a & b));
+        let mpza: Mpz = FromPrimitive::from_int(a).unwrap();
+        let mpzb: Mpz = FromPrimitive::from_int(b).unwrap();
+        let mpzres: Mpz = FromPrimitive::from_int(a & b).unwrap();
+        assert!(mpza & mpzb == mpzres);
     }
 
     #[test]
     fn test_bitor() {
         let a = 0b1001_0111;
         let b = 0b1100_0100;
-        assert!(IntConvertible::from_int::<Mpz>(a) | IntConvertible::from_int::<Mpz>(b)
-                == IntConvertible::from_int::<Mpz>(a | b));
+        let mpza: Mpz = FromPrimitive::from_int(a).unwrap();
+        let mpzb: Mpz = FromPrimitive::from_int(b).unwrap();
+        let mpzres: Mpz = FromPrimitive::from_int(a | b).unwrap();
+        assert!(mpza | mpzb == mpzres);
     }
 
     #[test]
     fn test_bitxor() {
         let a = 0b1001_0111;
         let b = 0b1100_0100;
-        assert!(IntConvertible::from_int::<Mpz>(a) ^ IntConvertible::from_int::<Mpz>(b)
-                == IntConvertible::from_int::<Mpz>(a ^ b));
+        let mpza: Mpz = FromPrimitive::from_int(a).unwrap();
+        let mpzb: Mpz = FromPrimitive::from_int(b).unwrap();
+        let mpzres: Mpz = FromPrimitive::from_int(a ^ b).unwrap();
+        assert!(mpza ^ mpzb == mpzres);
     }
 
     #[test]
     fn test_shifts() {
         let i = 227;
-        let j: Mpz = IntConvertible::from_int(i);
+        let j: Mpz = FromPrimitive::from_int(i).unwrap();
         assert!((i << 4).to_str() == (j << 4).to_str());
         assert!((-i << 4).to_str() == (-j << 4).to_str());
         assert!((i >> 4).to_str() == (j >> 4).to_str());
@@ -1118,8 +1119,10 @@ mod test_mpz {
 
     #[test]
     fn test_compl() {
-        assert!(IntConvertible::from_int::<Mpz>(13).compl().to_str() == (!13i).to_str());
-        assert!(IntConvertible::from_int::<Mpz>(-442).compl().to_str() == (!-442i).to_str());
+        let a: Mpz = FromPrimitive::from_int(13).unwrap();
+        let b: Mpz = FromPrimitive::from_int(-442).unwrap();
+        assert!(a.compl().to_str() == (!13i).to_str());
+        assert!(b.compl().to_str() == (!-442i).to_str());
     }
 
     #[test]
@@ -1129,63 +1132,76 @@ mod test_mpz {
 
     #[test]
     fn test_hamdist() {
-        assert!(IntConvertible::from_int::<Mpz>(0b1011_0001).hamdist(&IntConvertible::from_int(0b0010_1011)) == 4);
+        let a: Mpz = FromPrimitive::from_int(0b1011_0001).unwrap();
+        let b: Mpz = FromPrimitive::from_int(0b0010_1011).unwrap();
+        assert!(a.hamdist(&b) == 4);
     }
 
     #[test]
     fn test_bit_length() {
-        assert!(IntConvertible::from_int::<Mpz>(0b1011_0000_0001_0000).bit_length() == 16);
-        assert!(IntConvertible::from_int::<Mpz>(0b101).bit_length() == 3);
+        let a: Mpz = FromPrimitive::from_int(0b1011_0000_0001_0000).unwrap();
+        let b: Mpz = FromPrimitive::from_int(0b101).unwrap();
+        assert!(a.bit_length() == 16);
+        assert!(b.bit_length() == 3);
     }
 
     #[test]
     fn test_gcd() {
-        assert!(IntConvertible::from_int::<Mpz>(0).gcd(&IntConvertible::from_int(0))
-                == IntConvertible::from_int(0));
-        assert!(IntConvertible::from_int::<Mpz>(3).gcd(&IntConvertible::from_int(6))
-                == IntConvertible::from_int(3));
-        assert!(IntConvertible::from_int::<Mpz>(18).gcd(&IntConvertible::from_int(24))
-                == IntConvertible::from_int(6));
+        let zero: Mpz = FromPrimitive::from_int(0).unwrap();
+        let three: Mpz = FromPrimitive::from_int(3).unwrap();
+        let six: Mpz = FromPrimitive::from_int(6).unwrap();
+        let eighteen: Mpz = FromPrimitive::from_int(18).unwrap();
+        let twentyfour: Mpz = FromPrimitive::from_int(24).unwrap();
+        assert!(zero.gcd(&zero) == zero);
+        assert!(three.gcd(&six) == three);
+        assert!(eighteen.gcd(&twentyfour) == six);
     }
 
     #[test]
     fn test_lcm() {
-        assert!(IntConvertible::from_int::<Mpz>(0).lcm(&IntConvertible::from_int(5))
-                == IntConvertible::from_int(0));
-        assert!(IntConvertible::from_int::<Mpz>(5).lcm(&IntConvertible::from_int(0))
-                == IntConvertible::from_int(0));
-        assert!(IntConvertible::from_int::<Mpz>(3).lcm(&IntConvertible::from_int(6))
-                == IntConvertible::from_int(6));
-        assert!(IntConvertible::from_int::<Mpz>(18).lcm(&IntConvertible::from_int(24))
-                == IntConvertible::from_int(72));
+        let zero: Mpz = FromPrimitive::from_int(0).unwrap();
+        let three: Mpz = FromPrimitive::from_int(3).unwrap();
+        let five: Mpz = FromPrimitive::from_int(5).unwrap();
+        let six: Mpz = FromPrimitive::from_int(6).unwrap();
+        let eighteen: Mpz = FromPrimitive::from_int(18).unwrap();
+        let twentyfour: Mpz = FromPrimitive::from_int(24).unwrap();
+        let seventytwo: Mpz = FromPrimitive::from_int(72).unwrap();
+        assert!(zero.lcm(&five) == zero);
+        assert!(five.lcm(&zero) == zero);
+        assert!(three.lcm(&six) == six);
+        assert!(eighteen.lcm(&twentyfour) == seventytwo);
     }
 
     #[test]
     fn test_invert() {
-        assert!(IntConvertible::from_int::<Mpz>(3).invert(&IntConvertible::from_int(11))
-                == Some(IntConvertible::from_int(4)));
-        assert!(IntConvertible::from_int::<Mpz>(4).invert(&IntConvertible::from_int(11))
-                == Some(IntConvertible::from_int(3)));
-        assert!(IntConvertible::from_int::<Mpz>(2).invert(&IntConvertible::from_int(5))
-                == Some(IntConvertible::from_int(3)));
-        assert!(IntConvertible::from_int::<Mpz>(3).invert(&IntConvertible::from_int(5))
-                == Some(IntConvertible::from_int(2)));
-        assert!(IntConvertible::from_int::<Mpz>(2).invert(&IntConvertible::from_int(4)).is_none());
+        let two: Mpz = FromPrimitive::from_int(2).unwrap();
+        let three: Mpz = FromPrimitive::from_int(3).unwrap();
+        let four: Mpz = FromPrimitive::from_int(4).unwrap();
+        let five: Mpz = FromPrimitive::from_int(5).unwrap();
+        let eleven: Mpz = FromPrimitive::from_int(11).unwrap();
+        assert!(three.invert(&eleven) == Some(four.clone()));
+        assert!(four.invert(&eleven) == Some(three.clone()));
+        assert!(two.invert(&five) == Some(three.clone()));
+        assert!(three.invert(&five) == Some(two.clone()));
+        assert!(two.invert(&four).is_none());
     }
 
     #[test]
     fn test_one() {
-        assert!(One::one::<Mpz>() == IntConvertible::from_int(1));
+        let onea: Mpz = One::one();
+        let oneb: Mpz = FromPrimitive::from_int(1).unwrap();
+        assert!(onea == oneb);
     }
 
     #[test]
     fn test_bit_fiddling() {
-        let mut xs = IntConvertible::from_int::<Mpz>(0b1010_1000_0010_0011);
+        let mut xs: Mpz = FromPrimitive::from_int(0b1010_1000_0010_0011).unwrap();
         assert!(xs.bit_length() == 16);
-        let mut ys = vec::reversed([true, false, true, false,
-                                   true, false, false, false,
-                                   false, false, true, false,
-                                   false, false, true, true]);
+        let mut ys = [true, false, true, false,
+                      true, false, false, false,
+                      false, false, true, false,
+                      false, false, true, true];
+        ys.reverse();
         for i in range(0, xs.bit_length()) {
             assert!(xs.tstbit(i as c_ulong) == ys[i]);
         }
@@ -1210,8 +1226,6 @@ mod test_mpz {
 #[cfg(test)]
 mod test_rand {
     use super::*;
-    use std::num::IntConvertible;
-    use std::{int, uint};
 
     #[test]
     fn test_randstate() {
@@ -1219,7 +1233,7 @@ mod test_rand {
         state.seed_ui(42);
         for _ in range(1u, 1000) {
             for x in range(1i, 10) {
-                let upper = IntConvertible::from_int(x);
+                let upper: Mpz = FromPrimitive::from_int(x).unwrap();
                 assert!(state.urandom(&upper) < upper);
             }
         }
@@ -1230,11 +1244,12 @@ mod test_rand {
 mod test_mpq {
     use super::*;
     use std::num::One;
-    use std::num::IntConvertible;
 
     #[test]
     fn test_one() {
-        assert!(One::one::<Mpq>() == IntConvertible::from_int(1));
+        let onea: Mpq = One::one();
+        let oneb: Mpq = FromPrimitive::from_int(1).unwrap();
+        assert!(onea == oneb);
     }
 
     #[test]
