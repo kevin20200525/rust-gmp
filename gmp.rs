@@ -10,7 +10,7 @@
 use std::libc::{c_char, c_double, c_int, c_long, c_ulong, c_void, size_t};
 use std::num::{One, Zero};
 use std::mem::{uninit,size_of};
-use std::{cmp, str, vec, cast, fmt};
+use std::{cmp, vec, fmt};
 
 struct mpz_struct {
     _mp_alloc: c_int,
@@ -58,7 +58,7 @@ extern "C" {
     fn __gmpz_realloc2(x: mpz_ptr, n: mp_bitcnt_t);
     fn __gmpz_set(rop: mpz_ptr, op: mpz_srcptr);
     fn __gmpz_set_str(rop: mpz_ptr, str: *c_char, base: c_int) -> c_int;
-    fn __gmpz_get_str(str: *c_char, base: c_int, op: mpz_srcptr) -> *c_char;
+    fn __gmpz_get_str(str: *mut c_char, base: c_int, op: mpz_srcptr) -> *c_char;
     fn __gmpz_sizeinbase(op: mpz_srcptr, base: c_int) -> size_t;
     fn __gmpz_cmp(op1: mpz_srcptr, op2: mpz_srcptr) -> c_int;
     fn __gmpz_cmp_ui(op1: mpz_srcptr, op2: c_ulong) -> c_int;
@@ -194,16 +194,6 @@ impl Mpz {
         s.with_c_str(|s| {
             unsafe { __gmpz_set_str(&mut self.mpz, s, base as c_int) == 0 }
         })
-    }
-
-    // TODO: fail on an invalid base
-    pub fn to_str_radix(&self, base: int) -> ~str {
-        unsafe {
-            let len = __gmpz_sizeinbase(&self.mpz, base as c_int) as uint + 2;
-            let pdst = vec::from_elem(len, '0').as_ptr();
-
-            str::raw::from_c_str(__gmpz_get_str(pdst as *c_char, base as c_int, &self.mpz))
-        }
     }
 
     pub fn bit_length(&self) -> uint {
@@ -485,11 +475,36 @@ impl FromStr for Mpz {
     }
 }
 
+impl ToStrRadix for Mpz {
+    // TODO: fail on an invalid base
+    fn to_str_radix(&self, base: uint) -> ~str {
+        unsafe {
+            // Extra two bytes are for possible minus sign and null terminator
+            let len = __gmpz_sizeinbase(&self.mpz, base as c_int) as uint + 2;
+
+            // Allocate and write into a raw *c_char of the correct length
+            let mut vector: ~[u8] = vec::with_capacity(len);
+            vector.set_len(len);
+
+            let mut cstr = vector.to_c_str_unchecked();
+            cstr.with_mut_ref(|raw| -> () {
+                __gmpz_get_str(raw, base as c_int, &self.mpz);
+            });
+
+            match cstr.as_str() {
+                Some(slice) => slice.to_owned(),
+                None        => fail!("GMP returned invalid UTF-8!")
+            }
+        }
+    }
+}
+
 impl fmt::Show for Mpz {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f.buf, "{}", self.to_str_radix(10))
     }
 }
+
 
 pub struct RandState {
     priv state: gmp_randstate_struct,
@@ -1277,3 +1292,4 @@ mod test_mpf {
         x / x;
     }
 }
+
