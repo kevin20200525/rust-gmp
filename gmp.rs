@@ -8,9 +8,10 @@
 #[allow(non_camel_case_types)];
 
 use std::libc::{c_char, c_double, c_int, c_long, c_ulong, c_void, size_t};
-use std::num::{One, Zero};
+use std::num::{One, Zero, ToStrRadix};
 use std::mem::{uninit,size_of};
 use std::{cmp, vec, fmt};
+use std::from_str::FromStr;
 
 struct mpz_struct {
     _mp_alloc: c_int,
