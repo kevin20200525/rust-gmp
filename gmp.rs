@@ -10,7 +10,7 @@
 use std::libc::{c_char, c_double, c_int, c_long, c_ulong, c_void, size_t};
 use std::num::{One, Zero, ToStrRadix};
 use std::mem::{uninit,size_of};
-use std::{cmp, vec, fmt};
+use std::{cmp, fmt, slice};
 use std::from_str::FromStr;
 
 struct mpz_struct {
@@ -484,7 +484,7 @@ impl ToStrRadix for Mpz {
             let len = __gmpz_sizeinbase(&self.mpz, base as c_int) as uint + 2;
 
             // Allocate and write into a raw *c_char of the correct length
-            let mut vector: ~[u8] = vec::with_capacity(len);
+            let mut vector: ~[u8] = slice::with_capacity(len);
             vector.set_len(len);
 
             let mut cstr = vector.to_c_str_unchecked();
