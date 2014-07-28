@@ -1,0 +1,7 @@
+[package]
+name = "rust-gmp"
+version = "0.2.0"
+authors = [ "thestinger <danielmicay@gmail.com>" ]
+
+[[lib]]
+name = "gmp"
