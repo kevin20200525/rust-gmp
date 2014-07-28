@@ -347,7 +347,7 @@ impl Mul<Mpz, Mpz> for Mpz {
 impl Div<Mpz, Mpz> for Mpz {
     fn div(&self, other: &Mpz) -> Mpz {
         unsafe {
-            if self.is_zero() {
+            if other.is_zero() {
                 fail!("divide by zero")
             }
 
