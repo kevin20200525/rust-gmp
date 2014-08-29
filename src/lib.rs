@@ -89,6 +89,8 @@ extern "C" {
     fn __gmpz_xor(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
     fn __gmpz_com(rop: mpz_ptr, op: mpz_srcptr);
     fn __gmpz_popcount(op: mpz_srcptr) -> mp_bitcnt_t;
+    // TODO: maybe rather use `mpz_powm_ui`?
+    fn __gmpz_powm(rop: mpz_ptr, base: mpz_srcptr, exp: mpz_srcptr, modulo: mpz_srcptr);
     fn __gmpz_hamdist(op1: mpz_srcptr, op2: mpz_srcptr) -> mp_bitcnt_t;
     fn __gmpz_setbit(rop: mpz_ptr, bit_index: mp_bitcnt_t);
     fn __gmpz_clrbit(rop: mpz_ptr, bit_index: mp_bitcnt_t);
@@ -328,6 +330,15 @@ impl Mpz {
 
     pub fn popcount(&self) -> uint {
         unsafe { __gmpz_popcount(&self.mpz) as uint }
+    }
+
+    pub fn powm(&self, exp: &Mpz, modulus: &Mpz) -> Mpz {
+        unsafe {
+            let mut res = Mpz::new();
+            // TODO
+            __gmpz_powm(&mut res.mpz, &self.mpz, &exp.mpz, &modulus.mpz);
+            res
+        }
     }
 
     pub fn hamdist(&self, other: &Mpz) -> uint {

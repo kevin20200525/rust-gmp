@@ -226,6 +226,15 @@ mod mpz {
     }
 
     #[test]
+    fn test_powm() {
+        let a: Mpz = FromPrimitive::from_int(13).unwrap();
+        let b: Mpz = FromPrimitive::from_int(7).unwrap();
+        let p: Mpz = FromPrimitive::from_int(19).unwrap();
+        let c: Mpz = FromPrimitive::from_int(10).unwrap();
+        assert!(a.powm(&b, &p) == c);
+    }
+
+    #[test]
     fn test_popcount() {
         Mpz::from_str_radix("1010010011", 2).unwrap().popcount() == 5;
     }
