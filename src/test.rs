@@ -349,6 +349,20 @@ mod mpz {
             assert!(xs.tstbit(i as c_ulong) == ys[i]);
         }
     }
+
+    #[test]
+    fn test_root() {
+        let x: Mpz = FromPrimitive::from_int(123456).unwrap();
+        let y: Mpz = FromPrimitive::from_int(49).unwrap();
+        assert!(x.root(3) == y);
+    }
+
+    #[test]
+    fn test_sqrt() {
+        let x: Mpz = FromPrimitive::from_int(567).unwrap();
+        let y: Mpz = FromPrimitive::from_int(23).unwrap();
+        assert!(x.sqrt() == y);
+    }
 }
 
 mod rand {

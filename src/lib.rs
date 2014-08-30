@@ -101,6 +101,8 @@ extern "C" {
     fn __gmpz_invert(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr) -> c_int;
     fn __gmpz_import(rop: mpz_ptr, count: size_t, order: c_int, size: size_t,
                      endian: c_int, nails: size_t, op: *const c_void);
+    fn __gmpz_root(rop: mpz_ptr, op: mpz_srcptr, n: c_ulong) -> c_int;
+    fn __gmpz_sqrt(rop: mpz_ptr, op: mpz_srcptr);
     fn __gmp_randinit_default(state: gmp_randstate_t);
     fn __gmp_randinit_mt(state: gmp_randstate_t);
     fn __gmp_randinit_lc_2exp(state: gmp_randstate_t, a: mpz_srcptr, c: c_ulong, m2exp: mp_bitcnt_t);
@@ -359,6 +361,29 @@ impl Mpz {
 
     pub fn tstbit(&self, bit_index: c_ulong) -> bool {
         unsafe { __gmpz_tstbit(&self.mpz, bit_index) == 1 }
+    }
+
+    pub fn root(&self, n: c_ulong) -> Mpz {
+        assert!(*self >= Zero::zero());
+        unsafe {
+            let mut res = Mpz::new();
+            let _perfect_root
+                = match __gmpz_root(&mut res.mpz, &self.mpz, n) {
+                    0 => false,
+                    _ => true,
+            };
+            // TODO: consider returning `_perfect_root`
+            res
+        }
+    }
+
+    pub fn sqrt(&self) -> Mpz {
+        assert!(*self >= Zero::zero());
+        unsafe {
+            let mut res = Mpz::new();
+            __gmpz_sqrt(&mut res.mpz, &self.mpz);
+            res
+        }
     }
 }
 
