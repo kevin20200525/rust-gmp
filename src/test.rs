@@ -255,6 +255,13 @@ mod mpz {
     }
 
     #[test]
+    fn test_nextprime() {
+        let a: Mpz = FromPrimitive::from_int(123456).unwrap();
+        let b: Mpz = FromPrimitive::from_int(123457).unwrap();
+        assert!(a.nextprime() == b);
+    }
+
+    #[test]
     fn test_gcd() {
         let zero: Mpz = FromPrimitive::from_int(0).unwrap();
         let three: Mpz = FromPrimitive::from_int(3).unwrap();
