@@ -97,6 +97,7 @@ extern "C" {
     fn __gmpz_combit(rop: mpz_ptr, bit_index: mp_bitcnt_t);
     fn __gmpz_tstbit(rop: mpz_srcptr, bit_index: mp_bitcnt_t) -> c_int;
     fn __gmpz_gcd(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
+    fn __gmpz_gcdext(g: mpz_ptr, s: mpz_ptr, t: mpz_ptr, a: mpz_srcptr, b: mpz_srcptr);
     fn __gmpz_lcm(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
     fn __gmpz_invert(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr) -> c_int;
     fn __gmpz_import(rop: mpz_ptr, count: size_t, order: c_int, size: size_t,
@@ -284,6 +285,18 @@ impl Mpz {
             let mut res = Mpz::new();
             __gmpz_gcd(&mut res.mpz, &self.mpz, &other.mpz);
             res
+        }
+    }
+
+    /// Given (a, b), return (g, s, t) such that g = gcd(a, b) = s*a + t*b.
+    pub fn gcdext(&self, other: &Mpz) -> (Mpz, Mpz, Mpz) {
+        unsafe {
+            let mut g = Mpz::new();
+            let mut s = Mpz::new();
+            let mut t = Mpz::new();
+            __gmpz_gcdext(&mut g.mpz, &mut s.mpz, &mut t.mpz,
+                          &self.mpz, &other.mpz);
+            (g, s, t)
         }
     }
 

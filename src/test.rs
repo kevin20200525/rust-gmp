@@ -267,6 +267,16 @@ mod mpz {
     }
 
     #[test]
+    fn test_gcdext() {
+        let six: Mpz = FromPrimitive::from_int(6).unwrap();
+        let eighteen: Mpz = FromPrimitive::from_int(18).unwrap();
+        let twentyfour: Mpz = FromPrimitive::from_int(24).unwrap();
+        let (g, s, t) = eighteen.gcdext(&twentyfour);
+        assert!(g == six);
+        assert!(g == s*eighteen + t*twentyfour);
+    }
+
+    #[test]
     fn test_lcm() {
         let zero: Mpz = FromPrimitive::from_int(0).unwrap();
         let three: Mpz = FromPrimitive::from_int(3).unwrap();
