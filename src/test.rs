@@ -1,5 +1,6 @@
+
 mod mpz {
-    use super::super::*;
+    use super::super::Mpz;
     use std::from_str::FromStr;
     use std::num::One;
     use libc::c_ulong;
@@ -342,7 +343,7 @@ mod mpz {
 }
 
 mod rand {
-    use super::super::*;
+    use super::super::{RandState, Mpz};
 
     #[test]
     fn test_randstate() {
@@ -358,7 +359,7 @@ mod rand {
 }
 
 mod mpq {
-    use super::super::*;
+    use super::super::Mpq;
     use std::num::One;
 
     #[test]
@@ -383,7 +384,7 @@ mod mpq {
 }
 
 mod mpf {
-    use super::super::*;
+    use super::super::Mpf;
 
     #[test]
     #[should_fail]

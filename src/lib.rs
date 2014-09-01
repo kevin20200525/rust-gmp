@@ -4,7 +4,6 @@
 #![license = "MIT"]
 #![crate_type = "lib"]
 
-#![feature(globs)]
 #![allow(non_camel_case_types)]
 
 extern crate libc;
