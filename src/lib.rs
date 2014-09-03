@@ -5,13 +5,15 @@
 #![crate_type = "lib"]
 
 #![allow(non_camel_case_types)]
+#![feature(default_type_params)] // needed for implementing `Hash`
+
 
 extern crate libc;
 
 use libc::{c_char, c_double, c_int, c_long, c_ulong, c_void, size_t};
 use std::num::{One, Zero};
 use std::mem::{uninitialized,size_of};
-use std::{cmp, fmt};
+use std::{cmp, fmt, hash};
 use std::from_str::FromStr;
 
 #[cfg(test)]
@@ -47,6 +49,7 @@ struct gmp_randstate_struct {
     _mp_algdata: *const c_void
 }
 
+type mp_limb_t = uint; // TODO: Find a way to use __gmp_bits_per_limb instead.
 type mp_bitcnt_t = c_ulong;
 type mpz_srcptr = *const mpz_struct;
 type mpz_ptr = *mut mpz_struct;
@@ -58,6 +61,7 @@ type gmp_randstate_t = *mut gmp_randstate_struct;
 
 #[link(name = "gmp")]
 extern "C" {
+    static __gmp_bits_per_limb: c_int;
     fn __gmpz_init(x: mpz_ptr);
     fn __gmpz_init2(x: mpz_ptr, n: mp_bitcnt_t);
     fn __gmpz_init_set(rop: mpz_ptr, op: mpz_srcptr);
@@ -633,6 +637,18 @@ impl fmt::Show for Mpz {
     }
 }
 
+impl<S: hash::Writer> hash::Hash<S> for Mpz {
+    fn hash(&self, state: &mut S) {
+        unsafe {
+            for i in range(0, self.mpz._mp_size) {
+                let limb = self.mpz._mp_d as *const mp_limb_t;
+                let limb = *(limb.offset(i as int));
+                limb.hash(state);
+            }
+        }
+    }
+}
+
 
 pub struct RandState {
     state: gmp_randstate_struct,
@@ -1070,4 +1086,10 @@ impl Neg<Mpf> for Mpf {
             res
         }
     }
+}
+
+#[test]
+fn test_limb_size() {
+    // We are assuming that the limb size is the same as the pointer size.
+    assert_eq!(std::mem::size_of::<uint>() * 8, __gmp_bits_per_limb as uint);
 }

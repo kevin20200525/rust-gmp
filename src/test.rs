@@ -2,8 +2,10 @@
 mod mpz {
     use super::super::Mpz;
     use std::from_str::FromStr;
-    use std::num::One;
+    use std::num::{Zero, One};
     use libc::c_ulong;
+
+    use std::hash::hash;
 
     #[test]
     fn test_set() {
@@ -386,6 +388,27 @@ mod mpz {
         let x: Mpz = FromPrimitive::from_int(567).unwrap();
         let y: Mpz = FromPrimitive::from_int(23).unwrap();
         assert!(x.sqrt() == y);
+    }
+
+    #[test]
+    fn test_hash_short() {
+        let zero: Mpz = Zero::zero();
+        let one: Mpz = One::one();
+        let two = one + one;
+        assert!(hash(&zero) != hash(&one));
+        assert_eq!(hash(&one), hash(&(two - one)));
+    }
+
+    #[test]
+    fn test_hash_long() {
+        let a = Mpz::from_str_radix("348917329847193287498312749187234192387", 10)
+                .unwrap();
+        let b = Mpz::from_str_radix("348917329847193287498312749187234192386", 10)
+                .unwrap();
+        let one: Mpz = One::one();
+        assert!(hash(&a) != hash(&b));
+        assert_eq!(hash(&a), hash(&(b + one)));
+        assert_eq!(hash(&(a - a)), hash(&(one - one)));
     }
 }
 
