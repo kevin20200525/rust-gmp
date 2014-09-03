@@ -226,6 +226,13 @@ mod mpz {
     }
 
     #[test]
+    fn test_pow() {
+        let a: Mpz = FromPrimitive::from_int(2).unwrap();
+        let b: Mpz = FromPrimitive::from_int(8).unwrap();
+        assert!(a.pow(3) == b);
+    }
+
+    #[test]
     fn test_powm() {
         let a: Mpz = FromPrimitive::from_int(13).unwrap();
         let b: Mpz = FromPrimitive::from_int(7).unwrap();
