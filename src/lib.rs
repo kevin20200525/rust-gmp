@@ -72,6 +72,10 @@ extern "C" {
     fn __gmpz_set(rop: mpz_ptr, op: mpz_srcptr);
     fn __gmpz_set_str(rop: mpz_ptr, s: *const c_char, base: c_int) -> c_int;
     fn __gmpz_get_str(s: *mut c_char, base: c_int, op: mpz_srcptr) -> *mut c_char;
+    fn __gmpz_get_ui(op: mpz_srcptr) -> c_ulong;
+    fn __gmpz_fits_ulong_p(op: mpz_srcptr) -> c_int;
+    fn __gmpz_get_si(op: mpz_srcptr) -> c_ulong;
+    fn __gmpz_fits_slong_p(op: mpz_srcptr) -> c_long;
     fn __gmpz_sizeinbase(op: mpz_srcptr, base: c_int) -> size_t;
     fn __gmpz_cmp(op1: mpz_srcptr, op2: mpz_srcptr) -> c_int;
     fn __gmpz_cmp_ui(op1: mpz_srcptr, op2: c_ulong) -> c_int;
@@ -529,10 +533,23 @@ impl Neg<Mpz> for Mpz {
 
 impl ToPrimitive for Mpz {
     fn to_i64(&self) -> Option<i64> {
-        fail!("not implemented")
+        unsafe {
+            if __gmpz_fits_slong_p(&self.mpz) != 0 {
+                return Some(__gmpz_get_si(&self.mpz) as i64);
+            } else {
+                return None;
+            }
+        }
     }
+
     fn to_u64(&self) -> Option<u64> {
-        fail!("not implemented")
+        unsafe {
+            if __gmpz_fits_ulong_p(&self.mpz) != 0 {
+                return Some(__gmpz_get_ui(&self.mpz) as u64);
+            } else {
+                return None;
+            }
+        }
     }
 }
 
