@@ -113,6 +113,7 @@ extern "C" {
                      endian: c_int, nails: size_t, op: *const c_void);
     fn __gmpz_root(rop: mpz_ptr, op: mpz_srcptr, n: c_ulong) -> c_int;
     fn __gmpz_sqrt(rop: mpz_ptr, op: mpz_srcptr);
+    fn __gmpz_millerrabin(n: mpz_srcptr, reps: c_int) -> c_int;
     fn __gmp_randinit_default(state: gmp_randstate_t);
     fn __gmp_randinit_mt(state: gmp_randstate_t);
     fn __gmp_randinit_lc_2exp(state: gmp_randstate_t, a: mpz_srcptr, c: c_ulong, m2exp: mp_bitcnt_t);
@@ -420,6 +421,12 @@ impl Mpz {
             let mut res = Mpz::new();
             __gmpz_sqrt(&mut res.mpz, &self.mpz);
             res
+        }
+    }
+
+    pub fn millerrabin(&self, reps: c_int) -> c_int {
+        unsafe {
+            __gmpz_millerrabin(&self.mpz, reps)
         }
     }
 }
