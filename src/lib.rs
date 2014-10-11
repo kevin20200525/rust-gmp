@@ -80,8 +80,11 @@ extern "C" {
     fn __gmpz_abs(rop: mpz_ptr, op: mpz_srcptr);
     fn __gmpz_tdiv_q(q: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
     fn __gmpz_tdiv_r(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
+    fn __gmpz_fdiv_q(q: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
+    fn __gmpz_fdiv_r(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
     fn __gmpz_fdiv_q_2exp(q: mpz_ptr, n: mpz_srcptr, b: mp_bitcnt_t);
     fn __gmpz_mod(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
+    fn __gmpz_divisible_p(n: mpz_srcptr, d: mpz_srcptr) -> c_int;
     fn __gmpz_and(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
     fn __gmpz_ior(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
     fn __gmpz_xor(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
@@ -226,6 +229,22 @@ impl Mpz {
         }
     }
 
+    pub fn div_floor(&self, other: &Mpz) -> Mpz {
+      unsafe {
+        let mut res = Mpz::new();
+        __gmpz_fdiv_q(&mut res.mpz, &self.mpz, &other.mpz);
+        res
+      }
+    }
+
+    pub fn mod_floor(&self, other: &Mpz) -> Mpz {
+      unsafe {
+        let mut res = Mpz::new();
+        __gmpz_fdiv_r(&mut res.mpz, &self.mpz, &other.mpz);
+        res
+      }
+    }
+
     pub fn gcd(&self, other: &Mpz) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
@@ -238,6 +257,25 @@ impl Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_lcm(&mut res.mpz, &self.mpz, &other.mpz);
+            res
+        }
+    }
+
+    pub fn is_multiple_of(&self, other: &Mpz) -> bool {
+        unsafe {
+            __gmpz_divisible_p(&other.mpz, &self.mpz) != 0
+        }
+    }
+
+    #[inline]
+    pub fn divides(&self, other: &Mpz) -> bool {
+        self.is_multiple_of(other)
+    }
+
+    pub fn modulus(&self, modulo: &Mpz) -> Mpz {
+        unsafe {
+            let mut res = Mpz::new();
+            __gmpz_mod(&mut res.mpz, &self.mpz, &modulo.mpz);
             res
         }
     }

@@ -60,7 +60,7 @@ mod mpz {
         assert!(x != z);
         assert!(y != z);
     }
-    
+
     #[test]
     fn test_ord() {
         let x: Mpz = FromStr::from_str("40000000000000000000000").unwrap();
@@ -146,6 +146,35 @@ mod mpz {
         assert!(x == -y);
         assert!(x == y.abs());
         assert!(x.abs() == y.abs());
+    }
+
+    #[test]
+    fn test_div_floor() {
+        let two: Mpz = FromPrimitive::from_int(2).unwrap();
+        let eight: Mpz = FromPrimitive::from_int(8).unwrap();
+        let minuseight: Mpz = FromPrimitive::from_int(-8).unwrap();
+        let three: Mpz = FromPrimitive::from_int(3).unwrap();
+        let minusthree: Mpz = FromPrimitive::from_int(-3).unwrap();
+        assert_eq!(eight.div_floor(&three), two);
+        assert_eq!(eight.div_floor(&minusthree), minusthree);
+        assert_eq!(minuseight.div_floor(&three), minusthree);
+        assert_eq!(minuseight.div_floor(&minusthree), two);
+    }
+
+    #[test]
+    fn test_mod_floor() {
+        let one: Mpz = FromPrimitive::from_int(1).unwrap();
+        let minusone: Mpz = FromPrimitive::from_int(-1).unwrap();
+        let two: Mpz = FromPrimitive::from_int(2).unwrap();
+        let minustwo: Mpz = FromPrimitive::from_int(-2).unwrap();
+        let three: Mpz = FromPrimitive::from_int(3).unwrap();
+        let minusthree: Mpz = FromPrimitive::from_int(-3).unwrap();
+        let eight: Mpz = FromPrimitive::from_int(8).unwrap();
+        let minuseight: Mpz = FromPrimitive::from_int(-8).unwrap();
+        assert_eq!(eight.mod_floor(&three), two);
+        assert_eq!(eight.mod_floor(&minusthree), minusone);
+        assert_eq!(minuseight.mod_floor(&three), one);
+        assert_eq!(minuseight.mod_floor(&minusthree), minustwo);
     }
 
     #[test]
@@ -241,6 +270,25 @@ mod mpz {
         assert!(five.lcm(&zero) == zero);
         assert!(three.lcm(&six) == six);
         assert!(eighteen.lcm(&twentyfour) == seventytwo);
+    }
+
+    #[test]
+    fn test_is_multiple_of() {
+        let two: Mpz = FromPrimitive::from_int(2).unwrap();
+        let three: Mpz = FromPrimitive::from_int(3).unwrap();
+        let six: Mpz = FromPrimitive::from_int(6).unwrap();
+        assert!(two.is_multiple_of(&six));
+        assert!(three.is_multiple_of(&six));
+        assert!(!two.is_multiple_of(&three));
+    }
+
+    #[test]
+    fn test_modulus() {
+        let minusone: Mpz = FromPrimitive::from_int(-1).unwrap();
+        let two: Mpz = FromPrimitive::from_int(2).unwrap();
+        let three: Mpz = FromPrimitive::from_int(3).unwrap();
+        assert_eq!(two.modulus(&three), two);
+        assert_eq!(minusone.modulus(&three), two);
     }
 
     #[test]
