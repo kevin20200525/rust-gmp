@@ -786,7 +786,7 @@ impl Mul<Mpq, Mpq> for Mpq {
 impl Div<Mpq, Mpq> for Mpq {
     fn div(&self, other: &Mpq) -> Mpq {
         unsafe {
-            if self.is_zero() {
+            if other.is_zero() {
                 fail!("divide by zero")
             }
 
