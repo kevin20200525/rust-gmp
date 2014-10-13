@@ -230,19 +230,27 @@ impl Mpz {
     }
 
     pub fn div_floor(&self, other: &Mpz) -> Mpz {
-      unsafe {
-        let mut res = Mpz::new();
-        __gmpz_fdiv_q(&mut res.mpz, &self.mpz, &other.mpz);
-        res
-      }
+        unsafe {
+            if other.is_zero() {
+                fail!("divide by zero")
+            }
+
+            let mut res = Mpz::new();
+            __gmpz_fdiv_q(&mut res.mpz, &self.mpz, &other.mpz);
+            res
+        }
     }
 
     pub fn mod_floor(&self, other: &Mpz) -> Mpz {
-      unsafe {
-        let mut res = Mpz::new();
-        __gmpz_fdiv_r(&mut res.mpz, &self.mpz, &other.mpz);
-        res
-      }
+        unsafe {
+            if other.is_zero() {
+                fail!("divide by zero")
+            }
+
+            let mut res = Mpz::new();
+            __gmpz_fdiv_r(&mut res.mpz, &self.mpz, &other.mpz);
+            res
+        }
     }
 
     pub fn gcd(&self, other: &Mpz) -> Mpz {
@@ -263,17 +271,21 @@ impl Mpz {
 
     pub fn is_multiple_of(&self, other: &Mpz) -> bool {
         unsafe {
-            __gmpz_divisible_p(&other.mpz, &self.mpz) != 0
+            __gmpz_divisible_p(&self.mpz, &other.mpz) != 0
         }
     }
 
     #[inline]
     pub fn divides(&self, other: &Mpz) -> bool {
-        self.is_multiple_of(other)
+        other.is_multiple_of(self)
     }
 
     pub fn modulus(&self, modulo: &Mpz) -> Mpz {
         unsafe {
+            if modulo.is_zero() {
+                fail!("divide by zero")
+            }
+
             let mut res = Mpz::new();
             __gmpz_mod(&mut res.mpz, &self.mpz, &modulo.mpz);
             res

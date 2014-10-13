@@ -277,9 +277,9 @@ mod mpz {
         let two: Mpz = FromPrimitive::from_int(2).unwrap();
         let three: Mpz = FromPrimitive::from_int(3).unwrap();
         let six: Mpz = FromPrimitive::from_int(6).unwrap();
-        assert!(two.is_multiple_of(&six));
-        assert!(three.is_multiple_of(&six));
-        assert!(!two.is_multiple_of(&three));
+        assert!(six.is_multiple_of(&two));
+        assert!(six.is_multiple_of(&three));
+        assert!(!three.is_multiple_of(&two));
     }
 
     #[test]
