@@ -10,7 +10,7 @@
 extern crate libc;
 
 use libc::{c_char, c_double, c_int, c_long, c_ulong, c_void, size_t};
-use std::num::{One, Zero, ToStrRadix};
+use std::num::{One, Zero};
 use std::mem::{uninitialized,size_of};
 use std::{cmp, fmt};
 use std::from_str::FromStr;
@@ -178,6 +178,29 @@ impl Mpz {
     pub fn reserve(&mut self, n: c_ulong) {
         if (self.bit_length() as c_ulong) < n {
             unsafe { __gmpz_realloc2(&mut self.mpz, n) }
+        }
+    }
+
+    // TODO: fail on an invalid base
+    // FIXME: Unfortunately it isn't currently possible to use the fmt::RadixFmt
+    //        machinery for a custom type.
+    fn to_str_radix(&self, base: uint) -> String {
+        unsafe {
+            // Extra two bytes are for possible minus sign and null terminator
+            let len = __gmpz_sizeinbase(&self.mpz, base as c_int) as uint + 2;
+
+            // Allocate and write into a raw *c_char of the correct length
+            let mut vector: Vec<u8> = Vec::with_capacity(len);
+            vector.set_len(len);
+
+            let mut cstr = vector.as_slice().to_c_str_unchecked();
+
+            __gmpz_get_str(cstr.as_mut_ptr(), base as c_int, &self.mpz);
+
+            match cstr.as_str() {
+                Some(slice) => slice.to_string(),
+                None        => fail!("GMP returned invalid UTF-8!")
+            }
         }
     }
 
@@ -537,29 +560,6 @@ impl Shr<c_ulong, Mpz> for Mpz {
 impl FromStr for Mpz {
     fn from_str(s: &str) -> Option<Mpz> {
         Mpz::from_str_radix(s, 10)
-    }
-}
-
-impl ToStrRadix for Mpz {
-    // TODO: fail on an invalid base
-    fn to_str_radix(&self, base: uint) -> String {
-        unsafe {
-            // Extra two bytes are for possible minus sign and null terminator
-            let len = __gmpz_sizeinbase(&self.mpz, base as c_int) as uint + 2;
-
-            // Allocate and write into a raw *c_char of the correct length
-            let mut vector: Vec<u8> = Vec::with_capacity(len);
-            vector.set_len(len);
-
-            let mut cstr = vector.as_slice().to_c_str_unchecked();
-
-            __gmpz_get_str(cstr.as_mut_ptr(), base as c_int, &self.mpz);
-
-            match cstr.as_str() {
-                Some(slice) => slice.to_string(),
-                None        => fail!("GMP returned invalid UTF-8!")
-            }
-        }
     }
 }
 

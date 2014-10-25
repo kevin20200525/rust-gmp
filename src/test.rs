@@ -3,7 +3,6 @@ mod mpz {
     use std::from_str::FromStr;
     use std::num::One;
     use libc::c_ulong;
-    use std::num::ToStrRadix;
 
     #[test]
     fn test_set() {
@@ -107,13 +106,13 @@ mod mpz {
     #[test]
     fn test_to_str_radix() {
         let x: Mpz = FromPrimitive::from_int(255).unwrap();
-        assert!(x.to_str_radix(16) == "ff".to_owned());
+        assert!(x.to_str_radix(16) == "ff".to_string());
     }
 
     #[test]
     fn test_to_string() {
         let x: Mpz = FromStr::from_str("1234567890").unwrap();
-        assert!(x.to_string() == "1234567890".to_owned());
+        assert!(x.to_string() == "1234567890".to_string());
     }
 
     #[test]
@@ -134,7 +133,7 @@ mod mpz {
     #[test]
     fn test_from_int() {
         let x: Mpz = FromPrimitive::from_int(150).unwrap();
-        assert!(x.to_string() == "150".to_owned());
+        assert!(x.to_string() == "150".to_string());
         assert!(x == FromStr::from_str("150").unwrap());
     }
 
