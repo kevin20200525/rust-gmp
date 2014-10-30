@@ -213,7 +213,7 @@ impl Mpz {
 
             match cstr.as_str() {
                 Some(slice) => slice.to_string(),
-                None        => fail!("GMP returned invalid UTF-8!")
+                None        => panic!("GMP returned invalid UTF-8!")
             }
         }
     }
@@ -269,7 +269,7 @@ impl Mpz {
     pub fn div_floor(&self, other: &Mpz) -> Mpz {
         unsafe {
             if other.is_zero() {
-                fail!("divide by zero")
+                panic!("divide by zero")
             }
 
             let mut res = Mpz::new();
@@ -281,7 +281,7 @@ impl Mpz {
     pub fn mod_floor(&self, other: &Mpz) -> Mpz {
         unsafe {
             if other.is_zero() {
-                fail!("divide by zero")
+                panic!("divide by zero")
             }
 
             let mut res = Mpz::new();
@@ -340,7 +340,7 @@ impl Mpz {
     pub fn modulus(&self, modulo: &Mpz) -> Mpz {
         unsafe {
             if modulo.is_zero() {
-                fail!("divide by zero")
+                panic!("divide by zero")
             }
 
             let mut res = Mpz::new();
@@ -504,7 +504,7 @@ impl Div<Mpz, Mpz> for Mpz {
     fn div(&self, other: &Mpz) -> Mpz {
         unsafe {
             if other.is_zero() {
-                fail!("divide by zero")
+                panic!("divide by zero")
             }
 
             let mut res = Mpz::new();
@@ -518,7 +518,7 @@ impl Rem<Mpz, Mpz> for Mpz {
     fn rem(&self, other: &Mpz) -> Mpz {
         unsafe {
             if self.is_zero() {
-                fail!("divide by zero")
+                panic!("divide by zero")
             }
 
             let mut res = Mpz::new();
@@ -814,7 +814,7 @@ impl Mpq {
     pub fn invert(&self) -> Mpq {
         unsafe {
             if self.is_zero() {
-                fail!("divide by zero")
+                panic!("divide by zero")
             }
 
             let mut res = Mpq::new();
@@ -891,7 +891,7 @@ impl Div<Mpq, Mpq> for Mpq {
     fn div(&self, other: &Mpq) -> Mpq {
         unsafe {
             if other.is_zero() {
-                fail!("divide by zero")
+                panic!("divide by zero")
             }
 
             let mut res = Mpq::new();
@@ -913,10 +913,10 @@ impl Neg<Mpq> for Mpq {
 
 impl ToPrimitive for Mpq {
     fn to_i64(&self) -> Option<i64> {
-        fail!("not implemented")
+        panic!("not implemented")
     }
     fn to_u64(&self) -> Option<u64> {
-        fail!("not implemented")
+        panic!("not implemented")
     }
 }
 
@@ -1091,7 +1091,7 @@ impl Div<Mpf, Mpf> for Mpf {
     fn div(&self, other: &Mpf) -> Mpf {
         unsafe {
             if __gmpf_cmp_ui(&self.mpf, 0) == 0 {
-                fail!("divide by zero")
+                panic!("divide by zero")
             }
 
             let mut res = Mpf::new(cmp::max(self.get_prec() as uint,
