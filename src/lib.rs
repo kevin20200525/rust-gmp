@@ -517,7 +517,7 @@ impl Div<Mpz, Mpz> for Mpz {
 impl Rem<Mpz, Mpz> for Mpz {
     fn rem(&self, other: &Mpz) -> Mpz {
         unsafe {
-            if self.is_zero() {
+            if other.is_zero() {
                 panic!("divide by zero")
             }
 

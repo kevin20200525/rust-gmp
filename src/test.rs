@@ -78,15 +78,17 @@ mod mpz {
     #[test]
     #[should_fail]
     fn test_div_zero() {
-        let x = Mpz::new();
-        x / x;
+        let x: Mpz = One::one();
+        let y = Mpz::new();
+        x / y;
     }
 
     #[test]
     #[should_fail]
     fn test_rem_zero() {
-        let x = Mpz::new();
-        x % x;
+        let x: Mpz = One::one();
+        let y = Mpz::new();
+        x % y;
     }
 
     #[test]
@@ -442,8 +444,9 @@ mod mpq {
     #[test]
     #[should_fail]
     fn test_div_zero() {
-        let x = Mpq::new();
-        x / x;
+        let x: Mpq = One::one();
+        let y = Mpq::new();
+        x / y;
     }
 
     #[test]
@@ -459,6 +462,7 @@ mod mpf {
     #[test]
     #[should_fail]
     fn test_div_zero() {
+        // FIXME: change the numerator to One::one()
         let x = Mpf::new(100);
         x / x;
     }
