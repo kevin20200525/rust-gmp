@@ -4,6 +4,7 @@ mod mpz {
     use std::from_str::FromStr;
     use std::num::{Zero, One};
     use libc::c_ulong;
+    use std::{i64, u64};
 
     use std::hash::hash;
 
@@ -409,6 +410,44 @@ mod mpz {
         assert!(hash(&a) != hash(&b));
         assert_eq!(hash(&a), hash(&(b + one)));
         assert_eq!(hash(&(a - a)), hash(&(one - one)));
+    }
+    #[test]
+    fn test_to_u64() {
+        let minus_five: Mpz = FromPrimitive::from_int(-5).unwrap();
+        let minus_one: Mpz = FromPrimitive::from_int(-1).unwrap();
+        let zero: Mpz = FromPrimitive::from_int(0).unwrap();
+        let one: Mpz = FromPrimitive::from_int(1).unwrap();
+        let five: Mpz = FromPrimitive::from_int(5).unwrap();
+        let max_u64: Mpz = FromPrimitive::from_u64(u64::MAX).unwrap();
+
+        assert_eq!(minus_five.to_u64(), None);
+        assert_eq!(minus_one.to_u64(), None);
+        assert_eq!(zero.to_u64(), Some(0u64));
+        assert_eq!(one.to_u64(), Some(1u64));
+        assert_eq!(five.to_u64(), Some(5u64));
+        assert_eq!(max_u64.to_u64(), Some(u64::MAX));
+        assert_eq!((max_u64 + one).to_u64(), None);
+    }
+
+    #[test]
+    fn test_to_i64() {
+        let min_i64: Mpz = FromPrimitive::from_i64(i64::MIN).unwrap();
+        let minus_five: Mpz = FromPrimitive::from_int(-5).unwrap();
+        let minus_one: Mpz = FromPrimitive::from_int(-1).unwrap();
+        let zero: Mpz = FromPrimitive::from_int(0).unwrap();
+        let one: Mpz = FromPrimitive::from_int(1).unwrap();
+        let five: Mpz = FromPrimitive::from_int(5).unwrap();
+        let max_i64: Mpz = FromPrimitive::from_i64(i64::MAX).unwrap();
+
+        assert_eq!((min_i64 - one).to_i64(), None);
+        assert_eq!(min_i64.to_i64(), Some(i64::MIN));
+        assert_eq!(minus_five.to_i64(), Some(-5i64));
+        assert_eq!(minus_one.to_i64(), Some(-1i64));
+        assert_eq!(zero.to_i64(), Some(0i64));
+        assert_eq!(one.to_i64(), Some(1i64));
+        assert_eq!(five.to_i64(), Some(5i64));
+        assert_eq!(max_i64.to_i64(), Some(i64::MAX));
+        assert_eq!((max_i64 + one).to_i64(), None);
     }
 }
 
