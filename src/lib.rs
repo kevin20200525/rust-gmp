@@ -1,9 +1,6 @@
 #![crate_name = "gmp"]
 
-#![comment = "gmp bindings"]
-#![license = "MIT"]
-#![crate_type = "lib"]
-
+#![warn(deprecated)]
 #![allow(non_camel_case_types)]
 #![feature(default_type_params)] // needed for implementing `Hash`
 
@@ -11,10 +8,10 @@
 extern crate libc;
 
 use libc::{c_char, c_double, c_int, c_long, c_ulong, c_void, size_t};
-use std::num::{One, Zero};
+use std::num::SignedInt;
 use std::mem::{uninitialized,size_of};
 use std::{cmp, fmt, hash};
-use std::from_str::FromStr;
+use std::str::FromStr;
 
 #[cfg(test)]
 mod test;
@@ -402,7 +399,7 @@ impl Mpz {
     }
 
     pub fn root(&self, n: c_ulong) -> Mpz {
-        assert!(*self >= Zero::zero());
+        assert!(*self >= Mpz::zero());
         unsafe {
             let mut res = Mpz::new();
             let _perfect_root
@@ -416,7 +413,7 @@ impl Mpz {
     }
 
     pub fn sqrt(&self) -> Mpz {
-        assert!(*self >= Zero::zero());
+        assert!(*self >= Mpz::zero());
         unsafe {
             let mut res = Mpz::new();
             __gmpz_sqrt(&mut res.mpz, &self.mpz);
@@ -428,6 +425,19 @@ impl Mpz {
         unsafe {
             __gmpz_millerrabin(&self.mpz, reps)
         }
+    }
+
+    pub fn one() -> Mpz {
+        unsafe {
+            let mut mpz = uninitialized();
+            __gmpz_init_set_ui(&mut mpz, 1);
+            Mpz { mpz: mpz }
+        }
+    }
+
+    pub fn zero() -> Mpz { Mpz::new() }
+    pub fn is_zero(&self) -> bool {
+        unsafe { __gmpz_cmp_ui(&self.mpz, 0) == 0 }
     }
 }
 
@@ -580,24 +590,9 @@ impl FromPrimitive for Mpz {
             Some(res)
         }
     }
+
 }
 
-impl One for Mpz {
-    fn one() -> Mpz {
-        unsafe {
-            let mut mpz = uninitialized();
-            __gmpz_init_set_ui(&mut mpz, 1);
-            Mpz { mpz: mpz }
-        }
-    }
-}
-
-impl Zero for Mpz {
-    fn zero() -> Mpz { Mpz::new() }
-    fn is_zero(&self) -> bool {
-        unsafe { __gmpz_cmp_ui(&self.mpz, 0) == 0 }
-    }
-}
 
 impl BitAnd<Mpz, Mpz> for Mpz {
     fn bitand(&self, other: &Mpz) -> Mpz {
@@ -822,6 +817,17 @@ impl Mpq {
             res
         }
     }
+
+    pub fn one() -> Mpq {
+        let mut res = Mpq::new();
+        unsafe { __gmpq_set_ui(&mut res.mpq, 1, 1) }
+        res
+    }
+
+    pub fn zero() -> Mpq { Mpq::new() }
+    pub fn is_zero(&self) -> bool {
+        unsafe { __gmpq_cmp_ui(&self.mpq, 0, 1) == 0 }
+    }
 }
 
 impl Clone for Mpq {
@@ -933,20 +939,6 @@ impl FromPrimitive for Mpq {
     }
 }
 
-impl One for Mpq {
-    fn one() -> Mpq {
-        let mut res = Mpq::new();
-        unsafe { __gmpq_set_ui(&mut res.mpq, 1, 1) }
-        res
-    }
-}
-
-impl Zero for Mpq {
-    fn zero() -> Mpq { Mpq::new() }
-    fn is_zero(&self) -> bool {
-        unsafe { __gmpq_cmp_ui(&self.mpq, 0, 1) == 0 }
-    }
-}
 
 pub struct Mpf {
     mpf: mpf_struct,
