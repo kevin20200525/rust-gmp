@@ -166,6 +166,8 @@ pub struct Mpz {
     mpz: mpz_struct,
 }
 
+unsafe impl Send for Mpz { }
+
 impl Drop for Mpz {
     fn drop(&mut self) { unsafe { __gmpz_clear(&mut self.mpz) } }
 }
@@ -769,6 +771,8 @@ pub struct Mpq {
     mpq: mpq_struct,
 }
 
+unsafe impl Send for Mpq { }
+
 impl Drop for Mpq {
     fn drop(&mut self) { unsafe { __gmpq_clear(&mut self.mpq) } }
 }
@@ -964,6 +968,8 @@ impl FromPrimitive for Mpq {
 pub struct Mpf {
     mpf: mpf_struct,
 }
+
+unsafe impl Send for Mpf { }
 
 impl Drop for Mpf {
     fn drop(&mut self) { unsafe { __gmpf_clear(&mut self.mpf) } }
