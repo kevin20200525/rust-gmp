@@ -196,7 +196,7 @@ impl Mpz {
     // TODO: fail on an invalid base
     // FIXME: Unfortunately it isn't currently possible to use the fmt::RadixFmt
     //        machinery for a custom type.
-    fn to_str_radix(&self, base: usize) -> String {
+    pub fn to_str_radix(&self, base: usize) -> String {
         unsafe {
             // Extra two bytes are for possible minus sign and null terminator
             let len = __gmpz_sizeinbase(&self.mpz, base as c_int) as usize + 2;
