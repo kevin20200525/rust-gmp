@@ -205,12 +205,12 @@ impl Mpz {
 
             // Allocate and write into a raw *c_char of the correct length
             let mut vector: Vec<u8> = Vec::with_capacity(len);
-            vector.set_len(len-1);
-            vector.push(b'\0');
+            vector.set_len(len);
 
             __gmpz_get_str(vector.as_mut_ptr() as *mut _, base as c_int, &self.mpz);
 
-            vector.pop();
+            let first_nul = vector.position_elem(&0).unwrap_or(len);
+            vector.truncate(first_nul);
             match String::from_utf8(vector) {
                 Ok(s)  => s,
                 Err(_) => panic!("GMP returned invalid UTF-8!")
