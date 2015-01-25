@@ -203,7 +203,7 @@ impl Mpz {
 
             // Allocate and write into a raw *c_char of the correct length
             let mut vector: Vec<u8> = Vec::with_capacity(len);
-            vector.set_len(len);
+            vector.set_len(len-1);
             vector.push(b'\0');
 
             __gmpz_get_str(vector.as_mut_ptr() as *mut _, base as c_int, &self.mpz);
@@ -660,6 +660,12 @@ impl FromStr for Mpz {
     }
 }
 
+impl fmt::Display for Mpz {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.to_str_radix(10))
+    }
+}
+
 impl fmt::Debug for Mpz {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.to_str_radix(10))
@@ -730,7 +736,7 @@ impl RandState {
         unsafe { __gmp_randseed_ui(&mut self.state, seed) }
     }
 
-    /// Generate a uniform random isizeeger in the range 0 to n-1, inclusive
+    /// Generate a uniform random integer in the range 0 to n-1, inclusive
     pub fn urandom(&mut self, n: &Mpz) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
@@ -739,7 +745,7 @@ impl RandState {
         }
     }
 
-    /// Generate a uniformly distributed random isizeeger in the range 0 to 2^n−1, inclusive.
+    /// Generate a uniformly distributed random integer in the range 0 to 2^n−1, inclusive.
     pub fn urandom_2exp(&mut self, n: c_ulong) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
@@ -1126,6 +1132,52 @@ impl<'b> Neg for &'b Mpf {
 
 #[test]
 fn test_limb_size() {
-    // We are assuming that the limb size is the same as the poisizeer size.
+    // We are assuming that the limb size is the same as the pointer size.
     assert_eq!(std::mem::size_of::<mp_limb_t>() * 8, __gmp_bits_per_limb as usize);
 }
+
+macro_rules! gen_overloads_inner {
+    ($tr:ident, $meth:ident, $T:ident) => {
+        impl<'a> $tr <&'a $T> for $T {
+            type Output = $T;
+            fn $meth(self, other: &'a $T) -> $T {
+                (&self).$meth(other)
+            }
+        }
+        impl<'a> $tr <$T> for &'a $T {
+            type Output = $T;
+            fn $meth(self, other: $T) -> $T {
+                self.$meth(&other)
+            }
+        }
+        impl $tr<$T> for $T {
+            type Output = $T;
+            fn $meth(self, other: $T) -> $T {
+                (&self).$meth(&other)
+            }
+        }
+    }
+}
+
+macro_rules! gen_overloads {
+    ($T:ident) => {
+        gen_overloads_inner!(Add, add, $T);
+        gen_overloads_inner!(Sub, sub, $T);
+        gen_overloads_inner!(Mul, mul, $T);
+        gen_overloads_inner!(Div, div, $T);
+        impl Neg for $T {
+            type Output = $T;
+            fn neg(self) -> $T {
+                -(&self)
+            }
+        }
+    }
+}
+
+gen_overloads!(Mpf);
+gen_overloads!(Mpq);
+gen_overloads!(Mpz);
+
+gen_overloads_inner!(BitXor, bitxor, Mpz);
+gen_overloads_inner!(BitAnd, bitand, Mpz);
+gen_overloads_inner!(BitOr, bitor, Mpz);
