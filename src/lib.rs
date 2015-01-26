@@ -1,20 +1,18 @@
 #![crate_name = "gmp"]
 
-#![comment = "gmp bindings"]
-#![license = "MIT"]
-#![crate_type = "lib"]
-
+#![warn(deprecated)]
 #![allow(non_camel_case_types)]
-#![feature(default_type_params)] // needed for implementing `Hash`
-
 
 extern crate libc;
 
 use libc::{c_char, c_double, c_int, c_long, c_ulong, c_void, size_t};
-use std::num::{One, Zero};
+use std::num::{SignedInt, ToPrimitive, FromPrimitive};
 use std::mem::{uninitialized,size_of};
 use std::{cmp, fmt, hash};
-use std::from_str::FromStr;
+use std::cmp::Ordering::{self, Greater, Less, Equal};
+use std::str::FromStr;
+use std::ops::{Div, Mul, Add, Sub, Neg, Shl, Shr, BitXor, BitAnd, BitOr, Rem};
+use std::ffi::CString;
 
 #[cfg(test)]
 mod test;
@@ -49,7 +47,7 @@ struct gmp_randstate_struct {
     _mp_algdata: *const c_void
 }
 
-type mp_limb_t = uint; // TODO: Find a way to use __gmp_bits_per_limb instead.
+type mp_limb_t = usize; // TODO: Find a way to use __gmp_bits_per_limb instead.
 type mp_bitcnt_t = c_ulong;
 type mpz_srcptr = *const mpz_struct;
 type mpz_ptr = *mut mpz_struct;
@@ -168,6 +166,8 @@ pub struct Mpz {
     mpz: mpz_struct,
 }
 
+unsafe impl Send for Mpz { }
+
 impl Drop for Mpz {
     fn drop(&mut self) { unsafe { __gmpz_clear(&mut self.mpz) } }
 }
@@ -198,33 +198,32 @@ impl Mpz {
     // TODO: fail on an invalid base
     // FIXME: Unfortunately it isn't currently possible to use the fmt::RadixFmt
     //        machinery for a custom type.
-    fn to_str_radix(&self, base: uint) -> String {
+    pub fn to_str_radix(&self, base: usize) -> String {
         unsafe {
             // Extra two bytes are for possible minus sign and null terminator
-            let len = __gmpz_sizeinbase(&self.mpz, base as c_int) as uint + 2;
+            let len = __gmpz_sizeinbase(&self.mpz, base as c_int) as usize + 2;
 
             // Allocate and write into a raw *c_char of the correct length
             let mut vector: Vec<u8> = Vec::with_capacity(len);
             vector.set_len(len);
 
-            let mut cstr = vector.as_slice().to_c_str_unchecked();
+            __gmpz_get_str(vector.as_mut_ptr() as *mut _, base as c_int, &self.mpz);
 
-            __gmpz_get_str(cstr.as_mut_ptr(), base as c_int, &self.mpz);
-
-            match cstr.as_str() {
-                Some(slice) => slice.to_string(),
-                None        => panic!("GMP returned invalid UTF-8!")
+            let first_nul = vector.position_elem(&0).unwrap_or(len);
+            vector.truncate(first_nul);
+            match String::from_utf8(vector) {
+                Ok(s)  => s,
+                Err(_) => panic!("GMP returned invalid UTF-8!")
             }
         }
     }
 
-    pub fn from_str_radix(s: &str, base: uint) -> Option<Mpz> {
+    pub fn from_str_radix(s: &str, base: usize) -> Option<Mpz> {
         unsafe {
             assert!(base == 0 || (base >= 2 && base <= 62));
             let mut mpz = uninitialized();
-            let r = s.with_c_str(|s| {
-                __gmpz_init_set_str(&mut mpz, s, base as c_int)
-            });
+            let s = CString::from_slice(s.as_bytes());
+            let r = __gmpz_init_set_str(&mut mpz, s.as_ptr(), base as c_int);
             if r == 0 {
                 Some(Mpz { mpz: mpz })
             } else {
@@ -239,15 +238,14 @@ impl Mpz {
     }
 
     // TODO: too easy to forget to check this return value - rename?
-    pub fn set_from_str_radix(&mut self, s: &str, base: uint) -> bool {
+    pub fn set_from_str_radix(&mut self, s: &str, base: usize) -> bool {
         assert!(base == 0 || (base >= 2 && base <= 62));
-        s.with_c_str(|s| {
-            unsafe { __gmpz_set_str(&mut self.mpz, s, base as c_int) == 0 }
-        })
+        let s = CString::from_slice(s.as_bytes());
+        unsafe { __gmpz_set_str(&mut self.mpz, s.as_ptr(), base as c_int) == 0 }
     }
 
-    pub fn bit_length(&self) -> uint {
-        unsafe { __gmpz_sizeinbase(&self.mpz, 2) as uint }
+    pub fn bit_length(&self) -> usize {
+        unsafe { __gmpz_sizeinbase(&self.mpz, 2) as usize }
     }
 
     pub fn compl(&self) -> Mpz {
@@ -361,8 +359,8 @@ impl Mpz {
         }
     }
 
-    pub fn popcount(&self) -> uint {
-        unsafe { __gmpz_popcount(&self.mpz) as uint }
+    pub fn popcount(&self) -> usize {
+        unsafe { __gmpz_popcount(&self.mpz) as usize }
     }
 
     pub fn pow(&self, exp: u64) -> Mpz {
@@ -381,8 +379,8 @@ impl Mpz {
         }
     }
 
-    pub fn hamdist(&self, other: &Mpz) -> uint {
-        unsafe { __gmpz_hamdist(&self.mpz, &other.mpz) as uint }
+    pub fn hamdist(&self, other: &Mpz) -> usize {
+        unsafe { __gmpz_hamdist(&self.mpz, &other.mpz) as usize }
     }
 
     pub fn setbit(&mut self, bit_index: c_ulong) {
@@ -402,7 +400,7 @@ impl Mpz {
     }
 
     pub fn root(&self, n: c_ulong) -> Mpz {
-        assert!(*self >= Zero::zero());
+        assert!(*self >= Mpz::zero());
         unsafe {
             let mut res = Mpz::new();
             let _perfect_root
@@ -416,7 +414,7 @@ impl Mpz {
     }
 
     pub fn sqrt(&self) -> Mpz {
-        assert!(*self >= Zero::zero());
+        assert!(*self >= Mpz::zero());
         unsafe {
             let mut res = Mpz::new();
             __gmpz_sqrt(&mut res.mpz, &self.mpz);
@@ -428,6 +426,19 @@ impl Mpz {
         unsafe {
             __gmpz_millerrabin(&self.mpz, reps)
         }
+    }
+
+    pub fn one() -> Mpz {
+        unsafe {
+            let mut mpz = uninitialized();
+            __gmpz_init_set_ui(&mut mpz, 1);
+            Mpz { mpz: mpz }
+        }
+    }
+
+    pub fn zero() -> Mpz { Mpz::new() }
+    pub fn is_zero(&self) -> bool {
+        unsafe { __gmpz_cmp_ui(&self.mpz, 0) == 0 }
     }
 }
 
@@ -470,8 +481,9 @@ impl PartialOrd for Mpz {
     }
 }
 
-impl Add<Mpz, Mpz> for Mpz {
-    fn add(&self, other: &Mpz) -> Mpz {
+impl<'a, 'b> Add<&'a Mpz> for &'b Mpz {
+    type Output = Mpz;
+    fn add(self, other: &Mpz) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_add(&mut res.mpz, &self.mpz, &other.mpz);
@@ -480,8 +492,9 @@ impl Add<Mpz, Mpz> for Mpz {
     }
 }
 
-impl Sub<Mpz, Mpz> for Mpz {
-    fn sub(&self, other: &Mpz) -> Mpz {
+impl<'a, 'b> Sub<&'a Mpz> for &'b Mpz {
+    type Output = Mpz;
+    fn sub(self, other: &Mpz) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_sub(&mut res.mpz, &self.mpz, &other.mpz);
@@ -490,8 +503,9 @@ impl Sub<Mpz, Mpz> for Mpz {
     }
 }
 
-impl Mul<Mpz, Mpz> for Mpz {
-    fn mul(&self, other: &Mpz) -> Mpz {
+impl<'a, 'b> Mul<&'a Mpz> for &'b Mpz {
+    type Output = Mpz;
+    fn mul(self, other: &Mpz) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_mul(&mut res.mpz, &self.mpz, &other.mpz);
@@ -500,8 +514,9 @@ impl Mul<Mpz, Mpz> for Mpz {
     }
 }
 
-impl Div<Mpz, Mpz> for Mpz {
-    fn div(&self, other: &Mpz) -> Mpz {
+impl<'a, 'b> Div<&'a Mpz> for &'b Mpz {
+    type Output = Mpz;
+    fn div(self, other: &Mpz) -> Mpz {
         unsafe {
             if other.is_zero() {
                 panic!("divide by zero")
@@ -514,8 +529,9 @@ impl Div<Mpz, Mpz> for Mpz {
     }
 }
 
-impl Rem<Mpz, Mpz> for Mpz {
-    fn rem(&self, other: &Mpz) -> Mpz {
+impl<'a, 'b> Rem<&'a Mpz> for &'b Mpz {
+    type Output = Mpz;
+    fn rem(self, other: &Mpz) -> Mpz {
         unsafe {
             if self.is_zero() {
                 panic!("divide by zero")
@@ -528,8 +544,9 @@ impl Rem<Mpz, Mpz> for Mpz {
     }
 }
 
-impl Neg<Mpz> for Mpz {
-    fn neg(&self) -> Mpz {
+impl<'b> Neg for &'b Mpz {
+    type Output = Mpz;
+    fn neg(self) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_neg(&mut res.mpz, &self.mpz);
@@ -580,27 +597,13 @@ impl FromPrimitive for Mpz {
             Some(res)
         }
     }
+
 }
 
-impl One for Mpz {
-    fn one() -> Mpz {
-        unsafe {
-            let mut mpz = uninitialized();
-            __gmpz_init_set_ui(&mut mpz, 1);
-            Mpz { mpz: mpz }
-        }
-    }
-}
 
-impl Zero for Mpz {
-    fn zero() -> Mpz { Mpz::new() }
-    fn is_zero(&self) -> bool {
-        unsafe { __gmpz_cmp_ui(&self.mpz, 0) == 0 }
-    }
-}
-
-impl BitAnd<Mpz, Mpz> for Mpz {
-    fn bitand(&self, other: &Mpz) -> Mpz {
+impl<'a, 'b> BitAnd<&'a Mpz> for &'b Mpz {
+    type Output = Mpz;
+    fn bitand(self, other: &Mpz) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_and(&mut res.mpz, &self.mpz, &other.mpz);
@@ -609,8 +612,9 @@ impl BitAnd<Mpz, Mpz> for Mpz {
     }
 }
 
-impl BitOr<Mpz, Mpz> for Mpz {
-    fn bitor(&self, other: &Mpz) -> Mpz {
+impl<'a, 'b> BitOr<&'a Mpz> for &'b Mpz {
+    type Output = Mpz;
+    fn bitor(self, other: &Mpz) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_ior(&mut res.mpz, &self.mpz, &other.mpz);
@@ -619,8 +623,9 @@ impl BitOr<Mpz, Mpz> for Mpz {
     }
 }
 
-impl BitXor<Mpz, Mpz> for Mpz {
-    fn bitxor(&self, other: &Mpz) -> Mpz {
+impl<'a, 'b> BitXor<&'a Mpz> for &'b Mpz {
+    type Output = Mpz;
+    fn bitxor(self, other: &Mpz) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_xor(&mut res.mpz, &self.mpz, &other.mpz);
@@ -629,18 +634,20 @@ impl BitXor<Mpz, Mpz> for Mpz {
     }
 }
 
-impl Shl<c_ulong, Mpz> for Mpz {
-    fn shl(&self, other: &c_ulong) -> Mpz {
+impl<'b> Shl<c_ulong> for &'b Mpz {
+    type Output = Mpz;
+    fn shl(self, other: c_ulong) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
-            __gmpz_mul_2exp(&mut res.mpz, &self.mpz, *other);
+            __gmpz_mul_2exp(&mut res.mpz, &self.mpz, other);
             res
         }
     }
 }
 
-impl Shr<c_ulong, Mpz> for Mpz {
-    fn shr(&self, other: &c_ulong) -> Mpz {
+impl<'a, 'b> Shr<&'a c_ulong> for &'b Mpz {
+    type Output = Mpz;
+    fn shr(self, other: &c_ulong) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_fdiv_q_2exp(&mut res.mpz, &self.mpz, *other);
@@ -655,18 +662,24 @@ impl FromStr for Mpz {
     }
 }
 
-impl fmt::Show for Mpz {
+impl fmt::Display for Mpz {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.to_str_radix(10))
     }
 }
 
-impl<S: hash::Writer> hash::Hash<S> for Mpz {
+impl fmt::Debug for Mpz {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.to_str_radix(10))
+    }
+}
+
+impl<S: hash::Hasher + hash::Writer> hash::Hash<S> for Mpz {
     fn hash(&self, state: &mut S) {
         unsafe {
             for i in range(0, self.mpz._mp_size) {
                 let limb = self.mpz._mp_d as *const mp_limb_t;
-                let limb = *(limb.offset(i as int));
+                let limb = *(limb.offset(i as isize));
                 limb.hash(state);
             }
         }
@@ -758,6 +771,8 @@ pub struct Mpq {
     mpq: mpq_struct,
 }
 
+unsafe impl Send for Mpq { }
+
 impl Drop for Mpq {
     fn drop(&mut self) { unsafe { __gmpq_clear(&mut self.mpq) } }
 }
@@ -822,6 +837,17 @@ impl Mpq {
             res
         }
     }
+
+    pub fn one() -> Mpq {
+        let mut res = Mpq::new();
+        unsafe { __gmpq_set_ui(&mut res.mpq, 1, 1) }
+        res
+    }
+
+    pub fn zero() -> Mpq { Mpq::new() }
+    pub fn is_zero(&self) -> bool {
+        unsafe { __gmpq_cmp_ui(&self.mpq, 0, 1) == 0 }
+    }
 }
 
 impl Clone for Mpq {
@@ -857,8 +883,9 @@ impl PartialOrd for Mpq {
     }
 }
 
-impl Add<Mpq, Mpq> for Mpq {
-    fn add(&self, other: &Mpq) -> Mpq {
+impl<'a, 'b> Add<&'a Mpq> for &'b Mpq {
+    type Output = Mpq;
+    fn add(self, other: &Mpq) -> Mpq {
         unsafe {
             let mut res = Mpq::new();
             __gmpq_add(&mut res.mpq, &self.mpq, &other.mpq);
@@ -867,8 +894,9 @@ impl Add<Mpq, Mpq> for Mpq {
     }
 }
 
-impl Sub<Mpq, Mpq> for Mpq {
-    fn sub(&self, other: &Mpq) -> Mpq {
+impl<'a, 'b> Sub<&'a Mpq> for &'b Mpq {
+    type Output = Mpq;
+    fn sub(self, other: &Mpq) -> Mpq {
         unsafe {
             let mut res = Mpq::new();
             __gmpq_sub(&mut res.mpq, &self.mpq, &other.mpq);
@@ -877,8 +905,9 @@ impl Sub<Mpq, Mpq> for Mpq {
     }
 }
 
-impl Mul<Mpq, Mpq> for Mpq {
-    fn mul(&self, other: &Mpq) -> Mpq {
+impl<'a, 'b> Mul<&'a Mpq> for &'b Mpq {
+    type Output = Mpq;
+    fn mul(self, other: &Mpq) -> Mpq {
         unsafe {
             let mut res = Mpq::new();
             __gmpq_mul(&mut res.mpq, &self.mpq, &other.mpq);
@@ -887,8 +916,9 @@ impl Mul<Mpq, Mpq> for Mpq {
     }
 }
 
-impl Div<Mpq, Mpq> for Mpq {
-    fn div(&self, other: &Mpq) -> Mpq {
+impl<'a, 'b> Div<&'a Mpq> for &'b Mpq {
+    type Output = Mpq;
+    fn div(self, other: &Mpq) -> Mpq {
         unsafe {
             if other.is_zero() {
                 panic!("divide by zero")
@@ -901,8 +931,9 @@ impl Div<Mpq, Mpq> for Mpq {
     }
 }
 
-impl Neg<Mpq> for Mpq {
-    fn neg(&self) -> Mpq {
+impl<'b> Neg for &'b Mpq {
+    type Output = Mpq;
+    fn neg(self) -> Mpq {
         unsafe {
             let mut res = Mpq::new();
             __gmpq_neg(&mut res.mpq, &self.mpq);
@@ -933,24 +964,12 @@ impl FromPrimitive for Mpq {
     }
 }
 
-impl One for Mpq {
-    fn one() -> Mpq {
-        let mut res = Mpq::new();
-        unsafe { __gmpq_set_ui(&mut res.mpq, 1, 1) }
-        res
-    }
-}
-
-impl Zero for Mpq {
-    fn zero() -> Mpq { Mpq::new() }
-    fn is_zero(&self) -> bool {
-        unsafe { __gmpq_cmp_ui(&self.mpq, 0, 1) == 0 }
-    }
-}
 
 pub struct Mpf {
     mpf: mpf_struct,
 }
+
+unsafe impl Send for Mpf { }
 
 impl Drop for Mpf {
     fn drop(&mut self) { unsafe { __gmpf_clear(&mut self.mpf) } }
@@ -1011,8 +1030,8 @@ impl Mpf {
 
     pub fn reldiff(&self, other: &Mpf) -> Mpf {
         unsafe {
-            let mut res = Mpf::new(cmp::max(self.get_prec() as uint,
-                                         other.get_prec() as uint) as c_ulong);
+            let mut res = Mpf::new(cmp::max(self.get_prec() as usize,
+                                         other.get_prec() as usize) as c_ulong);
             __gmpf_reldiff(&mut res.mpf, &self.mpf, &other.mpf);
             res
         }
@@ -1054,56 +1073,61 @@ impl PartialOrd for Mpf {
     }
 }
 
-impl Add<Mpf, Mpf> for Mpf {
-    fn add(&self, other: &Mpf) -> Mpf {
+impl<'a, 'b> Add<&'a Mpf> for &'b Mpf {
+    type Output = Mpf;
+    fn add(self, other: &Mpf) -> Mpf {
         unsafe {
-            let mut res = Mpf::new(cmp::max(self.get_prec() as uint,
-                                             other.get_prec() as uint) as c_ulong);
+            let mut res = Mpf::new(cmp::max(self.get_prec() as usize,
+                                             other.get_prec() as usize) as c_ulong);
             __gmpf_add(&mut res.mpf, &self.mpf, &other.mpf);
             res
         }
     }
 }
 
-impl Sub<Mpf, Mpf> for Mpf {
-    fn sub(&self, other: &Mpf) -> Mpf {
+impl<'a, 'b> Sub<&'a Mpf> for &'b Mpf {
+    type Output = Mpf;
+    fn sub(self, other: &Mpf) -> Mpf {
         unsafe {
-            let mut res = Mpf::new(cmp::max(self.get_prec() as uint,
-                                             other.get_prec() as uint) as c_ulong);
+            let mut res = Mpf::new(cmp::max(self.get_prec() as usize,
+                                             other.get_prec() as usize) as c_ulong);
             __gmpf_sub(&mut res.mpf, &self.mpf, &other.mpf);
             res
         }
     }
 }
 
-impl Mul<Mpf, Mpf> for Mpf {
-    fn mul(&self, other: &Mpf) -> Mpf {
+impl<'a, 'b> Mul<&'a Mpf> for &'b Mpf {
+    type Output = Mpf;
+    fn mul(self, other: &Mpf) -> Mpf {
         unsafe {
-            let mut res = Mpf::new(cmp::max(self.get_prec() as uint,
-                                             other.get_prec() as uint) as c_ulong);
+            let mut res = Mpf::new(cmp::max(self.get_prec() as usize,
+                                             other.get_prec() as usize) as c_ulong);
             __gmpf_mul(&mut res.mpf, &self.mpf, &other.mpf);
             res
         }
     }
 }
 
-impl Div<Mpf, Mpf> for Mpf {
-    fn div(&self, other: &Mpf) -> Mpf {
+impl<'a, 'b> Div<&'a Mpf> for &'b Mpf {
+    type Output = Mpf;
+    fn div(self, other: &Mpf) -> Mpf {
         unsafe {
             if __gmpf_cmp_ui(&self.mpf, 0) == 0 {
                 panic!("divide by zero")
             }
 
-            let mut res = Mpf::new(cmp::max(self.get_prec() as uint,
-                                             other.get_prec() as uint) as c_ulong);
+            let mut res = Mpf::new(cmp::max(self.get_prec() as usize,
+                                             other.get_prec() as usize) as c_ulong);
             __gmpf_div(&mut res.mpf, &self.mpf, &other.mpf);
             res
         }
     }
 }
 
-impl Neg<Mpf> for Mpf {
-    fn neg(&self) -> Mpf {
+impl<'b> Neg for &'b Mpf {
+    type Output = Mpf;
+    fn neg(self) -> Mpf {
         unsafe {
             let mut res = Mpf::new(self.get_prec());
             __gmpf_neg(&mut res.mpf, &self.mpf);
@@ -1115,5 +1139,51 @@ impl Neg<Mpf> for Mpf {
 #[test]
 fn test_limb_size() {
     // We are assuming that the limb size is the same as the pointer size.
-    assert_eq!(std::mem::size_of::<mp_limb_t>() * 8, __gmp_bits_per_limb as uint);
+    assert_eq!(std::mem::size_of::<mp_limb_t>() * 8, __gmp_bits_per_limb as usize);
 }
+
+macro_rules! gen_overloads_inner {
+    ($tr:ident, $meth:ident, $T:ident) => {
+        impl<'a> $tr <&'a $T> for $T {
+            type Output = $T;
+            fn $meth(self, other: &'a $T) -> $T {
+                (&self).$meth(other)
+            }
+        }
+        impl<'a> $tr <$T> for &'a $T {
+            type Output = $T;
+            fn $meth(self, other: $T) -> $T {
+                self.$meth(&other)
+            }
+        }
+        impl $tr<$T> for $T {
+            type Output = $T;
+            fn $meth(self, other: $T) -> $T {
+                (&self).$meth(&other)
+            }
+        }
+    }
+}
+
+macro_rules! gen_overloads {
+    ($T:ident) => {
+        gen_overloads_inner!(Add, add, $T);
+        gen_overloads_inner!(Sub, sub, $T);
+        gen_overloads_inner!(Mul, mul, $T);
+        gen_overloads_inner!(Div, div, $T);
+        impl Neg for $T {
+            type Output = $T;
+            fn neg(self) -> $T {
+                -(&self)
+            }
+        }
+    }
+}
+
+gen_overloads!(Mpf);
+gen_overloads!(Mpq);
+gen_overloads!(Mpz);
+
+gen_overloads_inner!(BitXor, bitxor, Mpz);
+gen_overloads_inner!(BitAnd, bitand, Mpz);
+gen_overloads_inner!(BitOr, bitor, Mpz);
