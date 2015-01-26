@@ -965,6 +965,20 @@ impl FromPrimitive for Mpq {
 }
 
 
+impl fmt::Show for Mpq {
+    /// Renders as `numer/denom`. If denom=1, renders as numer.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let numer = self.get_num();
+        let denom = self.get_den();
+
+        if denom == One::one() {
+            write!(f, "{}", numer)
+        } else {
+            write!(f, "{}/{}", numer, denom)
+        }
+    }
+}
+
 pub struct Mpf {
     mpf: mpf_struct,
 }

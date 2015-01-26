@@ -491,6 +491,18 @@ mod mpq {
     fn test_invert_zero() {
         Mpq::new().invert();
     }
+
+    #[test]
+    fn test_fmt() {
+        let fourty: Mpq = FromPrimitive::from_int(40).unwrap();
+        let six: Mpq = FromPrimitive::from_int(6).unwrap();
+        let fourty_sixths = fourty / six;
+
+        assert_eq!(format!("{}", fourty)[], "40");
+        assert_eq!(format!("{}", -fourty)[], "-40");
+        assert_eq!(format!("{}", fourty_sixths)[], "20/3");
+        assert_eq!(format!("{}", -fourty_sixths)[], "-20/3");
+    }
 }
 
 mod mpf {
