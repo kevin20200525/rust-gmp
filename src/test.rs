@@ -461,8 +461,8 @@ mod rand {
     fn test_randstate() {
         let mut state = RandState::new();
         state.seed_ui(42);
-        for _ in range(1u, 1000) {
-            for x in range(1i, 10) {
+        for _ in range(1u32, 1000) {
+            for x in range(1i32, 10) {
                 let upper: Mpz = FromPrimitive::from_int(x).unwrap();
                 assert!(state.urandom(&upper) < upper);
             }

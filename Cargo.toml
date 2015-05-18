@@ -5,3 +5,6 @@ authors = [ "thestinger <danielmicay@gmail.com>" ]
 
 [lib]
 name = "gmp"
+
+[dependencies]
+libc = "0.1.8"

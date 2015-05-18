@@ -6,7 +6,8 @@
 extern crate libc;
 
 use libc::{c_char, c_double, c_int, c_long, c_ulong, c_void, size_t};
-use std::num::{SignedInt, ToPrimitive, FromPrimitive};
+use std::convert::{From, Into};
+use std::num::One;
 use std::mem::{uninitialized,size_of};
 use std::{cmp, fmt, hash};
 use std::cmp::Ordering::{self, Greater, Less, Equal};
@@ -218,17 +219,17 @@ impl Mpz {
         }
     }
 
-    pub fn from_str_radix(s: &str, base: usize) -> Option<Mpz> {
+    pub fn from_str_radix(s: &str, base: usize) -> Result<Mpz, ()> {
         unsafe {
             assert!(base == 0 || (base >= 2 && base <= 62));
             let mut mpz = uninitialized();
-            let s = CString::from_slice(s.as_bytes());
+            let s = CString::new(s.to_string()).unwrap();
             let r = __gmpz_init_set_str(&mut mpz, s.as_ptr(), base as c_int);
             if r == 0 {
-                Some(Mpz { mpz: mpz })
+                Ok(Mpz { mpz: mpz })
             } else {
                 __gmpz_clear(&mut mpz);
-                None
+                Err(())
             }
         }
     }
@@ -240,7 +241,7 @@ impl Mpz {
     // TODO: too easy to forget to check this return value - rename?
     pub fn set_from_str_radix(&mut self, s: &str, base: usize) -> bool {
         assert!(base == 0 || (base >= 2 && base <= 62));
-        let s = CString::from_slice(s.as_bytes());
+        let s = CString::new(s.to_string()).unwrap();
         unsafe { __gmpz_set_str(&mut self.mpz, s.as_ptr(), base as c_int) == 0 }
     }
 
@@ -363,7 +364,7 @@ impl Mpz {
         unsafe { __gmpz_popcount(&self.mpz) as usize }
     }
 
-    pub fn pow(&self, exp: u64) -> Mpz {
+    pub fn pow(&self, exp: u32) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_pow_ui(&mut res.mpz, &self.mpz, exp);
@@ -555,8 +556,8 @@ impl<'b> Neg for &'b Mpz {
     }
 }
 
-impl ToPrimitive for Mpz {
-    fn to_i64(&self) -> Option<i64> {
+impl Into<Option<i64>> for Mpz {
+    fn into(self) -> Option<i64> {
         unsafe {
             if __gmpz_fits_slong_p(&self.mpz) != 0 {
                 return Some(__gmpz_get_si(&self.mpz) as i64);
@@ -565,8 +566,10 @@ impl ToPrimitive for Mpz {
             }
         }
     }
+}
 
-    fn to_u64(&self) -> Option<u64> {
+impl Into<Option<u64>> for Mpz {
+    fn into(self) -> Option<u64> {
         unsafe {
             if __gmpz_fits_ulong_p(&self.mpz) != 0 {
                 return Some(__gmpz_get_ui(&self.mpz) as u64);
@@ -577,16 +580,19 @@ impl ToPrimitive for Mpz {
     }
 }
 
-impl FromPrimitive for Mpz {
-    fn from_u64(other: u64) -> Option<Mpz> {
+impl From<u64> for Mpz {
+    fn from(other: u64) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_import(&mut res.mpz, 1, 1, size_of::<u64>() as size_t, 0, 0,
                           &other as *const u64 as *const c_void);
-            Some(res)
+            res
         }
     }
-    fn from_i64(other: i64) -> Option<Mpz> {
+}
+
+impl From<i64> for Mpz {
+    fn from(other: i64) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_import(&mut res.mpz, 1, 1, size_of::<i64>() as size_t, 0, 0,
@@ -594,10 +600,9 @@ impl FromPrimitive for Mpz {
             if other.is_negative() {
                 __gmpz_neg(&mut res.mpz, &res.mpz)
             }
-            Some(res)
+            res
         }
     }
-
 }
 
 
@@ -657,8 +662,15 @@ impl<'a, 'b> Shr<&'a c_ulong> for &'b Mpz {
 }
 
 impl FromStr for Mpz {
-    fn from_str(s: &str) -> Option<Mpz> {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         Mpz::from_str_radix(s, 10)
+    }
+}
+
+impl One for Mpz {
+    fn one() -> Mpz {
+        From::<i64>::from(1)
     }
 }
 
@@ -674,10 +686,10 @@ impl fmt::Debug for Mpz {
     }
 }
 
-impl<S: hash::Hasher + hash::Writer> hash::Hash<S> for Mpz {
-    fn hash(&self, state: &mut S) {
+impl hash::Hash for Mpz {
+    fn hash<S: hash::Hasher>(&self, state: &mut S) {
         unsafe {
-            for i in range(0, self.mpz._mp_size) {
+            for i in 0..self.mpz._mp_size {
                 let limb = self.mpz._mp_d as *const mp_limb_t;
                 let limb = *(limb.offset(i as isize));
                 limb.hash(state);
@@ -942,30 +954,36 @@ impl<'b> Neg for &'b Mpq {
     }
 }
 
-impl ToPrimitive for Mpq {
-    fn to_i64(&self) -> Option<i64> {
-        panic!("not implemented")
-    }
-    fn to_u64(&self) -> Option<u64> {
+impl Into<Option<i64>> for Mpq {
+    fn into(self) -> Option<i64> {
         panic!("not implemented")
     }
 }
 
-impl FromPrimitive for Mpq {
-    fn from_i64(other: i64) -> Option<Mpq> {
-        let mut res = Mpq::new();
-        res.set_z(&FromPrimitive::from_i64(other).unwrap());
-        Some(res)
+impl Into<Option<u64>> for Mpq {
+    fn into(self) -> Option<u64> {
+        panic!("not implemented")
     }
-    fn from_u64(other: u64) -> Option<Mpq> {
+}
+
+impl From<i64> for Mpq {
+    fn from(other: i64) -> Mpq {
         let mut res = Mpq::new();
-        res.set_z(&FromPrimitive::from_u64(other).unwrap());
-        Some(res)
+        res.set_z(&From::<i64>::from(other));
+        res
+    }
+}
+
+impl From<u64> for Mpq {
+    fn from(other: u64) -> Mpq {
+        let mut res = Mpq::new();
+        res.set_z(&From::<u64>::from(other));
+        res
     }
 }
 
 
-impl fmt::Show for Mpq {
+impl fmt::Debug for Mpq {
     /// Renders as `numer/denom`. If denom=1, renders as numer.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let numer = self.get_num();
