@@ -20,7 +20,7 @@ mod mpz {
     use libc::c_ulong;
     use std::{i64, u64};
 
-    use std::hash::hash;
+    use std::hash::{Hash, SipHasher};
 
     #[test]
     fn test_set() {
@@ -137,8 +137,8 @@ mod mpz {
 
     #[test]
     fn test_invalid_str() {
-        let x: Option<Mpz> = FromStr::from_str("foobar");
-        assert!(x.is_none());
+        let x: Result<Mpz,()> = FromStr::from_str("foobar");
+        assert!(x.is_err());
     }
 
     #[test]
@@ -202,7 +202,7 @@ mod mpz {
         let b = 0b1100_0100;
         let mpza: Mpz = From::<i64>::from(a);
         let mpzb: Mpz = From::<i64>::from(b);
-        let mpzres: Mpz = From::<i64>::from(a & b).unwrap();
+        let mpzres: Mpz = From::<i64>::from(a & b);
         assert!(mpza & mpzb == mpzres);
     }
 
@@ -212,7 +212,7 @@ mod mpz {
         let b = 0b1100_0100;
         let mpza: Mpz = From::<i64>::from(a);
         let mpzb: Mpz = From::<i64>::from(b);
-        let mpzres: Mpz = From::<i64>::from(a | b).unwrap();
+        let mpzres: Mpz = From::<i64>::from(a | b);
         assert!(mpza | mpzb == mpzres);
     }
 
@@ -222,7 +222,7 @@ mod mpz {
         let b = 0b1100_0100;
         let mpza: Mpz = From::<i64>::from(a);
         let mpzb: Mpz = From::<i64>::from(b);
-        let mpzres: Mpz = From::<i64>::from(a ^ b).unwrap();
+        let mpzres: Mpz = From::<i64>::from(a ^ b);
         assert!(mpza ^ mpzb == mpzres);
     }
 
@@ -412,8 +412,8 @@ mod mpz {
         let zero: Mpz = From::<i64>::from(0);
         let one: Mpz = From::<i64>::from(1);
         let two = one + one;
-        assert!(hash(&zero) != hash(&one));
-        assert_eq!(hash(&one), hash(&(two - one)));
+        assert!(zero.hash(&mut SipHasher::new()) != one.hash(&mut SipHasher::new()));
+        assert_eq!(one.hash(&mut SipHasher::new()), (two - one).hash(&mut SipHasher::new()));
     }
 
     #[test]
@@ -423,9 +423,9 @@ mod mpz {
         let b = Mpz::from_str_radix("348917329847193287498312749187234192386", 10)
                 .unwrap();
         let one: Mpz = From::<i64>::from(1);
-        assert!(hash(&a) != hash(&b));
-        assert_eq!(hash(&a), hash(&(b + one)));
-        assert_eq!(hash(&(a - a)), hash(&(one - one)));
+        assert!(a.hash(&mut SipHasher::new()) != b.hash(&mut SipHasher::new()));
+        assert_eq!(a.hash(&mut SipHasher::new()), (b + one).hash(&mut SipHasher::new()));
+        assert_eq!((a - a).hash(&mut SipHasher::new()), (one - one).hash(&mut SipHasher::new()));
     }
     #[test]
     fn test_to_u64() {

@@ -15,7 +15,7 @@ pub struct mpz_struct {
     _mp_d: *mut c_void
 }
 
-type mp_limb_t = usize; // TODO: Find a way to use __gmp_bits_per_limb instead.
+pub type mp_limb_t = usize; // TODO: Find a way to use __gmp_bits_per_limb instead.
 pub type mp_bitcnt_t = c_ulong;
 pub type mpz_srcptr = *const mpz_struct;
 pub type mpz_ptr = *mut mpz_struct;
@@ -576,12 +576,34 @@ impl<'b> Shl<c_ulong> for &'b Mpz {
     }
 }
 
-impl<'a, 'b> Shr<&'a c_ulong> for &'b Mpz {
+impl<'b> Shr<c_ulong> for &'b Mpz {
     type Output = Mpz;
-    fn shr(self, other: &c_ulong) -> Mpz {
+    fn shr(self, other: c_ulong) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
-            __gmpz_fdiv_q_2exp(&mut res.mpz, &self.mpz, *other);
+            __gmpz_fdiv_q_2exp(&mut res.mpz, &self.mpz, other);
+            res
+        }
+    }
+}
+
+impl Shl<c_ulong> for Mpz {
+    type Output = Mpz;
+    fn shl(self, other: c_ulong) -> Mpz {
+        unsafe {
+            let mut res = Mpz::new();
+            __gmpz_mul_2exp(&mut res.mpz, &self.mpz, other);
+            res
+        }
+    }
+}
+
+impl Shr<c_ulong> for Mpz {
+    type Output = Mpz;
+    fn shr(self, other: c_ulong) -> Mpz {
+        unsafe {
+            let mut res = Mpz::new();
+            __gmpz_fdiv_q_2exp(&mut res.mpz, &self.mpz, other);
             res
         }
     }
@@ -623,3 +645,4 @@ gen_overloads!(Mpz);
 gen_overloads_inner!(BitXor, bitxor, Mpz);
 gen_overloads_inner!(BitAnd, bitand, Mpz);
 gen_overloads_inner!(BitOr, bitor, Mpz);
+gen_overloads_inner!(Rem, rem, Mpz);
