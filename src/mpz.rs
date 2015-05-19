@@ -41,6 +41,7 @@ extern "C" {
     fn __gmpz_cmp(op1: mpz_srcptr, op2: mpz_srcptr) -> c_int;
     fn __gmpz_cmp_ui(op1: mpz_srcptr, op2: c_ulong) -> c_int;
     fn __gmpz_add(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
+    fn __gmpz_add_ui(rop: mpz_ptr, op1: mpz_srcptr, op2: c_ulong);
     fn __gmpz_sub(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
     fn __gmpz_mul(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
     fn __gmpz_mul_2exp(rop: mpz_ptr, op1: mpz_srcptr, op2: mp_bitcnt_t);
@@ -487,11 +488,20 @@ impl<'b> Neg for &'b Mpz {
 impl<'b> Into<Option<i64>> for &'b Mpz {
     fn into(self) -> Option<i64> {
         unsafe {
-            if __gmpz_sizeinbase(&self.mpz, 2) <= 63 {
+            let negative = __gmpz_cmp_ui(&self.mpz, 0) < 0;
+            let mut to_export = Mpz::new();
+
+            if negative {
+                __gmpz_com(&mut to_export.mpz, &self.mpz);
+            } else {
+                __gmpz_set(&mut to_export.mpz, &self.mpz);
+            }
+
+            if __gmpz_sizeinbase(&to_export.mpz, 2) <= 63 {
                 let mut result : i64 = 0;
-                __gmpz_export(&mut result as *mut i64 as *mut c_void, 0 as *mut size_t, -1, size_of::<i64>() as size_t, 0, 0, &self.mpz);
-                if __gmpz_cmp_ui(&self.mpz, 0) < 0 {
-                    Some(-result)
+                __gmpz_export(&mut result as *mut i64 as *mut c_void, 0 as *mut size_t, -1, size_of::<i64>() as size_t, 0, 0, &to_export.mpz);
+                if negative {
+                    Some(result ^ -1i64)
                 } else {
                     Some(result)
                 }
@@ -531,10 +541,14 @@ impl From<i64> for Mpz {
     fn from(other: i64) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
-            __gmpz_import(&mut res.mpz, 1, -1, size_of::<i64>() as size_t, 0, 0,
-                          &other.abs() as *const i64 as *const c_void);
+
             if other.is_negative() {
-                __gmpz_neg(&mut res.mpz, &res.mpz)
+                __gmpz_import(&mut res.mpz, 1, -1, size_of::<i64>() as size_t, 0, 0,
+                              &(other ^ -1i64) as *const i64 as *const c_void);
+                __gmpz_com(&mut res.mpz, &res.mpz);
+            } else {
+                __gmpz_import(&mut res.mpz, 1, -1, size_of::<i64>() as size_t, 0, 0,
+                              &other as *const i64 as *const c_void);
             }
             res
         }
