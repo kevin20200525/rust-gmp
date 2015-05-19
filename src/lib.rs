@@ -3,6 +3,8 @@
 #![warn(deprecated)]
 #![allow(non_camel_case_types)]
 
+extern crate libc;
+
 macro_rules! gen_overloads_inner {
     ($tr:ident, $meth:ident, $T:ident) => {
         impl<'a> $tr <&'a $T> for $T {

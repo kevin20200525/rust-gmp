@@ -1,8 +1,6 @@
-extern crate libc;
-
 use super::mpz::{mpz_struct, Mpz, mpz_ptr, mpz_srcptr};
 use super::mpf::{Mpf, mpf_srcptr};
-use self::libc::{c_double, c_int, c_ulong};
+use libc::{c_double, c_int, c_ulong};
 use std::convert::{From, Into};
 use std::mem::uninitialized;
 use std::fmt;

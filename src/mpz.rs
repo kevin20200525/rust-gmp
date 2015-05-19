@@ -1,6 +1,4 @@
-extern crate libc;
-
-use self::libc::{c_char, c_int, c_long, c_ulong, c_void, size_t};
+use libc::{c_char, c_int, c_long, c_ulong, c_void, size_t};
 use super::rand::gmp_randstate_t;
 use std::convert::{From, Into};
 use std::mem::{uninitialized,size_of};

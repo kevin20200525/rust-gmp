@@ -1,6 +1,4 @@
-extern crate libc;
-
-use self::libc::{c_double, c_int, c_long, c_ulong, c_void};
+use libc::{c_double, c_int, c_long, c_ulong, c_void};
 use std::mem::uninitialized;
 use std::cmp;
 use std::cmp::Ordering::{self, Greater, Less, Equal};
