@@ -293,7 +293,7 @@ impl Mpz {
     pub fn pow(&self, exp: u32) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
-            __gmpz_pow_ui(&mut res.mpz, &self.mpz, exp);
+            __gmpz_pow_ui(&mut res.mpz, &self.mpz, exp as c_ulong);
             res
         }
     }
