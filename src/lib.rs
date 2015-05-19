@@ -50,9 +50,3 @@ pub mod rand;
 
 #[cfg(test)]
 mod test;
-
-#[test]
-fn test_limb_size() {
-    // We are assuming that the limb size is the same as the pointer size.
-    assert_eq!(std::mem::size_of::<mp_limb_t>() * 8, __gmp_bits_per_limb as usize);
-}

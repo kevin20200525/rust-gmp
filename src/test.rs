@@ -1,3 +1,18 @@
+use super::mpz::mp_limb_t;
+use std;
+use libc::c_int;
+
+#[link(name = "gmp")]
+extern "C" {
+    static __gmp_bits_per_limb: c_int;
+}
+
+#[test]
+fn test_limb_size() {
+    // We are assuming that the limb size is the same as the pointer size.
+    assert_eq!(std::mem::size_of::<mp_limb_t>() * 8, __gmp_bits_per_limb as usize);
+}
+
 mod mpz {
     use super::super::mpz::Mpz;
     use std::str::FromStr;
@@ -9,8 +24,8 @@ mod mpz {
 
     #[test]
     fn test_set() {
-        let mut x: Mpz = From::<i32>::from(1000).unwrap();
-        let y: Mpz = From::<i32>::from(5000).unwrap();
+        let mut x: Mpz = From::<i64>::from(1000);
+        let y: Mpz = From::<i64>::from(5000);
         assert!(x != y);
         x.set(&y);
         assert!(x == y);
@@ -18,8 +33,8 @@ mod mpz {
 
     #[test]
     fn test_set_from_str_radix() {
-        let mut x: Mpz = From::<i32>::from(1000).unwrap();
-        let y: Mpz = From::<i32>::from(5000).unwrap();
+        let mut x: Mpz = From::<i64>::from(1000);
+        let y: Mpz = From::<i64>::from(5000);
         assert!(x != y);
         assert!(x.set_from_str_radix("5000", 10));
         assert!(x == y);
@@ -54,9 +69,9 @@ mod mpz {
 
     #[test]
     fn test_eq() {
-        let x: Mpz = From::<i32>::from(4242142195).unwrap();
-        let y: Mpz = From::<i32>::from(4242142195).unwrap();
-        let z: Mpz = From::<i32>::from(4242142196).unwrap();
+        let x: Mpz = From::<i64>::from(4242142195);
+        let y: Mpz = From::<i64>::from(4242142195);
+        let z: Mpz = From::<i64>::from(4242142196);
 
         assert!(x == y);
         assert!(x != z);
@@ -78,7 +93,7 @@ mod mpz {
     #[test]
     #[should_panic]
     fn test_div_zero() {
-        let x: Mpz = One::one();
+        let x: Mpz = From::<i64>::from(1);
         let y = Mpz::new();
         x / y;
     }
@@ -86,23 +101,23 @@ mod mpz {
     #[test]
     #[should_panic]
     fn test_rem_zero() {
-        let x: Mpz = One::one();
+        let x: Mpz = From::<i64>::from(1);
         let y = Mpz::new();
         x % y;
     }
 
     #[test]
     fn test_div_round() {
-        let x: Mpz = From::<i32>::from(2).unwrap();
-        let y: Mpz = From::<i32>::from(3).unwrap();
+        let x: Mpz = From::<i64>::from(2);
+        let y: Mpz = From::<i64>::from(3);
         assert!((x / y).to_string() == (2i32 / 3).to_string());
         assert!((x / -y).to_string() == (2i32 / -3).to_string());
     }
 
     #[test]
     fn test_rem() {
-        let x: Mpz = From::<i32>::from(20).unwrap();
-        let y: Mpz = From::<i32>::from(3).unwrap();
+        let x: Mpz = From::<i64>::from(20);
+        let y: Mpz = From::<i64>::from(3);
         assert!((x % y).to_string() == (20i32 % 3).to_string());
         assert!((x % -y).to_string() == (20i32 % -3).to_string());
         assert!((-x % y).to_string() == (-20i32 % 3).to_string());
@@ -110,7 +125,7 @@ mod mpz {
 
     #[test]
     fn test_to_str_radix() {
-        let x: Mpz = From::<i32>::from(255).unwrap();
+        let x: Mpz = From::<i64>::from(255);
         assert!(x.to_str_radix(16) == "ff".to_string());
     }
 
@@ -128,24 +143,24 @@ mod mpz {
 
     #[test]
     fn test_clone() {
-        let a: Mpz = From::<i32>::from(100).unwrap();
+        let a: Mpz = From::<i64>::from(100);
         let b = a.clone();
-        let aplusb: Mpz = From::<i32>::from(200).unwrap();
+        let aplusb: Mpz = From::<i64>::from(200);
         assert!(b == a);
         assert!(a + b == aplusb);
     }
 
     #[test]
     fn test_from_int() {
-        let x: Mpz = From::<i32>::from(150).unwrap();
+        let x: Mpz = From::<i64>::from(150);
         assert!(x.to_string() == "150".to_string());
         assert!(x == FromStr::from_str("150").unwrap());
     }
 
     #[test]
     fn test_abs() {
-        let x: Mpz = From::<i32>::from(1000).unwrap();
-        let y: Mpz = From::<i32>::from(-1000).unwrap();
+        let x: Mpz = From::<i64>::from(1000);
+        let y: Mpz = From::<i64>::from(-1000);
         assert!(-x == y);
         assert!(x == -y);
         assert!(x == y.abs());
@@ -154,11 +169,11 @@ mod mpz {
 
     #[test]
     fn test_div_floor() {
-        let two: Mpz = From::<i32>::from(2).unwrap();
-        let eight: Mpz = From::<i32>::from(8).unwrap();
-        let minuseight: Mpz = From::<i32>::from(-8).unwrap();
-        let three: Mpz = From::<i32>::from(3).unwrap();
-        let minusthree: Mpz = From::<i32>::from(-3).unwrap();
+        let two: Mpz = From::<i64>::from(2);
+        let eight: Mpz = From::<i64>::from(8);
+        let minuseight: Mpz = From::<i64>::from(-8);
+        let three: Mpz = From::<i64>::from(3);
+        let minusthree: Mpz = From::<i64>::from(-3);
         assert_eq!(eight.div_floor(&three), two);
         assert_eq!(eight.div_floor(&minusthree), minusthree);
         assert_eq!(minuseight.div_floor(&three), minusthree);
@@ -167,14 +182,14 @@ mod mpz {
 
     #[test]
     fn test_mod_floor() {
-        let one: Mpz = From::<i32>::from(1).unwrap();
-        let minusone: Mpz = From::<i32>::from(-1).unwrap();
-        let two: Mpz = From::<i32>::from(2).unwrap();
-        let minustwo: Mpz = From::<i32>::from(-2).unwrap();
-        let three: Mpz = From::<i32>::from(3).unwrap();
-        let minusthree: Mpz = From::<i32>::from(-3).unwrap();
-        let eight: Mpz = From::<i32>::from(8).unwrap();
-        let minuseight: Mpz = From::<i32>::from(-8).unwrap();
+        let one: Mpz = From::<i64>::from(1);
+        let minusone: Mpz = From::<i64>::from(-1);
+        let two: Mpz = From::<i64>::from(2);
+        let minustwo: Mpz = From::<i64>::from(-2);
+        let three: Mpz = From::<i64>::from(3);
+        let minusthree: Mpz = From::<i64>::from(-3);
+        let eight: Mpz = From::<i64>::from(8);
+        let minuseight: Mpz = From::<i64>::from(-8);
         assert_eq!(eight.mod_floor(&three), two);
         assert_eq!(eight.mod_floor(&minusthree), minusone);
         assert_eq!(minuseight.mod_floor(&three), one);
@@ -185,9 +200,9 @@ mod mpz {
     fn test_bitand() {
         let a = 0b1001_0111;
         let b = 0b1100_0100;
-        let mpza: Mpz = From::<i32>::from(a).unwrap();
-        let mpzb: Mpz = From::<i32>::from(b).unwrap();
-        let mpzres: Mpz = FromPrimitive::from_int(a & b).unwrap();
+        let mpza: Mpz = From::<i64>::from(a);
+        let mpzb: Mpz = From::<i64>::from(b);
+        let mpzres: Mpz = From::<i64>::from(a & b).unwrap();
         assert!(mpza & mpzb == mpzres);
     }
 
@@ -195,9 +210,9 @@ mod mpz {
     fn test_bitor() {
         let a = 0b1001_0111;
         let b = 0b1100_0100;
-        let mpza: Mpz = From::<i32>::from(a).unwrap();
-        let mpzb: Mpz = From::<i32>::from(b).unwrap();
-        let mpzres: Mpz = FromPrimitive::from_int(a | b).unwrap();
+        let mpza: Mpz = From::<i64>::from(a);
+        let mpzb: Mpz = From::<i64>::from(b);
+        let mpzres: Mpz = From::<i64>::from(a | b).unwrap();
         assert!(mpza | mpzb == mpzres);
     }
 
@@ -205,16 +220,16 @@ mod mpz {
     fn test_bitxor() {
         let a = 0b1001_0111;
         let b = 0b1100_0100;
-        let mpza: Mpz = From::<i32>::from(a).unwrap();
-        let mpzb: Mpz = From::<i32>::from(b).unwrap();
-        let mpzres: Mpz = FromPrimitive::from_int(a ^ b).unwrap();
+        let mpza: Mpz = From::<i64>::from(a);
+        let mpzb: Mpz = From::<i64>::from(b);
+        let mpzres: Mpz = From::<i64>::from(a ^ b).unwrap();
         assert!(mpza ^ mpzb == mpzres);
     }
 
     #[test]
     fn test_shifts() {
         let i = 227;
-        let j: Mpz = From::<i32>::from(i).unwrap();
+        let j: Mpz = From::<i64>::from(i);
         assert!((i << 4).to_string() == (j << 4).to_string());
         assert!((-i << 4).to_string() == (-j << 4).to_string());
         assert!((i >> 4).to_string() == (j >> 4).to_string());
@@ -223,25 +238,25 @@ mod mpz {
 
     #[test]
     fn test_compl() {
-        let a: Mpz = From::<i32>::from(13).unwrap();
-        let b: Mpz = From::<i32>::from(-442).unwrap();
+        let a: Mpz = From::<i64>::from(13);
+        let b: Mpz = From::<i64>::from(-442);
         assert!(a.compl().to_string() == (!13i32).to_string());
         assert!(b.compl().to_string() == (!-442i32).to_string());
     }
 
     #[test]
     fn test_pow() {
-        let a: Mpz = From::<i32>::from(2).unwrap();
-        let b: Mpz = From::<i32>::from(8).unwrap();
+        let a: Mpz = From::<i64>::from(2);
+        let b: Mpz = From::<i64>::from(8);
         assert!(a.pow(3) == b);
     }
 
     #[test]
     fn test_powm() {
-        let a: Mpz = From::<i32>::from(13).unwrap();
-        let b: Mpz = From::<i32>::from(7).unwrap();
-        let p: Mpz = From::<i32>::from(19).unwrap();
-        let c: Mpz = From::<i32>::from(10).unwrap();
+        let a: Mpz = From::<i64>::from(13);
+        let b: Mpz = From::<i64>::from(7);
+        let p: Mpz = From::<i64>::from(19);
+        let c: Mpz = From::<i64>::from(10);
         assert!(a.powm(&b, &p) == c);
     }
 
@@ -252,33 +267,33 @@ mod mpz {
 
     #[test]
     fn test_hamdist() {
-        let a: Mpz = From::<i32>::from(0b1011_0001).unwrap();
-        let b: Mpz = From::<i32>::from(0b0010_1011).unwrap();
+        let a: Mpz = From::<i64>::from(0b1011_0001);
+        let b: Mpz = From::<i64>::from(0b0010_1011);
         assert!(a.hamdist(&b) == 4);
     }
 
     #[test]
     fn test_bit_length() {
-        let a: Mpz = From::<i32>::from(0b1011_0000_0001_0000).unwrap();
-        let b: Mpz = From::<i32>::from(0b101).unwrap();
+        let a: Mpz = From::<i64>::from(0b1011_0000_0001_0000);
+        let b: Mpz = From::<i64>::from(0b101);
         assert!(a.bit_length() == 16);
         assert!(b.bit_length() == 3);
     }
 
     #[test]
     fn test_nextprime() {
-        let a: Mpz = From::<i32>::from(123456).unwrap();
-        let b: Mpz = From::<i32>::from(123457).unwrap();
+        let a: Mpz = From::<i64>::from(123456);
+        let b: Mpz = From::<i64>::from(123457);
         assert!(a.nextprime() == b);
     }
 
     #[test]
     fn test_gcd() {
-        let zero: Mpz = From::<i32>::from(0).unwrap();
-        let three: Mpz = From::<i32>::from(3).unwrap();
-        let six: Mpz = From::<i32>::from(6).unwrap();
-        let eighteen: Mpz = From::<i32>::from(18).unwrap();
-        let twentyfour: Mpz = From::<i32>::from(24).unwrap();
+        let zero: Mpz = From::<i64>::from(0);
+        let three: Mpz = From::<i64>::from(3);
+        let six: Mpz = From::<i64>::from(6);
+        let eighteen: Mpz = From::<i64>::from(18);
+        let twentyfour: Mpz = From::<i64>::from(24);
         assert!(zero.gcd(&zero) == zero);
         assert!(three.gcd(&six) == three);
         assert!(eighteen.gcd(&twentyfour) == six);
@@ -286,9 +301,9 @@ mod mpz {
 
     #[test]
     fn test_gcdext() {
-        let six: Mpz = From::<i32>::from(6).unwrap();
-        let eighteen: Mpz = From::<i32>::from(18).unwrap();
-        let twentyfour: Mpz = From::<i32>::from(24).unwrap();
+        let six: Mpz = From::<i64>::from(6);
+        let eighteen: Mpz = From::<i64>::from(18);
+        let twentyfour: Mpz = From::<i64>::from(24);
         let (g, s, t) = eighteen.gcdext(&twentyfour);
         assert!(g == six);
         assert!(g == s*eighteen + t*twentyfour);
@@ -296,13 +311,13 @@ mod mpz {
 
     #[test]
     fn test_lcm() {
-        let zero: Mpz = From::<i32>::from(0).unwrap();
-        let three: Mpz = From::<i32>::from(3).unwrap();
-        let five: Mpz = From::<i32>::from(5).unwrap();
-        let six: Mpz = From::<i32>::from(6).unwrap();
-        let eighteen: Mpz = From::<i32>::from(18).unwrap();
-        let twentyfour: Mpz = From::<i32>::from(24).unwrap();
-        let seventytwo: Mpz = From::<i32>::from(72).unwrap();
+        let zero: Mpz = From::<i64>::from(0);
+        let three: Mpz = From::<i64>::from(3);
+        let five: Mpz = From::<i64>::from(5);
+        let six: Mpz = From::<i64>::from(6);
+        let eighteen: Mpz = From::<i64>::from(18);
+        let twentyfour: Mpz = From::<i64>::from(24);
+        let seventytwo: Mpz = From::<i64>::from(72);
         assert!(zero.lcm(&five) == zero);
         assert!(five.lcm(&zero) == zero);
         assert!(three.lcm(&six) == six);
@@ -311,9 +326,9 @@ mod mpz {
 
     #[test]
     fn test_is_multiple_of() {
-        let two: Mpz = From::<i32>::from(2).unwrap();
-        let three: Mpz = From::<i32>::from(3).unwrap();
-        let six: Mpz = From::<i32>::from(6).unwrap();
+        let two: Mpz = From::<i64>::from(2);
+        let three: Mpz = From::<i64>::from(3);
+        let six: Mpz = From::<i64>::from(6);
         assert!(six.is_multiple_of(&two));
         assert!(six.is_multiple_of(&three));
         assert!(!three.is_multiple_of(&two));
@@ -321,20 +336,20 @@ mod mpz {
 
     #[test]
     fn test_modulus() {
-        let minusone: Mpz = From::<i32>::from(-1).unwrap();
-        let two: Mpz = From::<i32>::from(2).unwrap();
-        let three: Mpz = From::<i32>::from(3).unwrap();
+        let minusone: Mpz = From::<i64>::from(-1);
+        let two: Mpz = From::<i64>::from(2);
+        let three: Mpz = From::<i64>::from(3);
         assert_eq!(two.modulus(&three), two);
         assert_eq!(minusone.modulus(&three), two);
     }
 
     #[test]
     fn test_invert() {
-        let two: Mpz = From::<i32>::from(2).unwrap();
-        let three: Mpz = From::<i32>::from(3).unwrap();
-        let four: Mpz = From::<i32>::from(4).unwrap();
-        let five: Mpz = From::<i32>::from(5).unwrap();
-        let eleven: Mpz = From::<i32>::from(11).unwrap();
+        let two: Mpz = From::<i64>::from(2);
+        let three: Mpz = From::<i64>::from(3);
+        let four: Mpz = From::<i64>::from(4);
+        let five: Mpz = From::<i64>::from(5);
+        let eleven: Mpz = From::<i64>::from(11);
         assert!(three.invert(&eleven) == Some(four.clone()));
         assert!(four.invert(&eleven) == Some(three.clone()));
         assert!(two.invert(&five) == Some(three.clone()));
@@ -344,21 +359,21 @@ mod mpz {
 
     #[test]
     fn test_one() {
-        let onea: Mpz = From::<i32>::from(0).unwrap();
-        let oneb: Mpz = From::<i32>::from(1).unwrap();
+        let onea: Mpz = From::<i64>::from(0);
+        let oneb: Mpz = From::<i64>::from(1);
         assert!(onea == oneb);
     }
 
     #[test]
     fn test_bit_fiddling() {
-        let mut xs: Mpz = From::<i32>::from(0b1010_1000_0010_0011).unwrap();
+        let mut xs: Mpz = From::<i64>::from(0b1010_1000_0010_0011);
         assert!(xs.bit_length() == 16);
         let mut ys = [true, false, true, false,
                       true, false, false, false,
                       false, false, true, false,
                       false, false, true, true];
         ys.reverse();
-        for i in range(0, xs.bit_length()) {
+        for i in 0..xs.bit_length() {
             assert!(xs.tstbit(i as c_ulong) == ys[i]);
         }
         xs.setbit(0);
@@ -373,29 +388,29 @@ mod mpz {
         ys[14] = !ys[14];
         xs.combit(15);
         ys[15] = !ys[15];
-        for i in range(0, xs.bit_length()) {
+        for i in 0..xs.bit_length() {
             assert!(xs.tstbit(i as c_ulong) == ys[i]);
         }
     }
 
     #[test]
     fn test_root() {
-        let x: Mpz = From::<i32>::from(123456).unwrap();
-        let y: Mpz = From::<i32>::from(49).unwrap();
+        let x: Mpz = From::<i64>::from(123456);
+        let y: Mpz = From::<i64>::from(49);
         assert!(x.root(3) == y);
     }
 
     #[test]
     fn test_sqrt() {
-        let x: Mpz = From::<i32>::from(567).unwrap();
-        let y: Mpz = From::<i32>::from(23).unwrap();
+        let x: Mpz = From::<i64>::from(567);
+        let y: Mpz = From::<i64>::from(23);
         assert!(x.sqrt() == y);
     }
 
     #[test]
     fn test_hash_short() {
-        let zero: Mpz = From::<i32>::from(0).unwrap();
-        let one: Mpz = From::<i32>::from(1).unwrap();
+        let zero: Mpz = From::<i64>::from(0);
+        let one: Mpz = From::<i64>::from(1);
         let two = one + one;
         assert!(hash(&zero) != hash(&one));
         assert_eq!(hash(&one), hash(&(two - one)));
@@ -407,48 +422,48 @@ mod mpz {
                 .unwrap();
         let b = Mpz::from_str_radix("348917329847193287498312749187234192386", 10)
                 .unwrap();
-        let one: Mpz = From::<i32>::from(1).unwrap();
+        let one: Mpz = From::<i64>::from(1);
         assert!(hash(&a) != hash(&b));
         assert_eq!(hash(&a), hash(&(b + one)));
         assert_eq!(hash(&(a - a)), hash(&(one - one)));
     }
     #[test]
     fn test_to_u64() {
-        let minus_five: Mpz = From::<i32>::from(-5).unwrap();
-        let minus_one: Mpz = From::<i32>::from(-1).unwrap();
-        let zero: Mpz = From::<i32>::from(0).unwrap();
-        let one: Mpz = From::<i32>::from(1).unwrap();
-        let five: Mpz = From::<i32>::from(5).unwrap();
-        let max_u64: Mpz = From::<u64>::from(u64::MAX).unwrap();
+        let minus_five: Mpz = From::<i64>::from(-5);
+        let minus_one: Mpz = From::<i64>::from(-1);
+        let zero: Mpz = From::<i64>::from(0);
+        let one: Mpz = From::<i64>::from(1);
+        let five: Mpz = From::<i64>::from(5);
+        let max_u64: Mpz = From::<u64>::from(u64::MAX);
 
-        assert_eq!(minus_five.to_u64(), None);
-        assert_eq!(minus_one.to_u64(), None);
-        assert_eq!(zero.to_u64(), Some(0u64));
-        assert_eq!(one.to_u64(), Some(1u64));
-        assert_eq!(five.to_u64(), Some(5u64));
-        assert_eq!(max_u64.to_u64(), Some(u64::MAX));
-        assert_eq!((max_u64 + one).to_u64(), None);
+        assert_eq!(Into::<Option<u64>>::into(minus_five), None);
+        assert_eq!(Into::<Option<u64>>::into(minus_one), None);
+        assert_eq!(Into::<Option<u64>>::into(zero), Some(0u64));
+        assert_eq!(Into::<Option<u64>>::into(one), Some(1u64));
+        assert_eq!(Into::<Option<u64>>::into(five), Some(5u64));
+        assert_eq!(Into::<Option<u64>>::into(max_u64), Some(u64::MAX));
+        assert_eq!(Into::<Option<u64>>::into((max_u64 + one)), None);
     }
 
     #[test]
     fn test_to_i64() {
-        let min_i64: Mpz = From::<i64>::from(i64::MIN).unwrap();
-        let minus_five: Mpz = From::<i32>::from(-5).unwrap();
-        let minus_one: Mpz = From::<i32>::from(-1).unwrap();
-        let zero: Mpz = From::<i32>::from(0).unwrap();
-        let one: Mpz = From::<i32>::from(1).unwrap();
-        let five: Mpz = From::<i32>::from(5).unwrap();
-        let max_i64: Mpz = From::<i64>::from(i64::MAX).unwrap();
+        let min_i64: Mpz = From::<i64>::from(i64::MIN);
+        let minus_five: Mpz = From::<i64>::from(-5);
+        let minus_one: Mpz = From::<i64>::from(-1);
+        let zero: Mpz = From::<i64>::from(0);
+        let one: Mpz = From::<i64>::from(1);
+        let five: Mpz = From::<i64>::from(5);
+        let max_i64: Mpz = From::<i64>::from(i64::MAX);
 
-        assert_eq!((min_i64 - one).to_i64(), None);
-        assert_eq!(min_i64.to_i64(), Some(i64::MIN));
-        assert_eq!(minus_five.to_i64(), Some(-5i64));
-        assert_eq!(minus_one.to_i64(), Some(-1i64));
-        assert_eq!(zero.to_i64(), Some(0i64));
-        assert_eq!(one.to_i64(), Some(1i64));
-        assert_eq!(five.to_i64(), Some(5i64));
-        assert_eq!(max_i64.to_i64(), Some(i64::MAX));
-        assert_eq!((max_i64 + one).to_i64(), None);
+        assert_eq!(Into::<Option<i64>>::into(min_i64 - one), None);
+        assert_eq!(Into::<Option<i64>>::into(min_i64), Some(i64::MIN));
+        assert_eq!(Into::<Option<i64>>::into(minus_five), Some(-5i64));
+        assert_eq!(Into::<Option<i64>>::into(minus_one), Some(-1i64));
+        assert_eq!(Into::<Option<i64>>::into(zero), Some(0i64));
+        assert_eq!(Into::<Option<i64>>::into(one), Some(1i64));
+        assert_eq!(Into::<Option<i64>>::into(five), Some(5i64));
+        assert_eq!(Into::<Option<i64>>::into(max_i64), Some(i64::MAX));
+        assert_eq!(Into::<Option<i64>>::into(max_i64 + one), None);
     }
 }
 
@@ -463,7 +478,7 @@ mod rand {
         state.seed_ui(42);
         for _ in 1u32..1000 {
             for x in 1i64..10 {
-                let upper: Mpz = From::<i32>::from(x).unwrap();
+                let upper: Mpz = From::<i64>::from(x);
                 assert!(state.urandom(&upper) < upper);
             }
         }
@@ -476,15 +491,15 @@ mod mpq {
 
     #[test]
     fn test_one() {
-        let onea: Mpq = From::<i32>::from(0).unwrap();
-        let oneb: Mpq = From::<i32>::from(1).unwrap();
+        let onea: Mpq = From::<i64>::from(0);
+        let oneb: Mpq = From::<i64>::from(1);
         assert!(onea == oneb);
     }
 
     #[test]
     #[should_panic]
     fn test_div_zero() {
-        let x: Mpq = One::one();
+        let x: Mpq = From::<i64>::from(1);
         let y = Mpq::new();
         x / y;
     }
@@ -497,14 +512,14 @@ mod mpq {
 
     #[test]
     fn test_fmt() {
-        let fourty: Mpq = From::<i32>::from(40).unwrap();
-        let six: Mpq = From::<i32>::from(6).unwrap();
+        let fourty: Mpq = From::<i64>::from(40);
+        let six: Mpq = From::<i64>::from(6);
         let fourty_sixths = fourty / six;
 
-        assert_eq!(format!("{}", fourty), "40");
-        assert_eq!(format!("{}", -fourty), "-40");
-        assert_eq!(format!("{}", fourty_sixths), "20/3");
-        assert_eq!(format!("{}", -fourty_sixths), "-20/3");
+        assert_eq!(format!("{:?}", fourty), "40");
+        assert_eq!(format!("{:?}", -fourty), "-40");
+        assert_eq!(format!("{:?}", fourty_sixths), "20/3");
+        assert_eq!(format!("{:?}", -fourty_sixths), "-20/3");
     }
 }
 
@@ -515,8 +530,7 @@ mod mpf {
     #[test]
     #[should_panic]
     fn test_div_zero() {
-        // FIXME: change the numerator to One::one()
-        let x = Mpf::new(100);
+        let x = Mpf::new(0);
         x / x;
     }
 }
