@@ -7,7 +7,6 @@ extern crate libc;
 
 use libc::{c_char, c_double, c_int, c_long, c_ulong, c_void, size_t};
 use std::convert::{From, Into};
-use std::num::One;
 use std::mem::{uninitialized,size_of};
 use std::{cmp, fmt, hash};
 use std::cmp::Ordering::{self, Greater, Less, Equal};
@@ -210,7 +209,17 @@ impl Mpz {
 
             __gmpz_get_str(vector.as_mut_ptr() as *mut _, base as c_int, &self.mpz);
 
-            let first_nul = vector.position_elem(&0).unwrap_or(len);
+            let mut first_nul = None;
+            let mut index : usize = 0;
+            for elem in &vector {
+                if *elem == 0 {
+                    first_nul = Some(index);
+                    break;
+                }
+                index += 1;
+            }
+            let first_nul = first_nul.unwrap_or(len);
+
             vector.truncate(first_nul);
             match String::from_utf8(vector) {
                 Ok(s)  => s,
@@ -668,12 +677,6 @@ impl FromStr for Mpz {
     }
 }
 
-impl One for Mpz {
-    fn one() -> Mpz {
-        From::<i64>::from(1)
-    }
-}
-
 impl fmt::Display for Mpz {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.to_str_radix(10))
@@ -989,7 +992,7 @@ impl fmt::Debug for Mpq {
         let numer = self.get_num();
         let denom = self.get_den();
 
-        if denom == One::one() {
+        if denom == From::<i64>::from(1) {
             write!(f, "{}", numer)
         } else {
             write!(f, "{}/{}", numer, denom)
