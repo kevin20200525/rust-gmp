@@ -482,7 +482,7 @@ impl<'b> Neg for &'b Mpz {
     }
 }
 
-impl Into<Option<i64>> for Mpz {
+impl<'b> Into<Option<i64>> for &'b Mpz {
     fn into(self) -> Option<i64> {
         unsafe {
             if __gmpz_fits_slong_p(&self.mpz) != 0 {
@@ -494,7 +494,7 @@ impl Into<Option<i64>> for Mpz {
     }
 }
 
-impl Into<Option<u64>> for Mpz {
+impl<'b> Into<Option<u64>> for &'b Mpz {
     fn into(self) -> Option<u64> {
         unsafe {
             if __gmpz_fits_ulong_p(&self.mpz) != 0 {

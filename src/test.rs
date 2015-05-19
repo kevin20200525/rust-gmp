@@ -110,17 +110,17 @@ mod mpz {
     fn test_div_round() {
         let x: Mpz = From::<i64>::from(2);
         let y: Mpz = From::<i64>::from(3);
-        assert!((x / y).to_string() == (2i32 / 3).to_string());
-        assert!((x / -y).to_string() == (2i32 / -3).to_string());
+        assert!((&x / &y).to_string() == (2i32 / 3).to_string());
+        assert!((&x / -&y).to_string() == (2i32 / -3).to_string());
     }
 
     #[test]
     fn test_rem() {
         let x: Mpz = From::<i64>::from(20);
         let y: Mpz = From::<i64>::from(3);
-        assert!((x % y).to_string() == (20i32 % 3).to_string());
-        assert!((x % -y).to_string() == (20i32 % -3).to_string());
-        assert!((-x % y).to_string() == (-20i32 % 3).to_string());
+        assert!((&x % &y).to_string() == (20i32 % 3).to_string());
+        assert!((&x % -&y).to_string() == (20i32 % -3).to_string());
+        assert!((-&x % &y).to_string() == (-20i32 % 3).to_string());
     }
 
     #[test]
@@ -161,8 +161,8 @@ mod mpz {
     fn test_abs() {
         let x: Mpz = From::<i64>::from(1000);
         let y: Mpz = From::<i64>::from(-1000);
-        assert!(-x == y);
-        assert!(x == -y);
+        assert!(-&x == y);
+        assert!(x == -&y);
         assert!(x == y.abs());
         assert!(x.abs() == y.abs());
     }
@@ -230,10 +230,10 @@ mod mpz {
     fn test_shifts() {
         let i = 227;
         let j: Mpz = From::<i64>::from(i);
-        assert!((i << 4).to_string() == (j << 4).to_string());
-        assert!((-i << 4).to_string() == (-j << 4).to_string());
-        assert!((i >> 4).to_string() == (j >> 4).to_string());
-        assert!((-i >> 4).to_string() == (-j >> 4).to_string());
+        assert!((i << 4).to_string() == (&j << 4).to_string());
+        assert!((-i << 4).to_string() == (-&j << 4).to_string());
+        assert!((i >> 4).to_string() == (&j >> 4).to_string());
+        assert!((-i >> 4).to_string() == (-&j >> 4).to_string());
     }
 
     #[test]
@@ -411,7 +411,7 @@ mod mpz {
     fn test_hash_short() {
         let zero: Mpz = From::<i64>::from(0);
         let one: Mpz = From::<i64>::from(1);
-        let two = one + one;
+        let two = &one + &one;
         assert!(zero.hash(&mut SipHasher::new()) != one.hash(&mut SipHasher::new()));
         assert_eq!(one.hash(&mut SipHasher::new()), (two - one).hash(&mut SipHasher::new()));
     }
@@ -424,8 +424,8 @@ mod mpz {
                 .unwrap();
         let one: Mpz = From::<i64>::from(1);
         assert!(a.hash(&mut SipHasher::new()) != b.hash(&mut SipHasher::new()));
-        assert_eq!(a.hash(&mut SipHasher::new()), (b + one).hash(&mut SipHasher::new()));
-        assert_eq!((a - a).hash(&mut SipHasher::new()), (one - one).hash(&mut SipHasher::new()));
+        assert_eq!(a.hash(&mut SipHasher::new()), (&b + &one).hash(&mut SipHasher::new()));
+        assert_eq!((&a - &a).hash(&mut SipHasher::new()), (&one - &one).hash(&mut SipHasher::new()));
     }
     #[test]
     fn test_to_u64() {
@@ -436,13 +436,13 @@ mod mpz {
         let five: Mpz = From::<i64>::from(5);
         let max_u64: Mpz = From::<u64>::from(u64::MAX);
 
-        assert_eq!(Into::<Option<u64>>::into(minus_five), None);
-        assert_eq!(Into::<Option<u64>>::into(minus_one), None);
-        assert_eq!(Into::<Option<u64>>::into(zero), Some(0u64));
-        assert_eq!(Into::<Option<u64>>::into(one), Some(1u64));
-        assert_eq!(Into::<Option<u64>>::into(five), Some(5u64));
-        assert_eq!(Into::<Option<u64>>::into(max_u64), Some(u64::MAX));
-        assert_eq!(Into::<Option<u64>>::into((max_u64 + one)), None);
+        assert_eq!(Into::<Option<u64>>::into(&minus_five), None);
+        assert_eq!(Into::<Option<u64>>::into(&minus_one), None);
+        assert_eq!(Into::<Option<u64>>::into(&zero), Some(0u64));
+        assert_eq!(Into::<Option<u64>>::into(&one), Some(1u64));
+        assert_eq!(Into::<Option<u64>>::into(&five), Some(5u64));
+        assert_eq!(Into::<Option<u64>>::into(&max_u64), Some(u64::MAX));
+        assert_eq!(Into::<Option<u64>>::into(&(&max_u64 + &one)), None);
     }
 
     #[test]
@@ -455,15 +455,15 @@ mod mpz {
         let five: Mpz = From::<i64>::from(5);
         let max_i64: Mpz = From::<i64>::from(i64::MAX);
 
-        assert_eq!(Into::<Option<i64>>::into(min_i64 - one), None);
-        assert_eq!(Into::<Option<i64>>::into(min_i64), Some(i64::MIN));
-        assert_eq!(Into::<Option<i64>>::into(minus_five), Some(-5i64));
-        assert_eq!(Into::<Option<i64>>::into(minus_one), Some(-1i64));
-        assert_eq!(Into::<Option<i64>>::into(zero), Some(0i64));
-        assert_eq!(Into::<Option<i64>>::into(one), Some(1i64));
-        assert_eq!(Into::<Option<i64>>::into(five), Some(5i64));
-        assert_eq!(Into::<Option<i64>>::into(max_i64), Some(i64::MAX));
-        assert_eq!(Into::<Option<i64>>::into(max_i64 + one), None);
+        assert_eq!(Into::<Option<i64>>::into(&(&min_i64 - &one)), None);
+        assert_eq!(Into::<Option<i64>>::into(&min_i64), Some(i64::MIN));
+        assert_eq!(Into::<Option<i64>>::into(&minus_five), Some(-5i64));
+        assert_eq!(Into::<Option<i64>>::into(&minus_one), Some(-1i64));
+        assert_eq!(Into::<Option<i64>>::into(&zero), Some(0i64));
+        assert_eq!(Into::<Option<i64>>::into(&one), Some(1i64));
+        assert_eq!(Into::<Option<i64>>::into(&five), Some(5i64));
+        assert_eq!(Into::<Option<i64>>::into(&max_i64), Some(i64::MAX));
+        assert_eq!(Into::<Option<i64>>::into(&(&max_i64 + &one)), None);
     }
 }
 
@@ -514,12 +514,12 @@ mod mpq {
     fn test_fmt() {
         let fourty: Mpq = From::<i64>::from(40);
         let six: Mpq = From::<i64>::from(6);
-        let fourty_sixths = fourty / six;
+        let fourty_sixths = &fourty / &six;
 
         assert_eq!(format!("{:?}", fourty), "40");
-        assert_eq!(format!("{:?}", -fourty), "-40");
+        assert_eq!(format!("{:?}", -&fourty), "-40");
         assert_eq!(format!("{:?}", fourty_sixths), "20/3");
-        assert_eq!(format!("{:?}", -fourty_sixths), "-20/3");
+        assert_eq!(format!("{:?}", -&fourty_sixths), "-20/3");
     }
 }
 
@@ -531,6 +531,6 @@ mod mpf {
     #[should_panic]
     fn test_div_zero() {
         let x = Mpf::new(0);
-        x / x;
+        &x / &x;
     }
 }
