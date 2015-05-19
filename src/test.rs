@@ -20,7 +20,7 @@ mod mpz {
     use libc::c_ulong;
     use std::{i64, u64};
 
-    use std::hash::{Hash, SipHasher};
+    use std::hash::{Hash, Hasher, SipHasher};
 
     #[test]
     fn test_set() {
@@ -359,7 +359,7 @@ mod mpz {
 
     #[test]
     fn test_one() {
-        let onea: Mpz = From::<i64>::from(0);
+        let onea: Mpz = From::<i64>::from(1);
         let oneb: Mpz = From::<i64>::from(1);
         assert!(onea == oneb);
     }
@@ -412,8 +412,15 @@ mod mpz {
         let zero: Mpz = From::<i64>::from(0);
         let one: Mpz = From::<i64>::from(1);
         let two = &one + &one;
-        assert!(zero.hash(&mut SipHasher::new()) != one.hash(&mut SipHasher::new()));
-        assert_eq!(one.hash(&mut SipHasher::new()), (two - one).hash(&mut SipHasher::new()));
+
+        let hash = |x : &Mpz| {
+            let mut hasher = SipHasher::new();
+            x.hash(&mut hasher);
+            hasher.finish()
+        };
+
+        assert!(hash(&zero) != hash(&one));
+        assert_eq!(hash(&one), hash(&(&two - &one)));
     }
 
     #[test]
@@ -423,9 +430,16 @@ mod mpz {
         let b = Mpz::from_str_radix("348917329847193287498312749187234192386", 10)
                 .unwrap();
         let one: Mpz = From::<i64>::from(1);
-        assert!(a.hash(&mut SipHasher::new()) != b.hash(&mut SipHasher::new()));
-        assert_eq!(a.hash(&mut SipHasher::new()), (&b + &one).hash(&mut SipHasher::new()));
-        assert_eq!((&a - &a).hash(&mut SipHasher::new()), (&one - &one).hash(&mut SipHasher::new()));
+
+        let hash = |x : &Mpz| {
+            let mut hasher = SipHasher::new();
+            x.hash(&mut hasher);
+            hasher.finish()
+        };
+
+        assert!(hash(&a) != hash(&b));
+        assert_eq!(hash(&a), hash(&(&b + &one)));
+        assert_eq!(hash(&(&a - &a)), hash(&(&one - &one)));
     }
     #[test]
     fn test_to_u64() {
@@ -468,7 +482,7 @@ mod mpz {
 }
 
 mod rand {
-    use std::convert::{From, Into};
+    use std::convert::From;
     use super::super::mpz::Mpz;
     use super::super::rand::RandState;
 
@@ -486,12 +500,12 @@ mod rand {
 }
 
 mod mpq {
-    use std::convert::{From, Into};
+    use std::convert::From;
     use super::super::mpq::Mpq;
 
     #[test]
     fn test_one() {
-        let onea: Mpq = From::<i64>::from(0);
+        let onea: Mpq = From::<i64>::from(1);
         let oneb: Mpq = From::<i64>::from(1);
         assert!(onea == oneb);
     }
@@ -524,7 +538,6 @@ mod mpq {
 }
 
 mod mpf {
-    use std::convert::{From, Into};
     use super::super::mpf::Mpf;
 
     #[test]

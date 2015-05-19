@@ -485,7 +485,7 @@ impl<'b> Neg for &'b Mpz {
 impl<'b> Into<Option<i64>> for &'b Mpz {
     fn into(self) -> Option<i64> {
         unsafe {
-            if __gmpz_fits_slong_p(&self.mpz) != 0 {
+            if __gmpz_sizeinbase(&self.mpz, 2) <= 63 {
                 return Some(__gmpz_get_si(&self.mpz) as i64);
             } else {
                 return None;
@@ -497,7 +497,7 @@ impl<'b> Into<Option<i64>> for &'b Mpz {
 impl<'b> Into<Option<u64>> for &'b Mpz {
     fn into(self) -> Option<u64> {
         unsafe {
-            if __gmpz_fits_ulong_p(&self.mpz) != 0 {
+            if __gmpz_sizeinbase(&self.mpz, 2) <= 64 && __gmpz_cmp_ui(&self.mpz, 0) >= 0 {
                 return Some(__gmpz_get_ui(&self.mpz) as u64);
             } else {
                 return None;
@@ -510,7 +510,7 @@ impl From<u64> for Mpz {
     fn from(other: u64) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
-            __gmpz_import(&mut res.mpz, 1, 1, size_of::<u64>() as size_t, 0, 0,
+            __gmpz_import(&mut res.mpz, 1, -1, size_of::<u64>() as size_t, 0, 0,
                           &other as *const u64 as *const c_void);
             res
         }
@@ -521,7 +521,7 @@ impl From<i64> for Mpz {
     fn from(other: i64) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
-            __gmpz_import(&mut res.mpz, 1, 1, size_of::<i64>() as size_t, 0, 0,
+            __gmpz_import(&mut res.mpz, 1, -1, size_of::<i64>() as size_t, 0, 0,
                           &other.abs() as *const i64 as *const c_void);
             if other.is_negative() {
                 __gmpz_neg(&mut res.mpz, &res.mpz)
