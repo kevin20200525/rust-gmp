@@ -72,6 +72,8 @@ extern "C" {
     fn __gmpz_invert(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr) -> c_int;
     fn __gmpz_import(rop: mpz_ptr, count: size_t, order: c_int, size: size_t,
                      endian: c_int, nails: size_t, op: *const c_void);
+    fn __gmpz_export(rop: *mut c_void, countp: *mut size_t, order: c_int, size: size_t, 
+                     endian: c_int, nails: size_t, op: mpz_srcptr);
     fn __gmpz_root(rop: mpz_ptr, op: mpz_srcptr, n: c_ulong) -> c_int;
     fn __gmpz_sqrt(rop: mpz_ptr, op: mpz_srcptr);
     fn __gmpz_millerrabin(n: mpz_srcptr, reps: c_int) -> c_int;
@@ -486,7 +488,13 @@ impl<'b> Into<Option<i64>> for &'b Mpz {
     fn into(self) -> Option<i64> {
         unsafe {
             if __gmpz_sizeinbase(&self.mpz, 2) <= 63 {
-                return Some(__gmpz_get_si(&self.mpz) as i64);
+                let mut result : i64 = 0;
+                __gmpz_export(&mut result as *mut i64 as *mut c_void, 0 as *mut size_t, -1, size_of::<i64>() as size_t, 0, 0, &self.mpz);
+                if __gmpz_cmp_ui(&self.mpz, 0) < 0 {
+                    Some(-result)
+                } else {
+                    Some(result)
+                }
             } else {
                 return None;
             }
@@ -498,9 +506,11 @@ impl<'b> Into<Option<u64>> for &'b Mpz {
     fn into(self) -> Option<u64> {
         unsafe {
             if __gmpz_sizeinbase(&self.mpz, 2) <= 64 && __gmpz_cmp_ui(&self.mpz, 0) >= 0 {
-                return Some(__gmpz_get_ui(&self.mpz) as u64);
+                let mut result : u64 = 0;
+                __gmpz_export(&mut result as *mut u64 as *mut c_void, 0 as *mut size_t, -1, size_of::<u64>() as size_t, 0, 0, &self.mpz);
+                Some(result)
             } else {
-                return None;
+                None
             }
         }
     }
