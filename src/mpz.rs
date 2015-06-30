@@ -101,24 +101,24 @@ impl Mpz {
         }
     }
 
-    pub fn new_reserve(n: c_ulong) -> Mpz {
+    pub fn new_reserve(n: usize) -> Mpz {
         unsafe {
             let mut mpz = uninitialized();
-            __gmpz_init2(&mut mpz, n);
+            __gmpz_init2(&mut mpz, n as c_ulong);
             Mpz { mpz: mpz }
         }
     }
 
-    pub fn reserve(&mut self, n: c_ulong) {
-        if (self.bit_length() as c_ulong) < n {
-            unsafe { __gmpz_realloc2(&mut self.mpz, n) }
+    pub fn reserve(&mut self, n: usize) {
+        if self.bit_length() < n {
+            unsafe { __gmpz_realloc2(&mut self.mpz, n as c_ulong) }
         }
     }
 
     // TODO: fail on an invalid base
     // FIXME: Unfortunately it isn't currently possible to use the fmt::RadixFmt
     //        machinery for a custom type.
-    pub fn to_str_radix(&self, base: usize) -> String {
+    pub fn to_str_radix(&self, base: u8) -> String {
         unsafe {
             // Extra two bytes are for possible minus sign and null terminator
             let len = __gmpz_sizeinbase(&self.mpz, base as c_int) as usize + 2;
@@ -148,7 +148,7 @@ impl Mpz {
         }
     }
 
-    pub fn from_str_radix(s: &str, base: usize) -> Result<Mpz, ()> {
+    pub fn from_str_radix(s: &str, base: u8) -> Result<Mpz, ()> {
         unsafe {
             assert!(base == 0 || (base >= 2 && base <= 62));
             let mut mpz = uninitialized();
@@ -168,7 +168,7 @@ impl Mpz {
     }
 
     // TODO: too easy to forget to check this return value - rename?
-    pub fn set_from_str_radix(&mut self, s: &str, base: usize) -> bool {
+    pub fn set_from_str_radix(&mut self, s: &str, base: u8) -> bool {
         assert!(base == 0 || (base >= 2 && base <= 62));
         let s = CString::new(s.to_string()).unwrap();
         unsafe { __gmpz_set_str(&mut self.mpz, s.as_ptr(), base as c_int) == 0 }
@@ -313,28 +313,28 @@ impl Mpz {
         unsafe { __gmpz_hamdist(&self.mpz, &other.mpz) as usize }
     }
 
-    pub fn setbit(&mut self, bit_index: c_ulong) {
-        unsafe { __gmpz_setbit(&mut self.mpz, bit_index) }
+    pub fn setbit(&mut self, bit_index: usize) {
+        unsafe { __gmpz_setbit(&mut self.mpz, bit_index as c_ulong) }
     }
 
-    pub fn clrbit(&mut self, bit_index: c_ulong) {
-        unsafe { __gmpz_clrbit(&mut self.mpz, bit_index) }
+    pub fn clrbit(&mut self, bit_index: usize) {
+        unsafe { __gmpz_clrbit(&mut self.mpz, bit_index as c_ulong) }
     }
 
-    pub fn combit(&mut self, bit_index: c_ulong) {
-        unsafe { __gmpz_combit(&mut self.mpz, bit_index) }
+    pub fn combit(&mut self, bit_index: usize) {
+        unsafe { __gmpz_combit(&mut self.mpz, bit_index as c_ulong) }
     }
 
-    pub fn tstbit(&self, bit_index: c_ulong) -> bool {
-        unsafe { __gmpz_tstbit(&self.mpz, bit_index) == 1 }
+    pub fn tstbit(&self, bit_index: usize) -> bool {
+        unsafe { __gmpz_tstbit(&self.mpz, bit_index as c_ulong) == 1 }
     }
 
-    pub fn root(&self, n: c_ulong) -> Mpz {
+    pub fn root(&self, n: u64) -> Mpz {
         assert!(*self >= Mpz::zero());
         unsafe {
             let mut res = Mpz::new();
             let _perfect_root
-                = match __gmpz_root(&mut res.mpz, &self.mpz, n) {
+                = match __gmpz_root(&mut res.mpz, &self.mpz, n as c_ulong) {
                     0 => false,
                     _ => true,
             };
@@ -352,9 +352,9 @@ impl Mpz {
         }
     }
 
-    pub fn millerrabin(&self, reps: c_int) -> c_int {
+    pub fn millerrabin(&self, reps: i32) -> i32 {
         unsafe {
-            __gmpz_millerrabin(&self.mpz, reps)
+            __gmpz_millerrabin(&self.mpz, reps as c_int)
         }
     }
 
@@ -367,6 +367,7 @@ impl Mpz {
     }
 
     pub fn zero() -> Mpz { Mpz::new() }
+
     pub fn is_zero(&self) -> bool {
         unsafe { __gmpz_cmp_ui(&self.mpz, 0) == 0 }
     }
@@ -382,9 +383,7 @@ impl Clone for Mpz {
     }
 }
 
-impl Eq for Mpz {
-
-}
+impl Eq for Mpz { }
 
 impl PartialEq for Mpz {
     fn eq(&self, other: &Mpz) -> bool {
@@ -589,45 +588,45 @@ impl<'a, 'b> BitXor<&'a Mpz> for &'b Mpz {
     }
 }
 
-impl<'b> Shl<c_ulong> for &'b Mpz {
+impl<'b> Shl<usize> for &'b Mpz {
     type Output = Mpz;
-    fn shl(self, other: c_ulong) -> Mpz {
+    fn shl(self, other: usize) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
-            __gmpz_mul_2exp(&mut res.mpz, &self.mpz, other);
+            __gmpz_mul_2exp(&mut res.mpz, &self.mpz, other as c_ulong);
             res
         }
     }
 }
 
-impl<'b> Shr<c_ulong> for &'b Mpz {
+impl<'b> Shr<usize> for &'b Mpz {
     type Output = Mpz;
-    fn shr(self, other: c_ulong) -> Mpz {
+    fn shr(self, other: usize) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
-            __gmpz_fdiv_q_2exp(&mut res.mpz, &self.mpz, other);
+            __gmpz_fdiv_q_2exp(&mut res.mpz, &self.mpz, other as c_ulong);
             res
         }
     }
 }
 
-impl Shl<c_ulong> for Mpz {
+impl Shl<usize> for Mpz {
     type Output = Mpz;
-    fn shl(self, other: c_ulong) -> Mpz {
+    fn shl(self, other: usize) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
-            __gmpz_mul_2exp(&mut res.mpz, &self.mpz, other);
+            __gmpz_mul_2exp(&mut res.mpz, &self.mpz, other as c_ulong);
             res
         }
     }
 }
 
-impl Shr<c_ulong> for Mpz {
+impl Shr<usize> for Mpz {
     type Output = Mpz;
-    fn shr(self, other: c_ulong) -> Mpz {
+    fn shr(self, other: usize) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
-            __gmpz_fdiv_q_2exp(&mut res.mpz, &self.mpz, other);
+            __gmpz_fdiv_q_2exp(&mut res.mpz, &self.mpz, other as c_ulong);
             res
         }
     }

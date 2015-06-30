@@ -8,13 +8,13 @@ use std::cmp::Ordering::{self, Greater, Less, Equal};
 use std::ops::{Div, Mul, Add, Sub, Neg};
 
 #[repr(C)]
-struct mpq_struct {
+pub struct mpq_struct {
     _mp_num: mpz_struct,
     _mp_den: mpz_struct
 }
 
-type mpq_srcptr = *const mpq_struct;
-type mpq_ptr = *mut mpq_struct;
+pub type mpq_srcptr = *const mpq_struct;
+pub type mpq_ptr = *mut mpq_struct;
 
 #[link(name = "gmp")]
 extern "C" {
@@ -40,7 +40,7 @@ extern "C" {
 }
 
 pub struct Mpq {
-    mpq: mpq_struct,
+    pub mpq: mpq_struct,
 }
 
 unsafe impl Send for Mpq { }

@@ -52,10 +52,10 @@ impl Drop for Mpf {
 }
 
 impl Mpf {
-    pub fn new(precision: c_ulong) -> Mpf {
+    pub fn new(precision: usize) -> Mpf {
         unsafe {
             let mut mpf = uninitialized();
-            __gmpf_init2(&mut mpf, precision);
+            __gmpf_init2(&mut mpf, precision as c_ulong);
             Mpf { mpf: mpf }
         }
     }
@@ -64,12 +64,12 @@ impl Mpf {
         unsafe { __gmpf_set(&mut self.mpf, &other.mpf) }
     }
 
-    pub fn get_prec(&self) -> c_ulong {
-        unsafe { __gmpf_get_prec(&self.mpf) }
+    pub fn get_prec(&self) -> usize {
+        unsafe { __gmpf_get_prec(&self.mpf) as usize }
     }
 
-    pub fn set_prec(&mut self, precision: c_ulong) {
-        unsafe { __gmpf_set_prec(&mut self.mpf, precision) }
+    pub fn set_prec(&mut self, precision: usize) {
+        unsafe { __gmpf_set_prec(&mut self.mpf, precision as c_ulong) }
     }
 
     pub fn abs(&self) -> Mpf {
@@ -106,8 +106,7 @@ impl Mpf {
 
     pub fn reldiff(&self, other: &Mpf) -> Mpf {
         unsafe {
-            let mut res = Mpf::new(cmp::max(self.get_prec() as usize,
-                                         other.get_prec() as usize) as c_ulong);
+            let mut res = Mpf::new(cmp::max(self.get_prec(), other.get_prec()));
             __gmpf_reldiff(&mut res.mpf, &self.mpf, &other.mpf);
             res
         }
@@ -154,8 +153,7 @@ impl<'a, 'b> Add<&'a Mpf> for &'b Mpf {
     type Output = Mpf;
     fn add(self, other: &Mpf) -> Mpf {
         unsafe {
-            let mut res = Mpf::new(cmp::max(self.get_prec() as usize,
-                                             other.get_prec() as usize) as c_ulong);
+            let mut res = Mpf::new(cmp::max(self.get_prec(), other.get_prec()));
             __gmpf_add(&mut res.mpf, &self.mpf, &other.mpf);
             res
         }
@@ -166,8 +164,7 @@ impl<'a, 'b> Sub<&'a Mpf> for &'b Mpf {
     type Output = Mpf;
     fn sub(self, other: &Mpf) -> Mpf {
         unsafe {
-            let mut res = Mpf::new(cmp::max(self.get_prec() as usize,
-                                             other.get_prec() as usize) as c_ulong);
+            let mut res = Mpf::new(cmp::max(self.get_prec(), other.get_prec()));
             __gmpf_sub(&mut res.mpf, &self.mpf, &other.mpf);
             res
         }
@@ -178,8 +175,7 @@ impl<'a, 'b> Mul<&'a Mpf> for &'b Mpf {
     type Output = Mpf;
     fn mul(self, other: &Mpf) -> Mpf {
         unsafe {
-            let mut res = Mpf::new(cmp::max(self.get_prec() as usize,
-                                             other.get_prec() as usize) as c_ulong);
+            let mut res = Mpf::new(cmp::max(self.get_prec(), other.get_prec()));
             __gmpf_mul(&mut res.mpf, &self.mpf, &other.mpf);
             res
         }
@@ -194,8 +190,7 @@ impl<'a, 'b> Div<&'a Mpf> for &'b Mpf {
                 panic!("divide by zero")
             }
 
-            let mut res = Mpf::new(cmp::max(self.get_prec() as usize,
-                                             other.get_prec() as usize) as c_ulong);
+            let mut res = Mpf::new(cmp::max(self.get_prec(), other.get_prec()));
             __gmpf_div(&mut res.mpf, &self.mpf, &other.mpf);
             res
         }

@@ -52,18 +52,18 @@ impl RandState {
         }
     }
 
-    pub fn new_lc_2exp(a: Mpz, c: c_ulong, m2exp: c_ulong) -> RandState {
+    pub fn new_lc_2exp(a: Mpz, c: u64, m2exp: u64) -> RandState {
         unsafe {
             let mut state: gmp_randstate_struct = uninitialized();
-            __gmp_randinit_lc_2exp(&mut state, &a.mpz, c, m2exp);
+            __gmp_randinit_lc_2exp(&mut state, &a.mpz, c as c_ulong, m2exp as c_ulong);
             RandState { state: state }
         }
     }
 
-    pub fn new_lc_2exp_size(size: c_ulong) -> RandState {
+    pub fn new_lc_2exp_size(size: u64) -> RandState {
         unsafe {
             let mut state: gmp_randstate_struct = uninitialized();
-            __gmp_randinit_lc_2exp_size(&mut state, size);
+            __gmp_randinit_lc_2exp_size(&mut state, size as c_ulong);
             RandState { state: state }
         }
     }
@@ -72,8 +72,8 @@ impl RandState {
         unsafe { __gmp_randseed(&mut self.state, &seed.mpz) }
     }
 
-    pub fn seed_ui(&mut self, seed: c_ulong) {
-        unsafe { __gmp_randseed_ui(&mut self.state, seed) }
+    pub fn seed_ui(&mut self, seed: u64) {
+        unsafe { __gmp_randseed_ui(&mut self.state, seed as c_ulong) }
     }
 
     /// Generate a uniform random integer in the range 0 to n-1, inclusive
@@ -86,10 +86,10 @@ impl RandState {
     }
 
     /// Generate a uniformly distributed random integer in the range 0 to 2^n−1, inclusive.
-    pub fn urandom_2exp(&mut self, n: c_ulong) -> Mpz {
+    pub fn urandom_2exp(&mut self, n: u64) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
-            __gmpz_urandomb(&mut res.mpz, &mut self.state, n);
+            __gmpz_urandomb(&mut res.mpz, &mut self.state, n as c_ulong);
             res
         }
     }

@@ -374,7 +374,7 @@ mod mpz {
                       false, false, true, true];
         ys.reverse();
         for i in 0..xs.bit_length() {
-            assert!(xs.tstbit(i as c_ulong) == ys[i]);
+            assert!(xs.tstbit(i) == ys[i]);
         }
         xs.setbit(0);
         ys[0] = true;
@@ -389,7 +389,7 @@ mod mpz {
         xs.combit(15);
         ys[15] = !ys[15];
         for i in 0..xs.bit_length() {
-            assert!(xs.tstbit(i as c_ulong) == ys[i]);
+            assert!(xs.tstbit(i) == ys[i]);
         }
     }
 
