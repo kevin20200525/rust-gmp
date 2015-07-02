@@ -1,4 +1,4 @@
-use libc::{c_char, c_int, c_long, c_ulong, c_void, size_t};
+use libc::{c_char, c_int, c_long, c_ulong, c_void, c_double, size_t};
 use super::rand::gmp_randstate_t;
 use std::convert::{From, Into};
 use std::mem::{uninitialized,size_of};
@@ -36,6 +36,7 @@ extern "C" {
     fn __gmpz_get_ui(op: mpz_srcptr) -> c_ulong;
     fn __gmpz_fits_ulong_p(op: mpz_srcptr) -> c_int;
     fn __gmpz_get_si(op: mpz_srcptr) -> c_ulong;
+    fn __gmpz_get_d(op: mpz_srcptr) -> c_double;
     fn __gmpz_fits_slong_p(op: mpz_srcptr) -> c_long;
     fn __gmpz_sizeinbase(op: mpz_srcptr, base: c_int) -> size_t;
     fn __gmpz_cmp(op1: mpz_srcptr, op2: mpz_srcptr) -> c_int;
@@ -521,6 +522,14 @@ impl<'b> Into<Option<u64>> for &'b Mpz {
             } else {
                 None
             }
+        }
+    }
+}
+
+impl<'a> Into<f64> for &'a Mpz {
+    fn into(self) -> f64 {
+        unsafe {
+            __gmpz_get_d(&self.mpz) as f64
         }
     }
 }
