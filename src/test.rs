@@ -277,6 +277,7 @@ mod mpz {
         let a: Mpz = From::<i64>::from(2);
         let b: Mpz = From::<i64>::from(8);
         assert!(a.pow(3) == b);
+        assert!(Mpz::ui_pow_ui(2, 3) == b);
     }
 
     #[test]
