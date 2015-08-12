@@ -435,6 +435,17 @@ impl<'a, 'b> Add<&'a Mpz> for &'b Mpz {
     }
 }
 
+impl Add<u64> for Mpz {
+	type Output = Mpz;
+	fn add(self, other: u64) -> Mpz {
+        unsafe {
+            let mut res = Mpz::new();
+            __gmpz_add_ui(&mut res.mpz, &self.mpz, other as c_ulong);
+            res
+        }
+	}
+}
+
 impl<'a> Add<u64> for &'a Mpz {
 	type Output = Mpz;
 	fn add(self, other: u64) -> Mpz {
@@ -455,6 +466,17 @@ impl<'a, 'b> Sub<&'a Mpz> for &'b Mpz {
             res
         }
     }
+}
+
+impl Sub<u64> for Mpz {
+	type Output = Mpz;
+	fn sub(self, other: u64) -> Mpz {
+        unsafe {
+            let mut res = Mpz::new();
+            __gmpz_sub_ui(&mut res.mpz, &self.mpz, other as c_ulong);
+            res
+        }
+	}
 }
 
 impl<'a> Sub<u64> for &'a Mpz {
@@ -479,6 +501,17 @@ impl<'a, 'b> Mul<&'a Mpz> for &'b Mpz {
     }
 }
 
+impl Mul<i64> for Mpz {
+	type Output = Mpz;
+	fn mul(self, other: i64) -> Mpz {
+        unsafe {
+            let mut res = Mpz::new();
+            __gmpz_mul_si(&mut res.mpz, &self.mpz, other as c_long);
+            res
+        }
+	}
+}
+
 impl<'a> Mul<i64> for &'a Mpz {
 	type Output = Mpz;
 	fn mul(self, other: i64) -> Mpz {
@@ -500,6 +533,21 @@ impl<'a, 'b> Div<&'a Mpz> for &'b Mpz {
 
             let mut res = Mpz::new();
             __gmpz_tdiv_q(&mut res.mpz, &self.mpz, &other.mpz);
+            res
+        }
+    }
+}
+
+impl Div<u64> for Mpz {
+    type Output = Mpz;
+    fn div(self, other: u64) -> Mpz {
+        unsafe {
+            if other == 0 {
+                panic!("divide by zero")
+            }
+
+            let mut res = Mpz::new();
+            __gmpz_tdiv_q_ui(&mut res.mpz, &self.mpz, other);
             res
         }
     }
@@ -530,6 +578,21 @@ impl<'a, 'b> Rem<&'a Mpz> for &'b Mpz {
 
             let mut res = Mpz::new();
             __gmpz_tdiv_r(&mut res.mpz, &self.mpz, &other.mpz);
+            res
+        }
+    }
+}
+
+impl Rem<u64> for Mpz {
+    type Output = Mpz;
+    fn rem(self, other: u64) -> Mpz {
+        unsafe {
+            if other == 0 {
+                panic!("divide by zero")
+            }
+
+            let mut res = Mpz::new();
+            __gmpz_tdiv_r_ui(&mut res.mpz, &self.mpz, other);
             res
         }
     }
