@@ -17,7 +17,6 @@ mod mpz {
     use super::super::mpz::Mpz;
     use std::str::FromStr;
     use std::convert::{From, Into};
-    use libc::c_ulong;
     use std::{i64, u64};
 
     use std::hash::{Hash, Hasher, SipHasher};
@@ -119,8 +118,37 @@ mod mpz {
         let x: Mpz = From::<i64>::from(20);
         let y: Mpz = From::<i64>::from(3);
         assert!((&x % &y).to_string() == (20i32 % 3).to_string());
+        assert!((&x % 3).to_string() == (20i32 % 3).to_string());
         assert!((&x % -&y).to_string() == (20i32 % -3).to_string());
         assert!((-&x % &y).to_string() == (-20i32 % 3).to_string());
+    }
+    
+    #[test]
+    fn test_add() {
+    	let x: Mpz = From::<i64>::from(2);
+    	let y: Mpz = From::<i64>::from(3);
+    	let str5 = 5i32.to_string();
+    	assert!((&x + &y).to_string() == str5);
+    	assert!((&x + 3).to_string() == str5);
+    	assert!((&y + 2).to_string() == str5);
+    }
+    
+    #[test]
+    fn test_sub() {
+    	let x: Mpz = From::<i64>::from(2);
+    	let y: Mpz = From::<i64>::from(3);
+    	assert!((&x - &y).to_string() == (-1i32).to_string());
+    	assert!((&y - &x).to_string() == 1i32.to_string());
+    	assert!((&y - 8).to_string() == (-5i32).to_string());
+    }
+    
+    #[test]
+    fn test_mul() {
+    	let x: Mpz = From::<i64>::from(2);
+    	let y: Mpz = From::<i64>::from(3);
+    	assert!((&x * &y).to_string() == 6i32.to_string());
+    	assert!((&x * 3).to_string() == 6i32.to_string());
+    	assert!((&y * -5).to_string() == (-15i32).to_string());
     }
 
     #[test]

@@ -44,12 +44,16 @@ extern "C" {
     fn __gmpz_add(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
     fn __gmpz_add_ui(rop: mpz_ptr, op1: mpz_srcptr, op2: c_ulong);
     fn __gmpz_sub(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
+    fn __gmpz_sub_ui(rop: mpz_ptr, op1: mpz_srcptr, op2: c_ulong);
     fn __gmpz_mul(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
+    fn __gmpz_mul_si(rop: mpz_ptr, op1: mpz_srcptr, op2: c_long);
     fn __gmpz_mul_2exp(rop: mpz_ptr, op1: mpz_srcptr, op2: mp_bitcnt_t);
     fn __gmpz_neg(rop: mpz_ptr, op: mpz_srcptr);
     fn __gmpz_abs(rop: mpz_ptr, op: mpz_srcptr);
     fn __gmpz_tdiv_q(q: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
     fn __gmpz_tdiv_r(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
+    fn __gmpz_tdiv_q_ui(q: mpz_ptr, n: mpz_srcptr, d: c_ulong);
+    fn __gmpz_tdiv_r_ui(r: mpz_ptr, n: mpz_srcptr, d: c_ulong);
     fn __gmpz_fdiv_q(q: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
     fn __gmpz_fdiv_r(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
     fn __gmpz_fdiv_q_2exp(q: mpz_ptr, n: mpz_srcptr, b: mp_bitcnt_t);
@@ -422,6 +426,17 @@ impl<'a, 'b> Add<&'a Mpz> for &'b Mpz {
     }
 }
 
+impl<'a> Add<u64> for &'a Mpz {
+	type Output = Mpz;
+	fn add(self, other: u64) -> Mpz {
+        unsafe {
+            let mut res = Mpz::new();
+            __gmpz_add_ui(&mut res.mpz, &self.mpz, other as c_ulong);
+            res
+        }
+	}
+}
+
 impl<'a, 'b> Sub<&'a Mpz> for &'b Mpz {
     type Output = Mpz;
     fn sub(self, other: &Mpz) -> Mpz {
@@ -433,6 +448,17 @@ impl<'a, 'b> Sub<&'a Mpz> for &'b Mpz {
     }
 }
 
+impl<'a> Sub<u64> for &'a Mpz {
+	type Output = Mpz;
+	fn sub(self, other: u64) -> Mpz {
+        unsafe {
+            let mut res = Mpz::new();
+            __gmpz_sub_ui(&mut res.mpz, &self.mpz, other as c_ulong);
+            res
+        }
+	}
+}
+
 impl<'a, 'b> Mul<&'a Mpz> for &'b Mpz {
     type Output = Mpz;
     fn mul(self, other: &Mpz) -> Mpz {
@@ -442,6 +468,17 @@ impl<'a, 'b> Mul<&'a Mpz> for &'b Mpz {
             res
         }
     }
+}
+
+impl<'a> Mul<i64> for &'a Mpz {
+	type Output = Mpz;
+	fn mul(self, other: i64) -> Mpz {
+        unsafe {
+            let mut res = Mpz::new();
+            __gmpz_mul_si(&mut res.mpz, &self.mpz, other as c_long);
+            res
+        }
+	}
 }
 
 impl<'a, 'b> Div<&'a Mpz> for &'b Mpz {
@@ -459,6 +496,21 @@ impl<'a, 'b> Div<&'a Mpz> for &'b Mpz {
     }
 }
 
+impl<'a> Div<u64> for &'a Mpz {
+    type Output = Mpz;
+    fn div(self, other: u64) -> Mpz {
+        unsafe {
+            if other == 0 {
+                panic!("divide by zero")
+            }
+
+            let mut res = Mpz::new();
+            __gmpz_tdiv_q_ui(&mut res.mpz, &self.mpz, other);
+            res
+        }
+    }
+}
+
 impl<'a, 'b> Rem<&'a Mpz> for &'b Mpz {
     type Output = Mpz;
     fn rem(self, other: &Mpz) -> Mpz {
@@ -469,6 +521,21 @@ impl<'a, 'b> Rem<&'a Mpz> for &'b Mpz {
 
             let mut res = Mpz::new();
             __gmpz_tdiv_r(&mut res.mpz, &self.mpz, &other.mpz);
+            res
+        }
+    }
+}
+
+impl<'a> Rem<u64> for &'a Mpz {
+    type Output = Mpz;
+    fn rem(self, other: u64) -> Mpz {
+        unsafe {
+            if other == 0 {
+                panic!("divide by zero")
+            }
+
+            let mut res = Mpz::new();
+            __gmpz_tdiv_r_ui(&mut res.mpz, &self.mpz, other);
             res
         }
     }
