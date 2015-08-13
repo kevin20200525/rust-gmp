@@ -45,6 +45,7 @@ extern "C" {
     fn __gmpz_add_ui(rop: mpz_ptr, op1: mpz_srcptr, op2: c_ulong);
     fn __gmpz_sub(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
     fn __gmpz_sub_ui(rop: mpz_ptr, op1: mpz_srcptr, op2: c_ulong);
+    fn __gmpz_ui_sub(rop: mpz_ptr, op1: c_ulong, op2: mpz_srcptr);
     fn __gmpz_mul(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
     fn __gmpz_mul_si(rop: mpz_ptr, op1: mpz_srcptr, op2: c_long);
     fn __gmpz_mul_2exp(rop: mpz_ptr, op1: mpz_srcptr, op2: mp_bitcnt_t);
@@ -457,6 +458,28 @@ impl<'a> Add<u64> for &'a Mpz {
 	}
 }
 
+impl Add<Mpz> for u64 {
+	type Output = Mpz;
+	fn add(self, other: Mpz) -> Mpz {
+		unsafe {
+            let mut res = Mpz::new();
+            __gmpz_add_ui(&mut res.mpz, &other.mpz, self as c_ulong);
+            res
+		}
+	}
+}
+
+impl<'a> Add<&'a Mpz> for u64 {
+	type Output = Mpz;
+	fn add(self, other: &'a Mpz) -> Mpz {
+		unsafe {
+            let mut res = Mpz::new();
+            __gmpz_add_ui(&mut res.mpz, &other.mpz, self as c_ulong);
+            res
+		}
+	}
+}
+
 impl<'a, 'b> Sub<&'a Mpz> for &'b Mpz {
     type Output = Mpz;
     fn sub(self, other: &Mpz) -> Mpz {
@@ -490,6 +513,28 @@ impl<'a> Sub<u64> for &'a Mpz {
 	}
 }
 
+impl Sub<Mpz> for u64 {
+	type Output = Mpz;
+	fn sub(self, other: Mpz) -> Mpz {
+		unsafe {
+            let mut res = Mpz::new();
+            __gmpz_ui_sub(&mut res.mpz, self as c_ulong, &other.mpz);
+            res
+		}
+	}
+}
+
+impl<'a> Sub<&'a Mpz> for u64 {
+	type Output = Mpz;
+	fn sub(self, other: &'a Mpz) -> Mpz {
+		unsafe {
+            let mut res = Mpz::new();
+            __gmpz_ui_sub(&mut res.mpz, self as c_ulong, &other.mpz);
+            res
+		}
+	}
+}
+
 impl<'a, 'b> Mul<&'a Mpz> for &'b Mpz {
     type Output = Mpz;
     fn mul(self, other: &Mpz) -> Mpz {
@@ -520,6 +565,28 @@ impl<'a> Mul<i64> for &'a Mpz {
             __gmpz_mul_si(&mut res.mpz, &self.mpz, other as c_long);
             res
         }
+	}
+}
+
+impl Mul<Mpz> for i64 {
+	type Output = Mpz;
+	fn mul(self, other: Mpz) -> Mpz {
+		unsafe {
+            let mut res = Mpz::new();
+            __gmpz_mul_si(&mut res.mpz, &other.mpz, self as c_long);
+            res
+		}
+	}
+}
+
+impl<'a> Mul<&'a Mpz> for i64 {
+	type Output = Mpz;
+	fn mul(self, other: &'a Mpz) -> Mpz {
+		unsafe {
+            let mut res = Mpz::new();
+            __gmpz_mul_si(&mut res.mpz, &other.mpz, self as c_long);
+            res
+		}
 	}
 }
 
