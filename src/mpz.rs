@@ -319,7 +319,7 @@ impl Mpz {
     pub fn ui_pow_ui(x: u64, y: u64) -> Mpz {
     	unsafe {
     		let mut res = Mpz::new();
-    		__gmpz_ui_pow_ui(&mut res.mpz, x, y);
+    		__gmpz_ui_pow_ui(&mut res.mpz, x as c_ulong, y as c_ulong);
     		res
     	}
     }
@@ -614,7 +614,7 @@ impl Div<u64> for Mpz {
             }
 
             let mut res = Mpz::new();
-            __gmpz_tdiv_q_ui(&mut res.mpz, &self.mpz, other);
+            __gmpz_tdiv_q_ui(&mut res.mpz, &self.mpz, other as c_ulong);
             res
         }
     }
@@ -629,7 +629,7 @@ impl<'a> Div<u64> for &'a Mpz {
             }
 
             let mut res = Mpz::new();
-            __gmpz_tdiv_q_ui(&mut res.mpz, &self.mpz, other);
+            __gmpz_tdiv_q_ui(&mut res.mpz, &self.mpz, other as c_ulong);
             res
         }
     }
@@ -659,7 +659,7 @@ impl Rem<u64> for Mpz {
             }
 
             let mut res = Mpz::new();
-            __gmpz_tdiv_r_ui(&mut res.mpz, &self.mpz, other);
+            __gmpz_tdiv_r_ui(&mut res.mpz, &self.mpz, other as c_ulong);
             res
         }
     }
@@ -674,7 +674,7 @@ impl<'a> Rem<u64> for &'a Mpz {
             }
 
             let mut res = Mpz::new();
-            __gmpz_tdiv_r_ui(&mut res.mpz, &self.mpz, other);
+            __gmpz_tdiv_r_ui(&mut res.mpz, &self.mpz, other as c_ulong);
             res
         }
     }
