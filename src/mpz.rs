@@ -15,7 +15,7 @@ pub struct mpz_struct {
     _mp_d: *mut c_void
 }
 
-//pub type mp_limb_t = usize; // TODO: Find a way to use __gmp_bits_per_limb instead.
+pub type mp_limb_t = usize; // TODO: Find a way to use __gmp_bits_per_limb instead.
 pub type mp_bitcnt_t = c_ulong;
 pub type mpz_srcptr = *const mpz_struct;
 pub type mpz_ptr = *mut mpz_struct;
@@ -973,27 +973,13 @@ impl fmt::Debug for Mpz {
     }
 }
 
-macro_rules! limb_type {
-    ($s: ident, $i: ident, $state: ident, $T:ident) => {
-       {
-               let limb = $s.mpz._mp_d as *const $T;
-               let limb = *(limb.offset($i as isize));
-               limb.hash($state);
-        }
-    }
-}
-
 impl hash::Hash for Mpz {
     fn hash<S: hash::Hasher>(&self, state: &mut S) {
         unsafe {
 			for i in 0..self.mpz._mp_size.abs() {
-				match __gmp_bits_per_limb {
-					8 => limb_type!(self, i, state, u8),
-					16 => limb_type!(self, i, state, u16),
-					32 => limb_type!(self, i, state, u32),
-					64 => limb_type!(self, i, state, u64),
-					_ => panic!("Strange bits_per_limb value!")
-				};
+				let limb = self.mpz._mp_d as *const mp_limb_t;
+            	let limb = *(limb.offset(i as isize));
+           		limb.hash(state);
 			}
         }
     }
