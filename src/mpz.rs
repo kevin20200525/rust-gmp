@@ -436,6 +436,17 @@ impl<'a, 'b> Add<&'a Mpz> for &'b Mpz {
     }
 }
 
+impl<'a> Add<&'a Mpz> for Mpz {
+    type Output = Mpz;
+	#[inline]
+    fn add(mut self, other: &Mpz) -> Mpz {
+        unsafe {
+            __gmpz_add(&mut self.mpz, &self.mpz, &other.mpz);
+            self
+        }
+    }
+}
+
 impl Add<u64> for Mpz {
 	type Output = Mpz;
 	fn add(self, other: u64) -> Mpz {
@@ -491,6 +502,17 @@ impl<'a, 'b> Sub<&'a Mpz> for &'b Mpz {
     }
 }
 
+impl<'a> Sub<&'a Mpz> for Mpz {
+    type Output = Mpz;
+    #[inline]
+    fn sub(mut self, other: &Mpz) -> Mpz {
+        unsafe {
+            __gmpz_sub(&mut self.mpz, &self.mpz, &other.mpz);
+            self
+        }
+    }
+}
+
 impl Sub<u64> for Mpz {
 	type Output = Mpz;
 	fn sub(self, other: u64) -> Mpz {
@@ -542,6 +564,17 @@ impl<'a, 'b> Mul<&'a Mpz> for &'b Mpz {
             let mut res = Mpz::new();
             __gmpz_mul(&mut res.mpz, &self.mpz, &other.mpz);
             res
+        }
+    }
+}
+
+impl<'a> Mul<&'a Mpz> for Mpz {
+    type Output = Mpz;
+    #[inline]
+    fn mul(mut self, other: &Mpz) -> Mpz {
+        unsafe {
+            __gmpz_mul(&mut self.mpz, &self.mpz, &other.mpz);
+            self
         }
     }
 }
@@ -605,6 +638,21 @@ impl<'a, 'b> Div<&'a Mpz> for &'b Mpz {
     }
 }
 
+impl<'a> Div<&'a Mpz> for Mpz {
+    type Output = Mpz;
+    #[inline]
+    fn div(mut self, other: &Mpz) -> Mpz {
+        unsafe {
+            if other.is_zero() {
+                panic!("divide by zero")
+            }
+
+            __gmpz_tdiv_q(&mut self.mpz, &self.mpz, &other.mpz);
+            self
+        }
+    }
+}
+
 impl Div<u64> for Mpz {
     type Output = Mpz;
     fn div(self, other: u64) -> Mpz {
@@ -650,6 +698,21 @@ impl<'a, 'b> Rem<&'a Mpz> for &'b Mpz {
     }
 }
 
+impl<'a> Rem<&'a Mpz> for Mpz {
+    type Output = Mpz;
+    #[inline]
+    fn rem(mut self, other: &Mpz) -> Mpz {
+        unsafe {
+            if other.is_zero() {
+                panic!("divide by zero")
+            }
+
+            __gmpz_tdiv_r(&mut self.mpz, &self.mpz, &other.mpz);
+            self
+        }
+    }
+}
+
 impl Rem<u64> for Mpz {
     type Output = Mpz;
     fn rem(self, other: u64) -> Mpz {
@@ -687,6 +750,17 @@ impl<'b> Neg for &'b Mpz {
             let mut res = Mpz::new();
             __gmpz_neg(&mut res.mpz, &self.mpz);
             res
+        }
+    }
+}
+
+impl Neg for Mpz {
+    type Output = Mpz;
+    #[inline]
+    fn neg(mut self) -> Mpz {
+        unsafe {
+            __gmpz_neg(&mut self.mpz, &self.mpz);
+            self
         }
     }
 }
@@ -781,6 +855,17 @@ impl<'a, 'b> BitAnd<&'a Mpz> for &'b Mpz {
     }
 }
 
+impl<'a> BitAnd<&'a Mpz> for Mpz {
+    type Output = Mpz;
+    #[inline]
+    fn bitand(mut self, other: &Mpz) -> Mpz {
+        unsafe {
+            __gmpz_and(&mut self.mpz, &self.mpz, &other.mpz);
+            self
+        }
+    }
+}
+
 impl<'a, 'b> BitOr<&'a Mpz> for &'b Mpz {
     type Output = Mpz;
     fn bitor(self, other: &Mpz) -> Mpz {
@@ -792,6 +877,17 @@ impl<'a, 'b> BitOr<&'a Mpz> for &'b Mpz {
     }
 }
 
+impl<'a> BitOr<&'a Mpz> for Mpz {
+    type Output = Mpz;
+    #[inline]
+    fn bitor(mut self, other: &Mpz) -> Mpz {
+        unsafe {
+            __gmpz_ior(&mut self.mpz, &self.mpz, &other.mpz);
+            self
+        }
+    }
+}
+
 impl<'a, 'b> BitXor<&'a Mpz> for &'b Mpz {
     type Output = Mpz;
     fn bitxor(self, other: &Mpz) -> Mpz {
@@ -799,6 +895,17 @@ impl<'a, 'b> BitXor<&'a Mpz> for &'b Mpz {
             let mut res = Mpz::new();
             __gmpz_xor(&mut res.mpz, &self.mpz, &other.mpz);
             res
+        }
+    }
+}
+
+impl<'a> BitXor<&'a Mpz> for Mpz {
+    type Output = Mpz;
+    #[inline]
+    fn bitxor(mut self, other: &Mpz) -> Mpz {
+        unsafe {
+            __gmpz_xor(&mut self.mpz, &self.mpz, &other.mpz);
+            self
         }
     }
 }

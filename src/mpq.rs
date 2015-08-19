@@ -166,6 +166,17 @@ impl<'a, 'b> Add<&'a Mpq> for &'b Mpq {
     }
 }
 
+impl<'a> Add<&'a Mpq> for Mpq {
+    type Output = Mpq;
+    #[inline]
+    fn add(mut self, other: &Mpq) -> Mpq {
+        unsafe {
+            __gmpq_add(&mut self.mpq, &self.mpq, &other.mpq);
+            self
+        }
+    }
+}
+
 impl<'a, 'b> Sub<&'a Mpq> for &'b Mpq {
     type Output = Mpq;
     fn sub(self, other: &Mpq) -> Mpq {
@@ -177,6 +188,17 @@ impl<'a, 'b> Sub<&'a Mpq> for &'b Mpq {
     }
 }
 
+impl<'a> Sub<&'a Mpq> for Mpq {
+    type Output = Mpq;
+    #[inline]
+    fn sub(mut self, other: &Mpq) -> Mpq {
+        unsafe {
+            __gmpq_sub(&mut self.mpq, &self.mpq, &other.mpq);
+            self
+        }
+    }
+}
+
 impl<'a, 'b> Mul<&'a Mpq> for &'b Mpq {
     type Output = Mpq;
     fn mul(self, other: &Mpq) -> Mpq {
@@ -184,6 +206,17 @@ impl<'a, 'b> Mul<&'a Mpq> for &'b Mpq {
             let mut res = Mpq::new();
             __gmpq_mul(&mut res.mpq, &self.mpq, &other.mpq);
             res
+        }
+    }
+}
+
+impl<'a> Mul<&'a Mpq> for Mpq {
+    type Output = Mpq;
+    #[inline]
+    fn mul(mut self, other: &Mpq) -> Mpq {
+        unsafe {
+            __gmpq_mul(&mut self.mpq, &self.mpq, &other.mpq);
+            self
         }
     }
 }
@@ -203,6 +236,21 @@ impl<'a, 'b> Div<&'a Mpq> for &'b Mpq {
     }
 }
 
+impl<'a> Div<&'a Mpq> for Mpq {
+    type Output = Mpq;
+    #[inline]
+    fn div(mut self, other: &Mpq) -> Mpq {
+        unsafe {
+            if other.is_zero() {
+                panic!("divide by zero")
+            }
+            
+            __gmpq_div(&mut self.mpq, &self.mpq, &other.mpq);
+            self
+        }
+    }
+}
+
 impl<'b> Neg for &'b Mpq {
     type Output = Mpq;
     fn neg(self) -> Mpq {
@@ -210,6 +258,17 @@ impl<'b> Neg for &'b Mpq {
             let mut res = Mpq::new();
             __gmpq_neg(&mut res.mpq, &self.mpq);
             res
+        }
+    }
+}
+
+impl Neg for Mpq {
+    type Output = Mpq;
+    #[inline]
+    fn neg(mut self) -> Mpq {
+        unsafe {
+            __gmpq_neg(&mut self.mpq, &self.mpq);
+            self
         }
     }
 }

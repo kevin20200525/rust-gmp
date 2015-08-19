@@ -160,6 +160,17 @@ impl<'a, 'b> Add<&'a Mpf> for &'b Mpf {
     }
 }
 
+impl<'a> Add<&'a Mpf> for Mpf {
+    type Output = Mpf;
+    #[inline]
+    fn add(mut self, other: &Mpf) -> Mpf {
+        unsafe {
+            __gmpf_add(&mut self.mpf, &self.mpf, &other.mpf);
+            self
+        }
+    }
+}
+
 impl<'a, 'b> Sub<&'a Mpf> for &'b Mpf {
     type Output = Mpf;
     fn sub(self, other: &Mpf) -> Mpf {
@@ -171,6 +182,17 @@ impl<'a, 'b> Sub<&'a Mpf> for &'b Mpf {
     }
 }
 
+impl<'a> Sub<&'a Mpf> for Mpf {
+    type Output = Mpf;
+    #[inline]
+    fn sub(mut self, other: &Mpf) -> Mpf {
+        unsafe {
+            __gmpf_sub(&mut self.mpf, &self.mpf, &other.mpf);
+            self
+        }
+    }
+}
+
 impl<'a, 'b> Mul<&'a Mpf> for &'b Mpf {
     type Output = Mpf;
     fn mul(self, other: &Mpf) -> Mpf {
@@ -178,6 +200,17 @@ impl<'a, 'b> Mul<&'a Mpf> for &'b Mpf {
             let mut res = Mpf::new(cmp::max(self.get_prec(), other.get_prec()));
             __gmpf_mul(&mut res.mpf, &self.mpf, &other.mpf);
             res
+        }
+    }
+}
+
+impl<'a> Mul<&'a Mpf> for Mpf {
+    type Output = Mpf;
+    #[inline]
+    fn mul(mut self, other: &Mpf) -> Mpf {
+        unsafe {
+            __gmpf_mul(&mut self.mpf, &self.mpf, &other.mpf);
+            self
         }
     }
 }
@@ -197,6 +230,21 @@ impl<'a, 'b> Div<&'a Mpf> for &'b Mpf {
     }
 }
 
+impl<'a> Div<&'a Mpf> for Mpf {
+    type Output = Mpf;
+    #[inline]
+    fn div(mut self, other: &Mpf) -> Mpf {
+        unsafe {
+            if __gmpf_cmp_ui(&self.mpf, 0) == 0 {
+                panic!("divide by zero")
+            }
+
+            __gmpf_div(&mut self.mpf, &self.mpf, &other.mpf);
+            self
+        }
+    }
+}
+
 impl<'b> Neg for &'b Mpf {
     type Output = Mpf;
     fn neg(self) -> Mpf {
@@ -204,6 +252,17 @@ impl<'b> Neg for &'b Mpf {
             let mut res = Mpf::new(self.get_prec());
             __gmpf_neg(&mut res.mpf, &self.mpf);
             res
+        }
+    }
+}
+
+impl Neg for Mpf {
+    type Output = Mpf;
+    #[inline]
+    fn neg(mut self) -> Mpf {
+        unsafe {
+            __gmpf_neg(&mut self.mpf, &self.mpf);
+            self
         }
     }
 }
