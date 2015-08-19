@@ -449,11 +449,11 @@ impl<'a> Add<&'a Mpz> for Mpz {
 
 impl Add<u64> for Mpz {
 	type Output = Mpz;
-	fn add(self, other: u64) -> Mpz {
+	#[inline]
+	fn add(mut self, other: u64) -> Mpz {
         unsafe {
-            let mut res = Mpz::new();
-            __gmpz_add_ui(&mut res.mpz, &self.mpz, other as c_ulong);
-            res
+            __gmpz_add_ui(&mut self.mpz, &self.mpz, other as c_ulong);
+            self
         }
 	}
 }
@@ -515,11 +515,11 @@ impl<'a> Sub<&'a Mpz> for Mpz {
 
 impl Sub<u64> for Mpz {
 	type Output = Mpz;
-	fn sub(self, other: u64) -> Mpz {
+	#[inline]
+	fn sub(mut self, other: u64) -> Mpz {
         unsafe {
-            let mut res = Mpz::new();
-            __gmpz_sub_ui(&mut res.mpz, &self.mpz, other as c_ulong);
-            res
+            __gmpz_sub_ui(&mut self.mpz, &self.mpz, other as c_ulong);
+            self
         }
 	}
 }
@@ -581,11 +581,11 @@ impl<'a> Mul<&'a Mpz> for Mpz {
 
 impl Mul<i64> for Mpz {
 	type Output = Mpz;
-	fn mul(self, other: i64) -> Mpz {
+	#[inline]
+	fn mul(mut self, other: i64) -> Mpz {
         unsafe {
-            let mut res = Mpz::new();
-            __gmpz_mul_si(&mut res.mpz, &self.mpz, other as c_long);
-            res
+            __gmpz_mul_si(&mut self.mpz, &self.mpz, other as c_long);
+            self
         }
 	}
 }
@@ -655,15 +655,15 @@ impl<'a> Div<&'a Mpz> for Mpz {
 
 impl Div<u64> for Mpz {
     type Output = Mpz;
-    fn div(self, other: u64) -> Mpz {
+    #[inline]
+    fn div(mut self, other: u64) -> Mpz {
         unsafe {
             if other == 0 {
                 panic!("divide by zero")
             }
 
-            let mut res = Mpz::new();
-            __gmpz_tdiv_q_ui(&mut res.mpz, &self.mpz, other as c_ulong);
-            res
+            __gmpz_tdiv_q_ui(&mut self.mpz, &self.mpz, other as c_ulong);
+            self
         }
     }
 }
@@ -715,15 +715,15 @@ impl<'a> Rem<&'a Mpz> for Mpz {
 
 impl Rem<u64> for Mpz {
     type Output = Mpz;
-    fn rem(self, other: u64) -> Mpz {
+    #[inline]
+    fn rem(mut self, other: u64) -> Mpz {
         unsafe {
             if other == 0 {
                 panic!("divide by zero")
             }
 
-            let mut res = Mpz::new();
-            __gmpz_tdiv_r_ui(&mut res.mpz, &self.mpz, other as c_ulong);
-            res
+            __gmpz_tdiv_r_ui(&mut self.mpz, &self.mpz, other as c_ulong);
+            self
         }
     }
 }
