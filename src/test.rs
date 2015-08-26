@@ -147,8 +147,8 @@ mod mpz {
     	let x: Mpz = From::<i64>::from(2);
     	let y: Mpz = From::<i64>::from(3);
     	assert!((&x * &y).to_string() == 6i32.to_string());
-    	assert!((&x * 3).to_string() == 6i32.to_string());
-    	assert!((&y * -5).to_string() == (-15i32).to_string());
+    	assert!((&x * 3i64).to_string() == 6i32.to_string());
+    	assert!((&y * -5i64).to_string() == (-15i32).to_string());
     }
 
     #[test]

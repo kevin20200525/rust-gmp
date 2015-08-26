@@ -7,6 +7,7 @@ use std::cmp::Ordering::{self, Greater, Less, Equal};
 use std::str::FromStr;
 use std::ops::{Div, Mul, Add, Sub, Neg, Shl, Shr, BitXor, BitAnd, BitOr, Rem};
 use std::ffi::CString;
+use std::{u32, i32};
 
 #[repr(C)]
 pub struct mpz_struct {
@@ -47,6 +48,7 @@ extern "C" {
     fn __gmpz_sub_ui(rop: mpz_ptr, op1: mpz_srcptr, op2: c_ulong);
     fn __gmpz_ui_sub(rop: mpz_ptr, op1: c_ulong, op2: mpz_srcptr);
     fn __gmpz_mul(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
+    fn __gmpz_mul_ui(rop: mpz_ptr, op1: mpz_srcptr, op2: c_ulong);
     fn __gmpz_mul_si(rop: mpz_ptr, op1: mpz_srcptr, op2: c_long);
     fn __gmpz_mul_2exp(rop: mpz_ptr, op1: mpz_srcptr, op2: mp_bitcnt_t);
     fn __gmpz_neg(rop: mpz_ptr, op: mpz_srcptr);
@@ -316,7 +318,7 @@ impl Mpz {
         }
     }
     
-    pub fn ui_pow_ui(x: u64, y: u64) -> Mpz {
+    pub fn ui_pow_ui(x: u32, y: u32) -> Mpz {
     	unsafe {
     		let mut res = Mpz::new();
     		__gmpz_ui_pow_ui(&mut res.mpz, x as c_ulong, y as c_ulong);
@@ -344,7 +346,7 @@ impl Mpz {
         unsafe { __gmpz_tstbit(&self.mpz, bit_index as c_ulong) == 1 }
     }
 
-    pub fn root(&self, n: u64) -> Mpz {
+    pub fn root(&self, n: u32) -> Mpz {
         assert!(*self >= Mpz::zero());
         unsafe {
             let mut res = Mpz::new();
@@ -452,8 +454,13 @@ impl Add<u64> for Mpz {
 	#[inline]
 	fn add(mut self, other: u64) -> Mpz {
         unsafe {
-            __gmpz_add_ui(&mut self.mpz, &self.mpz, other as c_ulong);
-            self
+        	if size_of::<c_ulong>() == 8 || other <= u32::MAX as u64 {
+            	__gmpz_add_ui(&mut self.mpz, &self.mpz, other as c_ulong);
+        		self
+        	}
+        	else {
+        		self + Mpz::from(other)
+    		}
         }
 	}
 }
@@ -462,20 +469,29 @@ impl<'a> Add<u64> for &'a Mpz {
 	type Output = Mpz;
 	fn add(self, other: u64) -> Mpz {
         unsafe {
-            let mut res = Mpz::new();
-            __gmpz_add_ui(&mut res.mpz, &self.mpz, other as c_ulong);
-            res
+        	if size_of::<c_ulong>() == 8 || other <= u32::MAX as u64 {
+	            let mut res = Mpz::new();
+	            __gmpz_add_ui(&mut res.mpz, &self.mpz, other as c_ulong);
+	            res
+            }
+        	else {
+        		self + Mpz::from(other)
+        	}
         }
 	}
 }
 
 impl Add<Mpz> for u64 {
 	type Output = Mpz;
-	fn add(self, other: Mpz) -> Mpz {
+	fn add(self, mut other: Mpz) -> Mpz {
 		unsafe {
-            let mut res = Mpz::new();
-            __gmpz_add_ui(&mut res.mpz, &other.mpz, self as c_ulong);
-            res
+			if size_of::<c_ulong>() == 8 || self <= u32::MAX as u64 {
+            	__gmpz_add_ui(&mut other.mpz, &other.mpz, self as c_ulong);
+            	other
+        	}
+			else {
+				other + Mpz::from(self)
+			}
 		}
 	}
 }
@@ -484,9 +500,14 @@ impl<'a> Add<&'a Mpz> for u64 {
 	type Output = Mpz;
 	fn add(self, other: &'a Mpz) -> Mpz {
 		unsafe {
-            let mut res = Mpz::new();
-            __gmpz_add_ui(&mut res.mpz, &other.mpz, self as c_ulong);
-            res
+			if size_of::<c_ulong>() == 8 || self <= u32::MAX as u64 {
+	            let mut res = Mpz::new();
+	            __gmpz_add_ui(&mut res.mpz, &other.mpz, self as c_ulong);
+	            res
+            }
+			else {
+				other + Mpz::from(self)
+			}
 		}
 	}
 }
@@ -518,8 +539,13 @@ impl Sub<u64> for Mpz {
 	#[inline]
 	fn sub(mut self, other: u64) -> Mpz {
         unsafe {
-            __gmpz_sub_ui(&mut self.mpz, &self.mpz, other as c_ulong);
-            self
+			if size_of::<c_ulong>() == 8 || other <= u32::MAX as u64 {
+	            __gmpz_sub_ui(&mut self.mpz, &self.mpz, other as c_ulong);
+	            self
+            }
+			else {
+				self - Mpz::from(other)
+			}
         }
 	}
 }
@@ -528,20 +554,29 @@ impl<'a> Sub<u64> for &'a Mpz {
 	type Output = Mpz;
 	fn sub(self, other: u64) -> Mpz {
         unsafe {
-            let mut res = Mpz::new();
-            __gmpz_sub_ui(&mut res.mpz, &self.mpz, other as c_ulong);
-            res
+        	if size_of::<c_ulong>() == 8 || other <= u32::MAX as u64 {
+	            let mut res = Mpz::new();
+	            __gmpz_sub_ui(&mut res.mpz, &self.mpz, other as c_ulong);
+	            res
+            }
+        	else {
+        		self - Mpz::from(other)
+        	}
         }
 	}
 }
 
 impl Sub<Mpz> for u64 {
 	type Output = Mpz;
-	fn sub(self, other: Mpz) -> Mpz {
+	fn sub(self, mut other: Mpz) -> Mpz {
 		unsafe {
-            let mut res = Mpz::new();
-            __gmpz_ui_sub(&mut res.mpz, self as c_ulong, &other.mpz);
-            res
+			if size_of::<c_ulong>() == 8 || self <= u32::MAX as u64 {
+	            __gmpz_ui_sub(&mut other.mpz, self as c_ulong, &other.mpz);
+	            other
+            }
+			else {
+				other - Mpz::from(self)
+			}
 		}
 	}
 }
@@ -550,9 +585,14 @@ impl<'a> Sub<&'a Mpz> for u64 {
 	type Output = Mpz;
 	fn sub(self, other: &'a Mpz) -> Mpz {
 		unsafe {
-            let mut res = Mpz::new();
-            __gmpz_ui_sub(&mut res.mpz, self as c_ulong, &other.mpz);
-            res
+			if size_of::<c_ulong>() == 8 || self <= u32::MAX as u64 {
+	            let mut res = Mpz::new();
+	            __gmpz_ui_sub(&mut res.mpz, self as c_ulong, &other.mpz);
+	            res
+            }
+			else {
+				other - Mpz::from(self)
+			}
 		}
 	}
 }
@@ -584,8 +624,13 @@ impl Mul<i64> for Mpz {
 	#[inline]
 	fn mul(mut self, other: i64) -> Mpz {
         unsafe {
-            __gmpz_mul_si(&mut self.mpz, &self.mpz, other as c_long);
-            self
+        	if size_of::<c_long>() == 8 || other <= i32::MAX as i64 {
+	            __gmpz_mul_si(&mut self.mpz, &self.mpz, other as c_long);
+	            self
+            }
+        	else {
+        		self * Mpz::from(other)
+        	}
         }
 	}
 }
@@ -594,20 +639,29 @@ impl<'a> Mul<i64> for &'a Mpz {
 	type Output = Mpz;
 	fn mul(self, other: i64) -> Mpz {
         unsafe {
-            let mut res = Mpz::new();
-            __gmpz_mul_si(&mut res.mpz, &self.mpz, other as c_long);
-            res
+        	if size_of::<c_long>() == 8 || other <= i32::MAX as i64 {
+	            let mut res = Mpz::new();
+	            __gmpz_mul_si(&mut res.mpz, &self.mpz, other as c_long);
+	            res
+            }
+        	else {
+        		self * Mpz::from(other)
+        	}
         }
 	}
 }
 
 impl Mul<Mpz> for i64 {
 	type Output = Mpz;
-	fn mul(self, other: Mpz) -> Mpz {
+	fn mul(self, mut other: Mpz) -> Mpz {
 		unsafe {
-            let mut res = Mpz::new();
-            __gmpz_mul_si(&mut res.mpz, &other.mpz, self as c_long);
-            res
+			if size_of::<c_long>() == 8 || self <= i32::MAX as i64 {
+	            __gmpz_mul_si(&mut other.mpz, &other.mpz, self as c_long);
+	            other
+            }
+			else {
+				Mpz::from(self) * other
+			}
 		}
 	}
 }
@@ -616,9 +670,77 @@ impl<'a> Mul<&'a Mpz> for i64 {
 	type Output = Mpz;
 	fn mul(self, other: &'a Mpz) -> Mpz {
 		unsafe {
-            let mut res = Mpz::new();
-            __gmpz_mul_si(&mut res.mpz, &other.mpz, self as c_long);
-            res
+			if size_of::<c_long>() == 8 || self <= i32::MAX as i64 {
+	            let mut res = Mpz::new();
+	            __gmpz_mul_si(&mut res.mpz, &other.mpz, self as c_long);
+	            res
+            }
+			else {
+				Mpz::from(self) * other
+			}
+		}
+	}
+}
+
+impl Mul<u64> for Mpz {
+	type Output = Mpz;
+	#[inline]
+	fn mul(mut self, other: u64) -> Mpz {
+        unsafe {
+        	if size_of::<c_ulong>() == 8 || other <= u32::MAX as u64 {
+	            __gmpz_mul_ui(&mut self.mpz, &self.mpz, other as c_ulong);
+	            self
+            }
+        	else {
+        		self * Mpz::from(other)
+        	}
+        }
+	}
+}
+
+impl<'a> Mul<u64> for &'a Mpz {
+	type Output = Mpz;
+	fn mul(self, other: u64) -> Mpz {
+        unsafe {
+        	if size_of::<c_ulong>() == 8 || other <= u32::MAX as u64 {
+	            let mut res = Mpz::new();
+	            __gmpz_mul_ui(&mut res.mpz, &self.mpz, other as c_ulong);
+	            res
+            }
+        	else {
+        		self * Mpz::from(other)
+        	}
+        }
+	}
+}
+
+impl Mul<Mpz> for u64 {
+	type Output = Mpz;
+	fn mul(self, mut other: Mpz) -> Mpz {
+		unsafe {
+			if size_of::<c_ulong>() == 8 || self <= u32::MAX as u64 {
+	            __gmpz_mul_ui(&mut other.mpz, &other.mpz, self as c_ulong);
+	            other
+            }
+			else {
+				Mpz::from(self) * other
+			}
+		}
+	}
+}
+
+impl<'a> Mul<&'a Mpz> for u64 {
+	type Output = Mpz;
+	fn mul(self, other: &'a Mpz) -> Mpz {
+		unsafe {
+			if size_of::<c_ulong>() == 8 || self <= u32::MAX as u64 {
+	            let mut res = Mpz::new();
+	            __gmpz_mul_ui(&mut res.mpz, &other.mpz, self as c_ulong);
+	            res
+            }
+			else {
+				Mpz::from(self) * other
+			}
 		}
 	}
 }
@@ -662,8 +784,13 @@ impl Div<u64> for Mpz {
                 panic!("divide by zero")
             }
 
-            __gmpz_tdiv_q_ui(&mut self.mpz, &self.mpz, other as c_ulong);
-            self
+			if size_of::<c_ulong>() == 8 || other <= u32::MAX as u64 {
+	            __gmpz_tdiv_q_ui(&mut self.mpz, &self.mpz, other as c_ulong);
+	            self
+            }
+			else {
+				self / Mpz::from(other)
+			}
         }
     }
 }
@@ -676,9 +803,14 @@ impl<'a> Div<u64> for &'a Mpz {
                 panic!("divide by zero")
             }
 
-            let mut res = Mpz::new();
-            __gmpz_tdiv_q_ui(&mut res.mpz, &self.mpz, other as c_ulong);
-            res
+			if size_of::<c_ulong>() == 8 || other <= u32::MAX as u64 {
+	            let mut res = Mpz::new();
+	            __gmpz_tdiv_q_ui(&mut res.mpz, &self.mpz, other as c_ulong);
+	            res
+            }
+			else {
+				self / Mpz::from(other)
+			}
         }
     }
 }
@@ -722,8 +854,13 @@ impl Rem<u64> for Mpz {
                 panic!("divide by zero")
             }
 
-            __gmpz_tdiv_r_ui(&mut self.mpz, &self.mpz, other as c_ulong);
-            self
+			if size_of::<c_ulong>() == 8 || other <= u32::MAX as u64 {
+	            __gmpz_tdiv_r_ui(&mut self.mpz, &self.mpz, other as c_ulong);
+	            self
+            }
+			else {
+				self % Mpz::from(other)
+			}
         }
     }
 }
@@ -736,9 +873,14 @@ impl<'a> Rem<u64> for &'a Mpz {
                 panic!("divide by zero")
             }
 
-            let mut res = Mpz::new();
-            __gmpz_tdiv_r_ui(&mut res.mpz, &self.mpz, other as c_ulong);
-            res
+			if size_of::<c_ulong>() == 8 || other <= u32::MAX as u64 {
+	            let mut res = Mpz::new();
+	            __gmpz_tdiv_r_ui(&mut res.mpz, &self.mpz, other as c_ulong);
+	            res
+            }
+			else {
+				self % Mpz::from(other)
+			}
         }
     }
 }
