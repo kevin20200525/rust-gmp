@@ -781,72 +781,9 @@ impl From<i32> for Mpz {
     }
 }
 
-
-impl<'a, 'b> BitAnd<&'a Mpz> for &'b Mpz {
-    type Output = Mpz;
-    fn bitand(self, other: &Mpz) -> Mpz {
-        unsafe {
-            let mut res = Mpz::new();
-            __gmpz_and(&mut res.mpz, &self.mpz, &other.mpz);
-            res
-        }
-    }
-}
-
-impl<'a> BitAnd<&'a Mpz> for Mpz {
-    type Output = Mpz;
-    #[inline]
-    fn bitand(mut self, other: &Mpz) -> Mpz {
-        unsafe {
-            __gmpz_and(&mut self.mpz, &self.mpz, &other.mpz);
-            self
-        }
-    }
-}
-
-impl<'a, 'b> BitOr<&'a Mpz> for &'b Mpz {
-    type Output = Mpz;
-    fn bitor(self, other: &Mpz) -> Mpz {
-        unsafe {
-            let mut res = Mpz::new();
-            __gmpz_ior(&mut res.mpz, &self.mpz, &other.mpz);
-            res
-        }
-    }
-}
-
-impl<'a> BitOr<&'a Mpz> for Mpz {
-    type Output = Mpz;
-    #[inline]
-    fn bitor(mut self, other: &Mpz) -> Mpz {
-        unsafe {
-            __gmpz_ior(&mut self.mpz, &self.mpz, &other.mpz);
-            self
-        }
-    }
-}
-
-impl<'a, 'b> BitXor<&'a Mpz> for &'b Mpz {
-    type Output = Mpz;
-    fn bitxor(self, other: &Mpz) -> Mpz {
-        unsafe {
-            let mut res = Mpz::new();
-            __gmpz_xor(&mut res.mpz, &self.mpz, &other.mpz);
-            res
-        }
-    }
-}
-
-impl<'a> BitXor<&'a Mpz> for Mpz {
-    type Output = Mpz;
-    #[inline]
-    fn bitxor(mut self, other: &Mpz) -> Mpz {
-        unsafe {
-            __gmpz_xor(&mut self.mpz, &self.mpz, &other.mpz);
-            self
-        }
-    }
-}
+impl_oper!(BitAnd, bitand, __gmpz_and);
+impl_oper!(BitOr, bitor, __gmpz_ior);
+impl_oper!(BitXor, bitxor, __gmpz_xor);
 
 impl<'b> Shl<usize> for &'b Mpz {
     type Output = Mpz;
@@ -922,7 +859,3 @@ impl hash::Hash for Mpz {
         }
     }
 }
-
-gen_overloads_inner!(BitXor, bitxor, Mpz);
-gen_overloads_inner!(BitAnd, bitand, Mpz);
-gen_overloads_inner!(BitOr, bitor, Mpz);
