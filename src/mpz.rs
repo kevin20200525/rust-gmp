@@ -427,463 +427,230 @@ impl PartialOrd for Mpz {
     }
 }
 
-impl<'a, 'b> Add<&'a Mpz> for &'b Mpz {
-    type Output = Mpz;
-    fn add(self, other: &Mpz) -> Mpz {
-        unsafe {
-            let mut res = Mpz::new();
-            __gmpz_add(&mut res.mpz, &self.mpz, &other.mpz);
-            res
-        }
-    }
+// Implementation of operators
+
+// This macro inserts a guard against division by 0 for Div and Rem implementations
+macro_rules! div_guard {
+	(Div, $what: expr, $zero: expr) => {
+		if $what == $zero {
+            panic!("divide by zero")
+    	}
+	};
+	(Rem, $what: expr, $zero: expr) => {
+		if $what == $zero {
+            panic!("divide by zero")
+    	}
+	};
+	($tr: ident, $what: expr, $zero: expr) => {}
 }
 
-impl<'a> Add<&'a Mpz> for Mpz {
-    type Output = Mpz;
-	#[inline]
-    fn add(mut self, other: &Mpz) -> Mpz {
-        unsafe {
-            __gmpz_add(&mut self.mpz, &self.mpz, &other.mpz);
-            self
+// On Windows c_long and c_ulong are only 32-bit - in order to implement operations for
+// 64-bit types we need some workarounds
+macro_rules! bit_guard {
+	(u64, $what: ident, $e1: expr, $e2: expr) => (
+    	if size_of::<c_ulong>() == 8 || $what <= u32::MAX as u64 {
+            $e1
         }
-    }
+    	else {
+    		$e2
+    	}
+	);
+	
+	(i64, $what: ident, $e1: expr, $e2: expr) => (
+    	if size_of::<c_long>() == 8 || $what <= i32::MAX as i64 {
+            $e1
+        }
+    	else {
+    		$e2
+    	}
+	);
+	
+	(u32, $what: ident, $e1: expr, $e2: expr) => ($e1);
+	
+	(i32, $what: ident, $e1: expr, $e2: expr) => ($e1);
 }
 
-impl Add<u64> for Mpz {
-	type Output = Mpz;
-	#[inline]
-	fn add(mut self, other: u64) -> Mpz {
-        unsafe {
-        	if size_of::<c_ulong>() == 8 || other <= u32::MAX as u64 {
-            	__gmpz_add_ui(&mut self.mpz, &self.mpz, other as c_ulong);
-        		self
-        	}
-        	else {
-        		self + Mpz::from(other)
-    		}
-        }
-	}
-}
-
-impl<'a> Add<u64> for &'a Mpz {
-	type Output = Mpz;
-	fn add(self, other: u64) -> Mpz {
-        unsafe {
-        	if size_of::<c_ulong>() == 8 || other <= u32::MAX as u64 {
-	            let mut res = Mpz::new();
-	            __gmpz_add_ui(&mut res.mpz, &self.mpz, other as c_ulong);
-	            res
-            }
-        	else {
-        		self + Mpz::from(other)
-        	}
-        }
-	}
-}
-
-impl Add<Mpz> for u64 {
-	type Output = Mpz;
-	fn add(self, mut other: Mpz) -> Mpz {
-		unsafe {
-			if size_of::<c_ulong>() == 8 || self <= u32::MAX as u64 {
-            	__gmpz_add_ui(&mut other.mpz, &other.mpz, self as c_ulong);
-            	other
-        	}
-			else {
-				other + Mpz::from(self)
+macro_rules! impl_oper {
+	($tr: ident, $meth: ident, $fun: ident) => {
+		impl $tr<Mpz> for Mpz {
+			type Output = Mpz;
+			#[inline]
+			fn $meth(mut self, other: Mpz) -> Mpz {
+				unsafe {
+					div_guard!($tr, other, Mpz::zero());
+					$fun(&mut self.mpz, &self.mpz, &other.mpz);
+					self
+				}
 			}
 		}
-	}
-}
-
-impl<'a> Add<&'a Mpz> for u64 {
-	type Output = Mpz;
-	fn add(self, other: &'a Mpz) -> Mpz {
-		unsafe {
-			if size_of::<c_ulong>() == 8 || self <= u32::MAX as u64 {
-	            let mut res = Mpz::new();
-	            __gmpz_add_ui(&mut res.mpz, &other.mpz, self as c_ulong);
-	            res
-            }
-			else {
-				other + Mpz::from(self)
+		
+		impl<'a> $tr<&'a Mpz> for Mpz {
+			type Output = Mpz;
+			#[inline]
+			fn $meth(mut self, other: &Mpz) -> Mpz {
+				unsafe {
+					div_guard!($tr, *other, Mpz::zero());
+					$fun(&mut self.mpz, &self.mpz, &other.mpz);
+					self
+				}
 			}
 		}
-	}
-}
-
-impl<'a, 'b> Sub<&'a Mpz> for &'b Mpz {
-    type Output = Mpz;
-    fn sub(self, other: &Mpz) -> Mpz {
-        unsafe {
-            let mut res = Mpz::new();
-            __gmpz_sub(&mut res.mpz, &self.mpz, &other.mpz);
-            res
-        }
-    }
-}
-
-impl<'a> Sub<&'a Mpz> for Mpz {
-    type Output = Mpz;
-    #[inline]
-    fn sub(mut self, other: &Mpz) -> Mpz {
-        unsafe {
-            __gmpz_sub(&mut self.mpz, &self.mpz, &other.mpz);
-            self
-        }
-    }
-}
-
-impl Sub<u64> for Mpz {
-	type Output = Mpz;
-	#[inline]
-	fn sub(mut self, other: u64) -> Mpz {
-        unsafe {
-			if size_of::<c_ulong>() == 8 || other <= u32::MAX as u64 {
-	            __gmpz_sub_ui(&mut self.mpz, &self.mpz, other as c_ulong);
-	            self
-            }
-			else {
-				self - Mpz::from(other)
-			}
-        }
-	}
-}
-
-impl<'a> Sub<u64> for &'a Mpz {
-	type Output = Mpz;
-	fn sub(self, other: u64) -> Mpz {
-        unsafe {
-        	if size_of::<c_ulong>() == 8 || other <= u32::MAX as u64 {
-	            let mut res = Mpz::new();
-	            __gmpz_sub_ui(&mut res.mpz, &self.mpz, other as c_ulong);
-	            res
-            }
-        	else {
-        		self - Mpz::from(other)
-        	}
-        }
-	}
-}
-
-impl Sub<Mpz> for u64 {
-	type Output = Mpz;
-	fn sub(self, mut other: Mpz) -> Mpz {
-		unsafe {
-			if size_of::<c_ulong>() == 8 || self <= u32::MAX as u64 {
-	            __gmpz_ui_sub(&mut other.mpz, self as c_ulong, &other.mpz);
-	            other
-            }
-			else {
-				other - Mpz::from(self)
+		
+		impl<'a> $tr<Mpz> for &'a Mpz {
+			type Output = Mpz;
+			#[inline]
+			fn $meth(self, mut other: Mpz) -> Mpz {
+				unsafe {
+					div_guard!($tr, other, Mpz::zero());
+					$fun(&mut other.mpz, &self.mpz, &other.mpz);
+					other
+				}
 			}
 		}
-	}
-}
-
-impl<'a> Sub<&'a Mpz> for u64 {
-	type Output = Mpz;
-	fn sub(self, other: &'a Mpz) -> Mpz {
-		unsafe {
-			if size_of::<c_ulong>() == 8 || self <= u32::MAX as u64 {
-	            let mut res = Mpz::new();
-	            __gmpz_ui_sub(&mut res.mpz, self as c_ulong, &other.mpz);
-	            res
-            }
-			else {
-				other - Mpz::from(self)
+		
+		impl<'a, 'b> $tr<&'b Mpz> for &'a Mpz {
+			type Output = Mpz;
+			fn $meth(self, other: &Mpz) -> Mpz {
+				unsafe {
+					div_guard!($tr, *other, Mpz::zero());
+					let mut res = Mpz::new();
+					$fun(&mut res.mpz, &self.mpz, &other.mpz);
+					res
+				}
 			}
 		}
-	}
-}
-
-impl<'a, 'b> Mul<&'a Mpz> for &'b Mpz {
-    type Output = Mpz;
-    fn mul(self, other: &Mpz) -> Mpz {
-        unsafe {
-            let mut res = Mpz::new();
-            __gmpz_mul(&mut res.mpz, &self.mpz, &other.mpz);
-            res
-        }
-    }
-}
-
-impl<'a> Mul<&'a Mpz> for Mpz {
-    type Output = Mpz;
-    #[inline]
-    fn mul(mut self, other: &Mpz) -> Mpz {
-        unsafe {
-            __gmpz_mul(&mut self.mpz, &self.mpz, &other.mpz);
-            self
-        }
-    }
-}
-
-impl Mul<i64> for Mpz {
-	type Output = Mpz;
-	#[inline]
-	fn mul(mut self, other: i64) -> Mpz {
-        unsafe {
-        	if size_of::<c_long>() == 8 || other <= i32::MAX as i64 {
-	            __gmpz_mul_si(&mut self.mpz, &self.mpz, other as c_long);
-	            self
-            }
-        	else {
-        		self * Mpz::from(other)
-        	}
-        }
-	}
-}
-
-impl<'a> Mul<i64> for &'a Mpz {
-	type Output = Mpz;
-	fn mul(self, other: i64) -> Mpz {
-        unsafe {
-        	if size_of::<c_long>() == 8 || other <= i32::MAX as i64 {
-	            let mut res = Mpz::new();
-	            __gmpz_mul_si(&mut res.mpz, &self.mpz, other as c_long);
-	            res
-            }
-        	else {
-        		self * Mpz::from(other)
-        	}
-        }
-	}
-}
-
-impl Mul<Mpz> for i64 {
-	type Output = Mpz;
-	fn mul(self, mut other: Mpz) -> Mpz {
-		unsafe {
-			if size_of::<c_long>() == 8 || self <= i32::MAX as i64 {
-	            __gmpz_mul_si(&mut other.mpz, &other.mpz, self as c_long);
-	            other
-            }
-			else {
-				Mpz::from(self) * other
+	};
+	
+	(both $num: ident, $cnum: ident, $tr: ident, $meth: ident, $fun: ident) => {
+		impl $tr<$num> for Mpz {
+			type Output = Mpz;
+			#[inline]
+			fn $meth(mut self, other: $num) -> Mpz {
+		        unsafe {
+		        	bit_guard!($num, other, {
+		    			$fun(&mut self.mpz, &self.mpz, other as $cnum);
+		    			self
+					}, self.$meth(Mpz::from(other)))
+		        }
 			}
 		}
-	}
-}
-
-impl<'a> Mul<&'a Mpz> for i64 {
-	type Output = Mpz;
-	fn mul(self, other: &'a Mpz) -> Mpz {
-		unsafe {
-			if size_of::<c_long>() == 8 || self <= i32::MAX as i64 {
-	            let mut res = Mpz::new();
-	            __gmpz_mul_si(&mut res.mpz, &other.mpz, self as c_long);
-	            res
-            }
-			else {
-				Mpz::from(self) * other
+		
+		impl<'a> $tr<$num> for &'a Mpz {
+			type Output = Mpz;
+			fn $meth(self, other: $num) -> Mpz {
+		        unsafe {
+		        	bit_guard!($num, other, {
+			            let mut res = Mpz::new();
+			            $fun(&mut res.mpz, &self.mpz, other as $cnum);
+			            res
+		            }, self.$meth(Mpz::from(other)))
+		        }
 			}
 		}
-	}
-}
-
-impl Mul<u64> for Mpz {
-	type Output = Mpz;
-	#[inline]
-	fn mul(mut self, other: u64) -> Mpz {
-        unsafe {
-        	if size_of::<c_ulong>() == 8 || other <= u32::MAX as u64 {
-	            __gmpz_mul_ui(&mut self.mpz, &self.mpz, other as c_ulong);
-	            self
-            }
-        	else {
-        		self * Mpz::from(other)
-        	}
-        }
-	}
-}
-
-impl<'a> Mul<u64> for &'a Mpz {
-	type Output = Mpz;
-	fn mul(self, other: u64) -> Mpz {
-        unsafe {
-        	if size_of::<c_ulong>() == 8 || other <= u32::MAX as u64 {
-	            let mut res = Mpz::new();
-	            __gmpz_mul_ui(&mut res.mpz, &self.mpz, other as c_ulong);
-	            res
-            }
-        	else {
-        		self * Mpz::from(other)
-        	}
-        }
-	}
-}
-
-impl Mul<Mpz> for u64 {
-	type Output = Mpz;
-	fn mul(self, mut other: Mpz) -> Mpz {
-		unsafe {
-			if size_of::<c_ulong>() == 8 || self <= u32::MAX as u64 {
-	            __gmpz_mul_ui(&mut other.mpz, &other.mpz, self as c_ulong);
-	            other
-            }
-			else {
-				Mpz::from(self) * other
+		
+		impl $tr<Mpz> for $num {
+			type Output = Mpz;
+			#[inline]
+			fn $meth(self, mut other: Mpz) -> Mpz {
+				unsafe {
+					bit_guard!($num, self, {
+		            	$fun(&mut other.mpz, &other.mpz, self as $cnum);
+		            	other
+		        	}, other.$meth(Mpz::from(self)))
+				}
 			}
 		}
-	}
-}
-
-impl<'a> Mul<&'a Mpz> for u64 {
-	type Output = Mpz;
-	fn mul(self, other: &'a Mpz) -> Mpz {
-		unsafe {
-			if size_of::<c_ulong>() == 8 || self <= u32::MAX as u64 {
-	            let mut res = Mpz::new();
-	            __gmpz_mul_ui(&mut res.mpz, &other.mpz, self as c_ulong);
-	            res
-            }
-			else {
-				Mpz::from(self) * other
+		
+		impl<'a> $tr<&'a Mpz> for $num {
+			type Output = Mpz;
+			fn $meth(self, other: &'a Mpz) -> Mpz {
+				unsafe {
+					bit_guard!($num, self, {
+			            let mut res = Mpz::new();
+			            $fun(&mut res.mpz, &other.mpz, self as $cnum);
+			            res
+		            }, other.$meth(Mpz::from(self)))
+				}
 			}
 		}
-	}
-}
-
-impl<'a, 'b> Div<&'a Mpz> for &'b Mpz {
-    type Output = Mpz;
-    fn div(self, other: &Mpz) -> Mpz {
-        unsafe {
-            if other.is_zero() {
-                panic!("divide by zero")
-            }
-
-            let mut res = Mpz::new();
-            __gmpz_tdiv_q(&mut res.mpz, &self.mpz, &other.mpz);
-            res
-        }
-    }
-}
-
-impl<'a> Div<&'a Mpz> for Mpz {
-    type Output = Mpz;
-    #[inline]
-    fn div(mut self, other: &Mpz) -> Mpz {
-        unsafe {
-            if other.is_zero() {
-                panic!("divide by zero")
-            }
-
-            __gmpz_tdiv_q(&mut self.mpz, &self.mpz, &other.mpz);
-            self
-        }
-    }
-}
-
-impl Div<u64> for Mpz {
-    type Output = Mpz;
-    #[inline]
-    fn div(mut self, other: u64) -> Mpz {
-        unsafe {
-            if other == 0 {
-                panic!("divide by zero")
-            }
-
-			if size_of::<c_ulong>() == 8 || other <= u32::MAX as u64 {
-	            __gmpz_tdiv_q_ui(&mut self.mpz, &self.mpz, other as c_ulong);
-	            self
-            }
-			else {
-				self / Mpz::from(other)
+	};
+	
+	(normal $num: ident, $cnum: ident, $tr: ident, $meth: ident, $fun: ident) => {
+		impl $tr<$num> for Mpz {
+			type Output = Mpz;
+			#[inline]
+			fn $meth(mut self, other: $num) -> Mpz {
+		        unsafe {
+					div_guard!($tr, other, 0);
+		        	bit_guard!($num, other, {
+		    			$fun(&mut self.mpz, &self.mpz, other as $cnum);
+		    			self
+					}, self.$meth(Mpz::from(other)))
+		        }
 			}
-        }
-    }
-}
-
-impl<'a> Div<u64> for &'a Mpz {
-    type Output = Mpz;
-    fn div(self, other: u64) -> Mpz {
-        unsafe {
-            if other == 0 {
-                panic!("divide by zero")
-            }
-
-			if size_of::<c_ulong>() == 8 || other <= u32::MAX as u64 {
-	            let mut res = Mpz::new();
-	            __gmpz_tdiv_q_ui(&mut res.mpz, &self.mpz, other as c_ulong);
-	            res
-            }
-			else {
-				self / Mpz::from(other)
+		}
+		
+		impl<'a> $tr<$num> for &'a Mpz {
+			type Output = Mpz;
+			fn $meth(self, other: $num) -> Mpz {
+		        unsafe {
+					div_guard!($tr, other, 0);
+		        	bit_guard!($num, other, {
+			            let mut res = Mpz::new();
+			            $fun(&mut res.mpz, &self.mpz, other as $cnum);
+			            res
+		            }, self.$meth(Mpz::from(other)))
+		        }
 			}
-        }
-    }
-}
-
-impl<'a, 'b> Rem<&'a Mpz> for &'b Mpz {
-    type Output = Mpz;
-    fn rem(self, other: &Mpz) -> Mpz {
-        unsafe {
-            if other.is_zero() {
-                panic!("divide by zero")
-            }
-
-            let mut res = Mpz::new();
-            __gmpz_tdiv_r(&mut res.mpz, &self.mpz, &other.mpz);
-            res
-        }
-    }
-}
-
-impl<'a> Rem<&'a Mpz> for Mpz {
-    type Output = Mpz;
-    #[inline]
-    fn rem(mut self, other: &Mpz) -> Mpz {
-        unsafe {
-            if other.is_zero() {
-                panic!("divide by zero")
-            }
-
-            __gmpz_tdiv_r(&mut self.mpz, &self.mpz, &other.mpz);
-            self
-        }
-    }
-}
-
-impl Rem<u64> for Mpz {
-    type Output = Mpz;
-    #[inline]
-    fn rem(mut self, other: u64) -> Mpz {
-        unsafe {
-            if other == 0 {
-                panic!("divide by zero")
-            }
-
-			if size_of::<c_ulong>() == 8 || other <= u32::MAX as u64 {
-	            __gmpz_tdiv_r_ui(&mut self.mpz, &self.mpz, other as c_ulong);
-	            self
-            }
-			else {
-				self % Mpz::from(other)
+		}
+	};
+	
+	(reverse $num: ident, $cnum: ident, $tr: ident, $meth: ident, $fun: ident) => {
+		impl $tr<Mpz> for $num {
+			type Output = Mpz;
+			#[inline]
+			fn $meth(self, mut other: Mpz) -> Mpz {
+				unsafe {
+					bit_guard!($num, self, {
+		            	$fun(&mut other.mpz, self as $cnum, &other.mpz);
+		            	other
+		        	}, Mpz::from(self).$meth(other))
+				}
 			}
-        }
-    }
-}
-
-impl<'a> Rem<u64> for &'a Mpz {
-    type Output = Mpz;
-    fn rem(self, other: u64) -> Mpz {
-        unsafe {
-            if other == 0 {
-                panic!("divide by zero")
-            }
-
-			if size_of::<c_ulong>() == 8 || other <= u32::MAX as u64 {
-	            let mut res = Mpz::new();
-	            __gmpz_tdiv_r_ui(&mut res.mpz, &self.mpz, other as c_ulong);
-	            res
-            }
-			else {
-				self % Mpz::from(other)
+		}
+		
+		impl<'a> $tr<&'a Mpz> for $num {
+			type Output = Mpz;
+			fn $meth(self, other: &'a Mpz) -> Mpz {
+				unsafe {
+					bit_guard!($num, self, {
+			            let mut res = Mpz::new();
+			            $fun(&mut res.mpz, self as $cnum, &other.mpz);
+			            res
+		            }, Mpz::from(self).$meth(other))
+				}
 			}
-        }
-    }
+		}
+	};
+	
 }
+
+impl_oper!(Add, add, __gmpz_add);
+impl_oper!(both u64, c_ulong, Add, add, __gmpz_add_ui);
+
+impl_oper!(Sub, sub, __gmpz_sub);
+impl_oper!(normal u64, c_ulong, Sub, sub, __gmpz_sub_ui);
+impl_oper!(reverse u64, c_ulong, Sub, sub, __gmpz_ui_sub); 
+
+impl_oper!(Mul, mul, __gmpz_mul);
+impl_oper!(both i64, c_long, Mul, mul, __gmpz_mul_si);
+impl_oper!(both u64, c_ulong, Mul, mul, __gmpz_mul_ui);
+
+impl_oper!(Div, div, __gmpz_tdiv_q);
+impl_oper!(normal u64, c_ulong, Div, div, __gmpz_tdiv_q_ui);
+
+impl_oper!(Rem, rem, __gmpz_tdiv_r);
+impl_oper!(normal u64, c_ulong, Rem, rem, __gmpz_tdiv_r_ui);
 
 impl<'b> Neg for &'b Mpz {
     type Output = Mpz;
@@ -1127,9 +894,6 @@ impl hash::Hash for Mpz {
     }
 }
 
-gen_overloads!(Mpz);
-
 gen_overloads_inner!(BitXor, bitxor, Mpz);
 gen_overloads_inner!(BitAnd, bitand, Mpz);
 gen_overloads_inner!(BitOr, bitor, Mpz);
-gen_overloads_inner!(Rem, rem, Mpz);
