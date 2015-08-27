@@ -734,6 +734,17 @@ impl From<u64> for Mpz {
     }
 }
 
+impl From<u32> for Mpz {
+    fn from(other: u32) -> Mpz {
+        unsafe {
+            let mut res = Mpz::new();
+            __gmpz_import(&mut res.mpz, 1, -1, size_of::<u32>() as size_t, 0, 0,
+                          &other as *const u32 as *const c_void);
+            res
+        }
+    }
+}
+
 impl From<i64> for Mpz {
     fn from(other: i64) -> Mpz {
         unsafe {
@@ -746,6 +757,24 @@ impl From<i64> for Mpz {
             } else {
                 __gmpz_import(&mut res.mpz, 1, -1, size_of::<i64>() as size_t, 0, 0,
                               &other as *const i64 as *const c_void);
+            }
+            res
+        }
+    }
+}
+
+impl From<i32> for Mpz {
+    fn from(other: i32) -> Mpz {
+        unsafe {
+            let mut res = Mpz::new();
+
+            if other.is_negative() {
+                __gmpz_import(&mut res.mpz, 1, -1, size_of::<i32>() as size_t, 0, 0,
+                              &(other ^ -1i32) as *const i32 as *const c_void);
+                __gmpz_com(&mut res.mpz, &res.mpz);
+            } else {
+                __gmpz_import(&mut res.mpz, 1, -1, size_of::<i32>() as size_t, 0, 0,
+                              &other as *const i32 as *const c_void);
             }
             res
         }
