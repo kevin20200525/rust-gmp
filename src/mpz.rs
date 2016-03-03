@@ -723,6 +723,17 @@ impl<'a> Into<f64> for &'a Mpz {
     }
 }
 
+impl<'a> From<&'a [u8]> for Mpz {
+    fn from(other: &'a [u8]) -> Mpz {
+        unsafe {
+            let mut res = Mpz::new();
+            __gmpz_import(&mut res.mpz, other.len(), 1, size_of::<u8>() as size_t,
+                          0, 0, other.as_ptr() as *const c_void);
+            res
+        }
+    }
+}
+
 impl From<u64> for Mpz {
     fn from(other: u64) -> Mpz {
         unsafe {

@@ -188,6 +188,13 @@ mod mpz {
     }
 
     #[test]
+    fn test_from_slice_u8() {
+        let v: Vec<u8> = vec!(255, 255);
+        let x: Mpz = From::from(&v[..]);
+        assert!(x.to_string() == "65535".to_string());
+    }
+
+    #[test]
     fn test_abs() {
         let x: Mpz = From::<i64>::from(1000);
         let y: Mpz = From::<i64>::from(-1000);
