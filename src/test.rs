@@ -479,6 +479,26 @@ mod mpz {
         assert_eq!(hash(&a), hash(&(&b + &one)));
         assert_eq!(hash(&(&a - &a)), hash(&(&one - &one)));
     }
+
+    #[test]
+    fn test_to_vec_u8() {
+        let minus_five: Mpz = From::<i64>::from(-5);
+        let minus_one: Mpz = From::<i64>::from(-1);
+        let zero: Mpz = From::<i64>::from(0);
+        let one: Mpz = From::<i64>::from(1);
+        let five: Mpz = From::<i64>::from(5);
+        let xffff: Mpz = From::<i64>::from(65535);
+        let max_u64: Mpz = From::<u64>::from(u64::MAX);
+
+        assert_eq!(Into::<Option<Vec<u8>>>::into(&minus_five), Some(vec!(5u8)));
+        assert_eq!(Into::<Option<Vec<u8>>>::into(&minus_one), Some(vec!(1u8)));
+        assert_eq!(Into::<Option<Vec<u8>>>::into(&zero), Some(vec!(0u8)));
+        assert_eq!(Into::<Option<Vec<u8>>>::into(&one), Some(vec!(1u8)));
+        assert_eq!(Into::<Option<Vec<u8>>>::into(&five), Some(vec!(5u8)));
+        assert_eq!(Into::<Option<Vec<u8>>>::into(&xffff), Some(vec!(255u8, 255u8)));
+        assert_eq!(Into::<Option<Vec<u8>>>::into(&max_u64), Some(vec!(255u8, 255u8, 255u8, 255u8, 255u8, 255u8, 255u8, 255u8)));
+    }
+
     #[test]
     fn test_to_u64() {
         let minus_five: Mpz = From::<i64>::from(-5);
