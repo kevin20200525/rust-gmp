@@ -92,7 +92,7 @@ extern "C" {
 }
 
 pub struct Mpz {
-    pub mpz: mpz_struct,
+    mpz: mpz_struct,
 }
 
 unsafe impl Send for Mpz { }
@@ -102,6 +102,14 @@ impl Drop for Mpz {
 }
 
 impl Mpz {
+    pub unsafe fn inner(&self) -> mpz_srcptr {
+        &self.mpz
+    }
+
+    pub unsafe fn inner_mut(&mut self) -> mpz_ptr {
+        &mut self.mpz
+    }
+
     pub fn new() -> Mpz {
         unsafe {
             let mut mpz = uninitialized();

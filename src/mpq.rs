@@ -40,7 +40,7 @@ extern "C" {
 }
 
 pub struct Mpq {
-    pub mpq: mpq_struct,
+    mpq: mpq_struct,
 }
 
 unsafe impl Send for Mpq { }
@@ -50,6 +50,14 @@ impl Drop for Mpq {
 }
 
 impl Mpq {
+    pub unsafe fn inner(&self) -> mpq_srcptr {
+        &self.mpq
+    }
+
+    pub unsafe fn inner_mut(&mut self) -> mpq_ptr {
+        &mut self.mpq
+    }
+
     pub fn new() -> Mpq {
         unsafe {
             let mut mpq = uninitialized();
@@ -63,7 +71,7 @@ impl Mpq {
     }
 
     pub fn set_z(&mut self, other: &Mpz) {
-        unsafe { __gmpq_set_z(&mut self.mpq, &other.mpz) }
+        unsafe { __gmpq_set_z(&mut self.mpq, other.inner()) }
     }
 
     pub fn set_d(&mut self, other: f64) {
@@ -71,13 +79,13 @@ impl Mpq {
     }
 
     pub fn set_f(&mut self, other: &Mpf) {
-        unsafe { __gmpq_set_f(&mut self.mpq, &other.mpf) }
+        unsafe { __gmpq_set_f(&mut self.mpq, other.inner()) }
     }
 
     pub fn get_num(&self) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
-            __gmpq_get_num(&mut res.mpz, &self.mpq);
+            __gmpq_get_num(res.inner_mut(), &self.mpq);
             res
         }
     }
@@ -85,7 +93,7 @@ impl Mpq {
     pub fn get_den(&self) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
-            __gmpq_get_den(&mut res.mpz, &self.mpq);
+            __gmpq_get_den(res.inner_mut(), &self.mpq);
             res
         }
     }

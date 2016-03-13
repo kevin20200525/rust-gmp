@@ -55,7 +55,7 @@ impl RandState {
     pub fn new_lc_2exp(a: Mpz, c: u64, m2exp: u64) -> RandState {
         unsafe {
             let mut state: gmp_randstate_struct = uninitialized();
-            __gmp_randinit_lc_2exp(&mut state, &a.mpz, c as c_ulong, m2exp as c_ulong);
+            __gmp_randinit_lc_2exp(&mut state, a.inner(), c as c_ulong, m2exp as c_ulong);
             RandState { state: state }
         }
     }
@@ -69,7 +69,7 @@ impl RandState {
     }
 
     pub fn seed(&mut self, seed: Mpz) {
-        unsafe { __gmp_randseed(&mut self.state, &seed.mpz) }
+        unsafe { __gmp_randseed(&mut self.state, seed.inner()) }
     }
 
     pub fn seed_ui(&mut self, seed: u64) {
@@ -80,7 +80,7 @@ impl RandState {
     pub fn urandom(&mut self, n: &Mpz) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
-            __gmpz_urandomm(&mut res.mpz, &mut self.state, &n.mpz);
+            __gmpz_urandomm(res.inner_mut(), &mut self.state, n.inner());
             res
         }
     }
@@ -89,7 +89,7 @@ impl RandState {
     pub fn urandom_2exp(&mut self, n: u64) -> Mpz {
         unsafe {
             let mut res = Mpz::new();
-            __gmpz_urandomb(&mut res.mpz, &mut self.state, n as c_ulong);
+            __gmpz_urandomb(res.inner_mut(), &mut self.state, n as c_ulong);
             res
         }
     }

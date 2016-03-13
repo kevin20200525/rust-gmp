@@ -51,7 +51,7 @@ extern "C" {
 }
 
 pub struct Mpf {
-    pub mpf: mpf_struct,
+    mpf: mpf_struct,
 }
 
 unsafe impl Send for Mpf { }
@@ -61,6 +61,14 @@ impl Drop for Mpf {
 }
 
 impl Mpf {
+    pub unsafe fn inner(&self) -> mpf_srcptr {
+        &self.mpf
+    }
+
+    pub unsafe fn inner_mut(&mut self) -> mpf_ptr {
+        &mut self.mpf
+    }
+
     pub fn zero() -> Mpf { Mpf::new(32) }
 
     pub fn new(precision: usize) -> Mpf {
