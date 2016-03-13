@@ -490,13 +490,13 @@ mod mpz {
         let xffff: Mpz = From::<i64>::from(65535);
         let max_u64: Mpz = From::<u64>::from(u64::MAX);
 
-        assert_eq!(Into::<Option<Vec<u8>>>::into(&minus_five), Some(vec!(5u8)));
-        assert_eq!(Into::<Option<Vec<u8>>>::into(&minus_one), Some(vec!(1u8)));
-        assert_eq!(Into::<Option<Vec<u8>>>::into(&zero), Some(vec!(0u8)));
-        assert_eq!(Into::<Option<Vec<u8>>>::into(&one), Some(vec!(1u8)));
-        assert_eq!(Into::<Option<Vec<u8>>>::into(&five), Some(vec!(5u8)));
-        assert_eq!(Into::<Option<Vec<u8>>>::into(&xffff), Some(vec!(255u8, 255u8)));
-        assert_eq!(Into::<Option<Vec<u8>>>::into(&max_u64), Some(vec!(255u8, 255u8, 255u8, 255u8, 255u8, 255u8, 255u8, 255u8)));
+        assert_eq!(Into::<Vec<u8>>::into(&minus_five), vec!(5u8));
+        assert_eq!(Into::<Vec<u8>>::into(&minus_one), vec!(1u8));
+        assert_eq!(Into::<Vec<u8>>::into(&zero), vec!(0u8));
+        assert_eq!(Into::<Vec<u8>>::into(&one), vec!(1u8));
+        assert_eq!(Into::<Vec<u8>>::into(&five), vec!(5u8));
+        assert_eq!(Into::<Vec<u8>>::into(&xffff), vec!(255u8, 255u8));
+        assert_eq!(Into::<Vec<u8>>::into(&max_u64), vec!(255u8, 255u8, 255u8, 255u8, 255u8, 255u8, 255u8, 255u8));
     }
 
     #[test]

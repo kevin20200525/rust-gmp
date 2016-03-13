@@ -675,14 +675,14 @@ impl Neg for Mpz {
 }
 
 // Similarly to mpz_export, this does not preserve the sign of the input.
-impl<'b> Into<Option<Vec<u8>>> for &'b Mpz {
-    fn into(self) -> Option<Vec<u8>> {
+impl<'b> Into<Vec<u8>> for &'b Mpz {
+    fn into(self) -> Vec<u8> {
         unsafe {
             let bit_size = size_of::<u8>() * 8;
             let size = (__gmpz_sizeinbase(&self.mpz, 2) + bit_size - 1) / bit_size;
             let mut result: Vec<u8> = vec!(0; size);
             __gmpz_export(result.as_mut_ptr() as *mut c_void, 0 as *mut size_t, 1, size_of::<u8>() as size_t, 0, 0, &self.mpz);
-            Some(result)
+            result
         }
     }
 }
