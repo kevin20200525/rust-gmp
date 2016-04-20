@@ -6,6 +6,8 @@ use std::ops::{Div, Mul, Add, Sub, Neg};
 use std::ffi::CString;
 use std::string::String;
 use super::mpz::mp_bitcnt_t;
+use super::mpz::{Mpz, mpz_srcptr};
+use super::mpq::{Mpq, mpq_srcptr};
 
 type mp_exp_t = c_long;
 
@@ -28,6 +30,8 @@ extern "C" {
     fn __gmpf_get_prec(op: mpf_srcptr) -> mp_bitcnt_t;
     fn __gmpf_set_prec(rop: mpf_ptr, prec: mp_bitcnt_t);
     fn __gmpf_set(rop: mpf_ptr, op: mpf_srcptr);
+    fn __gmpf_set_z(rop: mpf_ptr, op: mpz_srcptr);
+    fn __gmpf_set_q(rop: mpf_ptr, op: mpq_srcptr);
 
     fn __gmpf_set_str(rop: mpf_ptr, str: *const c_char, base: c_int);
     fn __gmpf_set_si(rop: mpf_ptr, op: c_long);
@@ -81,6 +85,14 @@ impl Mpf {
 
     pub fn set(&mut self, other: &Mpf) {
         unsafe { __gmpf_set(&mut self.mpf, &other.mpf) }
+    }
+
+    pub fn set_z(&mut self, other: &Mpz) {
+        unsafe { __gmpf_set_z(&mut self.mpf, other.inner()) }
+    }
+
+    pub fn set_q(&mut self, other: &Mpq) {
+        unsafe { __gmpf_set_q(&mut self.mpf, other.inner()) }
     }
 
     pub fn get_prec(&self) -> usize {
