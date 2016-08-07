@@ -40,6 +40,7 @@ extern "C" {
     fn __gmpq_set_num(rational: mpq_ptr, numerator: mpz_srcptr);
     fn __gmpq_set_den(rational: mpq_ptr, denominator: mpz_srcptr);
     fn __gmpq_canonicalize(rational: mpq_ptr);
+    fn __gmpq_get_d(rational: mpq_srcptr) -> c_double;
 }
 
 pub struct Mpq {
@@ -81,6 +82,12 @@ impl Mpq {
     pub fn canonicalize(&mut self) {
         unsafe {
             __gmpq_canonicalize(&mut self.mpq);
+        }
+    }
+
+    pub fn to_f64(&self) -> f64 {
+        unsafe {
+            __gmpq_get_d(&self.mpq) as f64
         }
     }
 
