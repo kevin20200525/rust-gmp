@@ -85,12 +85,6 @@ impl Mpq {
         }
     }
 
-    pub fn to_f64(&self) -> f64 {
-        unsafe {
-            __gmpq_get_d(&self.mpq) as f64
-        }
-    }
-
     pub fn set(&mut self, other: &Mpq) {
         unsafe { __gmpq_set(&mut self.mpq, &other.mpq) }
     }
@@ -315,6 +309,14 @@ impl Into<Option<i64>> for Mpq {
 impl Into<Option<u64>> for Mpq {
     fn into(self) -> Option<u64> {
         panic!("not implemented")
+    }
+}
+
+impl Into<f64> for Mpq {
+    fn into(self) -> f64 {
+        unsafe {
+            __gmpq_get_d(&self.mpq) as f64
+        }
     }
 }
 
