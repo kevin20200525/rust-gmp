@@ -37,6 +37,10 @@ extern "C" {
     fn __gmpq_inv(inverted_number: mpq_ptr, number: mpq_srcptr);
     fn __gmpq_get_num(numerator: mpz_ptr, rational: mpq_srcptr);
     fn __gmpq_get_den(denominator: mpz_ptr, rational: mpq_srcptr);
+    fn __gmpq_set_num(rational: mpq_ptr, numerator: mpz_srcptr);
+    fn __gmpq_set_den(rational: mpq_ptr, denominator: mpz_srcptr);
+    fn __gmpq_canonicalize(rational: mpq_ptr);
+    fn __gmpq_get_d(rational: mpq_srcptr) -> c_double;
 }
 
 pub struct Mpq {
@@ -63,6 +67,21 @@ impl Mpq {
             let mut mpq = uninitialized();
             __gmpq_init(&mut mpq);
             Mpq { mpq: mpq }
+        }
+    }
+
+    pub fn ratio(num: &Mpz, den: &Mpz) -> Mpq {
+        unsafe {
+            let mut res = Mpq::new();
+            __gmpq_set_num(&mut res.mpq, num.inner());
+            __gmpq_set_den(&mut res.mpq, den.inner());
+            res
+        }
+    }
+
+    pub fn canonicalize(&mut self) {
+        unsafe {
+            __gmpq_canonicalize(&mut self.mpq);
         }
     }
 
@@ -290,6 +309,14 @@ impl Into<Option<i64>> for Mpq {
 impl Into<Option<u64>> for Mpq {
     fn into(self) -> Option<u64> {
         panic!("not implemented")
+    }
+}
+
+impl Into<f64> for Mpq {
+    fn into(self) -> f64 {
+        unsafe {
+            __gmpq_get_d(&self.mpq) as f64
+        }
     }
 }
 

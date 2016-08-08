@@ -132,6 +132,12 @@ impl Mpz {
         }
     }
 
+    pub fn size_in_base(&self, base: u8) -> usize {
+        unsafe {
+            __gmpz_sizeinbase(&self.mpz, base as c_int) as usize
+        }
+    }
+
     // TODO: fail on an invalid base
     // FIXME: Unfortunately it isn't currently possible to use the fmt::RadixFmt
     //        machinery for a custom type.
