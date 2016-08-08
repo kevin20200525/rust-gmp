@@ -43,13 +43,13 @@ mod mpz {
     #[test]
     #[should_panic]
     fn test_from_str_radix_lower_bound() {
-        Mpz::from_str_radix("", 1);
+        let _ = Mpz::from_str_radix("", 1);
     }
 
     #[test]
     #[should_panic]
     fn test_from_str_radix_upper_bound() {
-        Mpz::from_str_radix("", 63);
+        let _ = Mpz::from_str_radix("", 63);
     }
 
     #[test]

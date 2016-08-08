@@ -3,7 +3,7 @@ use super::mpz::{mpz_struct, Mpz, mpz_ptr, mpz_srcptr, mp_bitcnt_t};
 use std::mem::uninitialized;
 
 #[repr(C)]
-struct gmp_randstate_struct {
+pub struct gmp_randstate_struct {
     _mp_seed: mpz_struct,
     _mp_alg: c_int,
     _mp_algdata: *const c_void
