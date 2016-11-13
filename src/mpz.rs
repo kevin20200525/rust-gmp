@@ -9,6 +9,8 @@ use std::ops::{Div, Mul, Add, Sub, Neg, Shl, Shr, BitXor, BitAnd, BitOr, Rem};
 use std::ffi::CString;
 use std::{u32, i32};
 
+use ffi::*;
+
 #[repr(C)]
 pub struct mpz_struct {
     _mp_alloc: c_int,
@@ -57,7 +59,6 @@ extern "C" {
     fn __gmpz_tdiv_r(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
     fn __gmpz_tdiv_q_ui(q: mpz_ptr, n: mpz_srcptr, d: c_ulong);
     fn __gmpz_tdiv_r_ui(r: mpz_ptr, n: mpz_srcptr, d: c_ulong);
-    fn __gmpz_fdiv_q(q: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
     fn __gmpz_fdiv_r(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);
     fn __gmpz_fdiv_q_2exp(q: mpz_ptr, n: mpz_srcptr, b: mp_bitcnt_t);
     fn __gmpz_mod(r: mpz_ptr, n: mpz_srcptr, d: mpz_srcptr);

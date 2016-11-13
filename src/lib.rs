@@ -33,6 +33,7 @@ macro_rules! gen_overloads {
     }
 }
 
+mod ffi;
 pub mod mpz;
 pub mod mpq;
 pub mod mpf;

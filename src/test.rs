@@ -559,7 +559,9 @@ mod rand {
 
 mod mpq {
     use std::convert::From;
+    use std::u64;
     use super::super::mpq::Mpq;
+    use super::super::mpz::Mpz;
 
     #[test]
     fn test_one() {
@@ -592,6 +594,28 @@ mod mpq {
         assert_eq!(format!("{:?}", -&fourty), "-40");
         assert_eq!(format!("{:?}", fourty_sixths), "20/3");
         assert_eq!(format!("{:?}", -&fourty_sixths), "-20/3");
+    }
+
+    #[test]
+    fn test_floor() {
+        let half = Mpq::ratio(&Mpz::from(1), &Mpz::from(2));
+        assert_eq!(half.floor(), Mpz::from(0));
+
+        let big = Mpz::from(u64::MAX) * Mpz::from(u64::MAX);
+        let slightly_more_than_one = Mpq::ratio(&(&big + Mpz::from(1)), &big);
+        assert_eq!(slightly_more_than_one.floor(), Mpz::from(1));
+
+        let minus_half = -half;
+        assert_eq!(minus_half.floor(), Mpz::from(-1));
+    }
+
+    #[test]
+    fn test_ceil() {
+        let half = Mpq::ratio(&Mpz::from(1), &Mpz::from(2));
+        assert_eq!(half.ceil(), Mpz::from(1));
+
+        let minus_half = -half;
+        assert_eq!(minus_half.ceil(), Mpz::from(0));
     }
 }
 
