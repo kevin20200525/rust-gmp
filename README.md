@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/fizyk20/rust-gmp.svg?branch=master)](https://travis-ci.org/fizyk20/rust-gmp)
 
+[Documentation](https://docs.rs/rust-gmp)
+
 The following functions are intentionally left out of the bindings:
 
 * `gmp_randinit` (not thread-safe, obsolete)
