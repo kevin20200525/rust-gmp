@@ -1,5 +1,6 @@
 use super::mpz::{mpz_struct, Mpz, mpz_ptr, mpz_srcptr};
 use super::mpf::{Mpf, mpf_srcptr};
+use ffi::*;
 use libc::{c_double, c_int, c_ulong};
 use std::convert::{From, Into};
 use std::mem::uninitialized;
@@ -135,6 +136,22 @@ impl Mpq {
             __gmpq_inv(&mut res.mpq, &self.mpq);
             res
         }
+    }
+
+    pub fn floor(&self) -> Mpz {
+        let mut res = Mpz::new();
+        unsafe {
+            __gmpz_fdiv_q(res.inner_mut(), &self.mpq._mp_num, &self.mpq._mp_den);
+        }
+        res
+    }
+
+    pub fn ceil(&self) -> Mpz {
+        let mut res = Mpz::new();
+        unsafe {
+            __gmpz_cdiv_q(res.inner_mut(), &self.mpq._mp_num, &self.mpq._mp_den);
+        }
+        res
     }
 
     pub fn one() -> Mpq {
