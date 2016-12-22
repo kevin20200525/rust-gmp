@@ -5,7 +5,7 @@ use std::mem::{uninitialized,size_of};
 use std::{fmt, hash};
 use std::cmp::Ordering::{self, Greater, Less, Equal};
 use std::str::FromStr;
-use std::ops::{Div, Mul, Add, Sub, Neg, Shl, Shr, BitXor, BitAnd, BitOr, Rem};
+use std::ops::{Div, DivAssign, Mul, MulAssign, Add, AddAssign, Sub, SubAssign, Neg, Shl, ShlAssign, Shr, ShrAssign, BitXor, BitXorAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, Rem, RemAssign};
 use std::ffi::CString;
 use std::{u32, i32};
 
@@ -486,16 +486,12 @@ macro_rules! bit_guard {
 }
 
 macro_rules! impl_oper {
-	($tr: ident, $meth: ident, $fun: ident) => {
+	($tr: ident, $meth: ident, $tr_assign: ident, $meth_assign: ident, $fun: ident) => {
 		impl $tr<Mpz> for Mpz {
 			type Output = Mpz;
 			#[inline]
-			fn $meth(mut self, other: Mpz) -> Mpz {
-				unsafe {
-					div_guard!($tr, other.is_zero());
-					$fun(&mut self.mpz, &self.mpz, &other.mpz);
-					self
-				}
+			fn $meth(self, other: Mpz) -> Mpz {
+				self.$meth(&other)
 			}
 		}
 		
@@ -503,11 +499,8 @@ macro_rules! impl_oper {
 			type Output = Mpz;
 			#[inline]
 			fn $meth(mut self, other: &Mpz) -> Mpz {
-				unsafe {
-					div_guard!($tr, other.is_zero());
-					$fun(&mut self.mpz, &self.mpz, &other.mpz);
-					self
-				}
+				self.$meth_assign(other);
+				self
 			}
 		}
 		
@@ -534,34 +527,27 @@ macro_rules! impl_oper {
 				}
 			}
 		}
-	};
-	
-	(both $num: ident, $cnum: ident, $tr: ident, $meth: ident, $fun: ident) => {
-		impl $tr<$num> for Mpz {
-			type Output = Mpz;
+		
+		impl $tr_assign<Mpz> for Mpz {
 			#[inline]
-			fn $meth(mut self, other: $num) -> Mpz {
-		        unsafe {
-		        	bit_guard!($num, other, {
-		    			$fun(&mut self.mpz, &self.mpz, other as $cnum);
-		    			self
-					}, self.$meth(Mpz::from(other)))
-		        }
+			fn $meth_assign(&mut self, other: Mpz) {
+				self.$meth_assign(&other)
 			}
 		}
 		
-		impl<'a> $tr<$num> for &'a Mpz {
-			type Output = Mpz;
-			fn $meth(self, other: $num) -> Mpz {
-		        unsafe {
-		        	bit_guard!($num, other, {
-			            let mut res = Mpz::new();
-			            $fun(&mut res.mpz, &self.mpz, other as $cnum);
-			            res
-		            }, self.$meth(Mpz::from(other)))
-		        }
+		impl<'a> $tr_assign<&'a Mpz> for Mpz {
+			#[inline]
+			fn $meth_assign(&mut self, other: &Mpz) {
+				unsafe {
+					div_guard!($tr, other.is_zero());
+					$fun(&mut self.mpz, &self.mpz, &other.mpz);
+				}
 			}
 		}
+	};
+	
+	(both $num: ident, $cnum: ident, $tr: ident, $meth: ident, $tr_assign: ident, $meth_assign: ident, $fun: ident) => {
+		impl_oper!(normal $num, $cnum, $tr, $meth, $tr_assign, $meth_assign, $fun);
 		
 		impl $tr<Mpz> for $num {
 			type Output = Mpz;
@@ -590,18 +576,13 @@ macro_rules! impl_oper {
 		}
 	};
 	
-	(normal $num: ident, $cnum: ident, $tr: ident, $meth: ident, $fun: ident) => {
+	(normal $num: ident, $cnum: ident, $tr: ident, $meth: ident, $tr_assign: ident, $meth_assign: ident, $fun: ident) => {
 		impl $tr<$num> for Mpz {
 			type Output = Mpz;
 			#[inline]
 			fn $meth(mut self, other: $num) -> Mpz {
-		        unsafe {
-					div_guard!($tr, other == 0);
-		        	bit_guard!($num, other, {
-		    			$fun(&mut self.mpz, &self.mpz, other as $cnum);
-		    			self
-					}, self.$meth(Mpz::from(other)))
-		        }
+				self.$meth_assign(other);
+				self
 			}
 		}
 		
@@ -616,6 +597,18 @@ macro_rules! impl_oper {
 			            res
 		            }, self.$meth(Mpz::from(other)))
 		        }
+			}
+		}
+		
+		impl $tr_assign<$num> for Mpz {
+			#[inline]
+			fn $meth_assign(&mut self, other: $num) {
+				unsafe {
+					div_guard!($tr, other == 0);
+					bit_guard!($num, other,
+						$fun(&mut self.mpz, &self.mpz, other as $cnum),
+						self.$meth_assign(Mpz::from(other)))
+				}
 			}
 		}
 	};
@@ -650,22 +643,22 @@ macro_rules! impl_oper {
 	
 }
 
-impl_oper!(Add, add, __gmpz_add);
-impl_oper!(both u64, c_ulong, Add, add, __gmpz_add_ui);
+impl_oper!(Add, add, AddAssign, add_assign, __gmpz_add);
+impl_oper!(both u64, c_ulong, Add, add, AddAssign, add_assign, __gmpz_add_ui);
 
-impl_oper!(Sub, sub, __gmpz_sub);
-impl_oper!(normal u64, c_ulong, Sub, sub, __gmpz_sub_ui);
+impl_oper!(Sub, sub, SubAssign, sub_assign, __gmpz_sub);
+impl_oper!(normal u64, c_ulong, Sub, sub, SubAssign, sub_assign, __gmpz_sub_ui);
 impl_oper!(reverse u64, c_ulong, Sub, sub, __gmpz_ui_sub); 
 
-impl_oper!(Mul, mul, __gmpz_mul);
-impl_oper!(both i64, c_long, Mul, mul, __gmpz_mul_si);
-impl_oper!(both u64, c_ulong, Mul, mul, __gmpz_mul_ui);
+impl_oper!(Mul, mul, MulAssign, mul_assign, __gmpz_mul);
+impl_oper!(both i64, c_long, Mul, mul, MulAssign, mul_assign, __gmpz_mul_si);
+impl_oper!(both u64, c_ulong, Mul, mul, MulAssign, mul_assign, __gmpz_mul_ui);
 
-impl_oper!(Div, div, __gmpz_tdiv_q);
-impl_oper!(normal u64, c_ulong, Div, div, __gmpz_tdiv_q_ui);
+impl_oper!(Div, div, DivAssign, div_assign, __gmpz_tdiv_q);
+impl_oper!(normal u64, c_ulong, Div, div, DivAssign, div_assign, __gmpz_tdiv_q_ui);
 
-impl_oper!(Rem, rem, __gmpz_tdiv_r);
-impl_oper!(normal u64, c_ulong, Rem, rem, __gmpz_tdiv_r_ui);
+impl_oper!(Rem, rem, RemAssign, rem_assign, __gmpz_tdiv_r);
+impl_oper!(normal u64, c_ulong, Rem, rem, RemAssign, rem_assign, __gmpz_tdiv_r_ui);
 
 impl<'b> Neg for &'b Mpz {
     type Output = Mpz;
@@ -820,9 +813,9 @@ impl From<i32> for Mpz {
     }
 }
 
-impl_oper!(BitAnd, bitand, __gmpz_and);
-impl_oper!(BitOr, bitor, __gmpz_ior);
-impl_oper!(BitXor, bitxor, __gmpz_xor);
+impl_oper!(BitAnd, bitand, BitAndAssign, bitand_assign, __gmpz_and);
+impl_oper!(BitOr, bitor, BitOrAssign, bitor_assign, __gmpz_ior);
+impl_oper!(BitXor, bitxor, BitXorAssign, bitxor_assign, __gmpz_xor);
 
 impl<'b> Shl<usize> for &'b Mpz {
     type Output = Mpz;
@@ -864,6 +857,22 @@ impl Shr<usize> for Mpz {
             let mut res = Mpz::new();
             __gmpz_fdiv_q_2exp(&mut res.mpz, &self.mpz, other as c_ulong);
             res
+        }
+    }
+}
+
+impl ShlAssign<usize> for Mpz {
+    fn shl_assign(&mut self, other: usize) {
+        unsafe {
+            __gmpz_mul_2exp(&mut self.mpz, &self.mpz, other as c_ulong);
+        }
+    }
+}
+
+impl ShrAssign<usize> for Mpz {
+    fn shr_assign(&mut self, other: usize) {
+        unsafe {
+            __gmpz_fdiv_q_2exp(&mut self.mpz, &self.mpz, other as c_ulong);
         }
     }
 }
