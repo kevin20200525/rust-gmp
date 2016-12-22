@@ -337,19 +337,35 @@ impl Into<f64> for Mpq {
     }
 }
 
+impl From<Mpz> for Mpq {
+    fn from(other: Mpz) -> Mpq {
+        let mut res = Mpq::new();
+        res.set_z(&other);
+        res
+    }
+}
+
 impl From<i64> for Mpq {
     fn from(other: i64) -> Mpq {
-        let mut res = Mpq::new();
-        res.set_z(&From::<i64>::from(other));
-        res
+        From::<Mpz>::from(From::<i64>::from(other))
+    }
+}
+
+impl From<i32> for Mpq {
+    fn from(other: i32) -> Mpq {
+        From::<Mpz>::from(From::<i32>::from(other))
     }
 }
 
 impl From<u64> for Mpq {
     fn from(other: u64) -> Mpq {
-        let mut res = Mpq::new();
-        res.set_z(&From::<u64>::from(other));
-        res
+        From::<Mpz>::from(From::<u64>::from(other))
+    }
+}
+
+impl From<u32> for Mpq {
+    fn from(other: u32) -> Mpq {
+        From::<Mpz>::from(From::<u32>::from(other))
     }
 }
 
