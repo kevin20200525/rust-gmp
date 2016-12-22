@@ -6,7 +6,7 @@ use std::convert::{From, Into};
 use std::mem::uninitialized;
 use std::fmt;
 use std::cmp::Ordering::{self, Greater, Less, Equal};
-use std::ops::{Div, Mul, Add, Sub, Neg};
+use std::ops::{Div, DivAssign, Mul, MulAssign, Add, AddAssign, Sub, SubAssign, Neg};
 
 #[repr(C)]
 pub struct mpq_struct {
@@ -199,101 +199,81 @@ impl PartialOrd for Mpq {
     }
 }
 
-impl<'a, 'b> Add<&'a Mpq> for &'b Mpq {
-    type Output = Mpq;
-    fn add(self, other: &Mpq) -> Mpq {
-        unsafe {
-            let mut res = Mpq::new();
-            __gmpq_add(&mut res.mpq, &self.mpq, &other.mpq);
-            res
+macro_rules! div_guard {
+    (Div, $what: expr) => {
+        if $what.is_zero() {
+            panic!("divide by zero")
         }
-    }
+    };
+    ($tr: ident, $what: expr) => {}
 }
 
-impl<'a> Add<&'a Mpq> for Mpq {
-    type Output = Mpq;
-    #[inline]
-    fn add(mut self, other: &Mpq) -> Mpq {
-        unsafe {
-            __gmpq_add(&mut self.mpq, &self.mpq, &other.mpq);
-            self
-        }
-    }
-}
-
-impl<'a, 'b> Sub<&'a Mpq> for &'b Mpq {
-    type Output = Mpq;
-    fn sub(self, other: &Mpq) -> Mpq {
-        unsafe {
-            let mut res = Mpq::new();
-            __gmpq_sub(&mut res.mpq, &self.mpq, &other.mpq);
-            res
-        }
-    }
-}
-
-impl<'a> Sub<&'a Mpq> for Mpq {
-    type Output = Mpq;
-    #[inline]
-    fn sub(mut self, other: &Mpq) -> Mpq {
-        unsafe {
-            __gmpq_sub(&mut self.mpq, &self.mpq, &other.mpq);
-            self
-        }
-    }
-}
-
-impl<'a, 'b> Mul<&'a Mpq> for &'b Mpq {
-    type Output = Mpq;
-    fn mul(self, other: &Mpq) -> Mpq {
-        unsafe {
-            let mut res = Mpq::new();
-            __gmpq_mul(&mut res.mpq, &self.mpq, &other.mpq);
-            res
-        }
-    }
-}
-
-impl<'a> Mul<&'a Mpq> for Mpq {
-    type Output = Mpq;
-    #[inline]
-    fn mul(mut self, other: &Mpq) -> Mpq {
-        unsafe {
-            __gmpq_mul(&mut self.mpq, &self.mpq, &other.mpq);
-            self
-        }
-    }
-}
-
-impl<'a, 'b> Div<&'a Mpq> for &'b Mpq {
-    type Output = Mpq;
-    fn div(self, other: &Mpq) -> Mpq {
-        unsafe {
-            if other.is_zero() {
-                panic!("divide by zero")
+macro_rules! impl_oper {
+    ($tr: ident, $meth: ident, $tr_assign: ident, $meth_assign: ident, $fun: ident) => {
+        impl $tr<Mpq> for Mpq {
+            type Output = Mpq;
+            #[inline]
+            fn $meth(self, other: Mpq) -> Mpq {
+                self.$meth(&other)
             }
-
-            let mut res = Mpq::new();
-            __gmpq_div(&mut res.mpq, &self.mpq, &other.mpq);
-            res
         }
-    }
-}
 
-impl<'a> Div<&'a Mpq> for Mpq {
-    type Output = Mpq;
-    #[inline]
-    fn div(mut self, other: &Mpq) -> Mpq {
-        unsafe {
-            if other.is_zero() {
-                panic!("divide by zero")
+        impl<'a> $tr<&'a Mpq> for Mpq {
+            type Output = Mpq;
+            #[inline]
+            fn $meth(mut self, other: &Mpq) -> Mpq {
+                self.$meth_assign(other);
+                self
             }
-            
-            __gmpq_div(&mut self.mpq, &self.mpq, &other.mpq);
-            self
+        }
+
+        impl<'a> $tr<Mpq> for &'a Mpq {
+            type Output = Mpq;
+            #[inline]
+            fn $meth(self, mut other: Mpq) -> Mpq {
+                unsafe {
+                    div_guard!($tr, other);
+                    $fun(&mut other.mpq, &self.mpq, &other.mpq);
+                    other
+                }
+            }
+        }
+
+        impl<'a, 'b> $tr<&'a Mpq> for &'b Mpq {
+            type Output = Mpq;
+            fn $meth(self, other: &Mpq) -> Mpq {
+                unsafe {
+                    div_guard!($tr, *other);
+                    let mut res = Mpq::new();
+                    $fun(&mut res.mpq, &self.mpq, &other.mpq);
+                    res
+                }
+            }
+        }
+
+        impl<'a> $tr_assign<Mpq> for Mpq {
+            #[inline]
+            fn $meth_assign(&mut self, other: Mpq) {
+                self.$meth_assign(&other)
+            }
+        }
+
+        impl<'a> $tr_assign<&'a Mpq> for Mpq {
+            #[inline]
+            fn $meth_assign(&mut self, other: &Mpq) {
+                unsafe {
+                    div_guard!($tr, *other);
+                    $fun(&mut self.mpq, &self.mpq, &other.mpq)
+                }
+            }
         }
     }
 }
+
+impl_oper!(Add, add, AddAssign, add_assign, __gmpq_add);
+impl_oper!(Sub, sub, SubAssign, sub_assign, __gmpq_sub);
+impl_oper!(Mul, mul, MulAssign, mul_assign, __gmpq_mul);
+impl_oper!(Div, div, DivAssign, div_assign, __gmpq_div);
 
 impl<'b> Neg for &'b Mpq {
     type Output = Mpq;
@@ -337,19 +317,35 @@ impl Into<f64> for Mpq {
     }
 }
 
+impl From<Mpz> for Mpq {
+    fn from(other: Mpz) -> Mpq {
+        let mut res = Mpq::new();
+        res.set_z(&other);
+        res
+    }
+}
+
 impl From<i64> for Mpq {
     fn from(other: i64) -> Mpq {
-        let mut res = Mpq::new();
-        res.set_z(&From::<i64>::from(other));
-        res
+        From::<Mpz>::from(From::<i64>::from(other))
+    }
+}
+
+impl From<i32> for Mpq {
+    fn from(other: i32) -> Mpq {
+        From::<Mpz>::from(From::<i32>::from(other))
     }
 }
 
 impl From<u64> for Mpq {
     fn from(other: u64) -> Mpq {
-        let mut res = Mpq::new();
-        res.set_z(&From::<u64>::from(other));
-        res
+        From::<Mpz>::from(From::<u64>::from(other))
+    }
+}
+
+impl From<u32> for Mpq {
+    fn from(other: u32) -> Mpq {
+        From::<Mpz>::from(From::<u32>::from(other))
     }
 }
 
@@ -367,5 +363,3 @@ impl fmt::Debug for Mpq {
         }
     }
 }
-
-gen_overloads!(Mpq);

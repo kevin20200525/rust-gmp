@@ -5,7 +5,7 @@ use std::mem::{uninitialized,size_of};
 use std::{fmt, hash};
 use std::cmp::Ordering::{self, Greater, Less, Equal};
 use std::str::FromStr;
-use std::ops::{Div, Mul, Add, Sub, Neg, Shl, Shr, BitXor, BitAnd, BitOr, Rem};
+use std::ops::{Div, DivAssign, Mul, MulAssign, Add, AddAssign, Sub, SubAssign, Neg, Not, Shl, ShlAssign, Shr, ShrAssign, BitXor, BitXorAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, Rem, RemAssign};
 use std::ffi::CString;
 use std::{u32, i32};
 use num_traits::{Zero, One};
@@ -363,7 +363,7 @@ impl Mpz {
     }
 
     pub fn root(&self, n: u32) -> Mpz {
-        assert!(*self >= Mpz::zero());
+        assert!(self.mpz._mp_size >= 0);
         unsafe {
             let mut res = Mpz::new();
             let _perfect_root
@@ -377,7 +377,7 @@ impl Mpz {
     }
 
     pub fn sqrt(&self) -> Mpz {
-        assert!(*self >= Mpz::zero());
+        assert!(self.mpz._mp_size >= 0);
         unsafe {
             let mut res = Mpz::new();
             __gmpz_sqrt(&mut res.mpz, &self.mpz);
@@ -402,7 +402,7 @@ impl Mpz {
     pub fn zero() -> Mpz { Mpz::new() }
 
     pub fn is_zero(&self) -> bool {
-        unsafe { __gmpz_cmp_ui(&self.mpz, 0) == 0 }
+        self.mpz._mp_size == 0
     }
 }
 
@@ -447,17 +447,17 @@ impl PartialOrd for Mpz {
 
 // This macro inserts a guard against division by 0 for Div and Rem implementations
 macro_rules! div_guard {
-	(Div, $what: expr, $zero: expr) => {
-		if $what == $zero {
+	(Div, $is_zero: expr) => {
+		if $is_zero {
             panic!("divide by zero")
     	}
 	};
-	(Rem, $what: expr, $zero: expr) => {
-		if $what == $zero {
+	(Rem, $is_zero: expr) => {
+		if $is_zero {
             panic!("divide by zero")
     	}
 	};
-	($tr: ident, $what: expr, $zero: expr) => {}
+	($tr: ident, $is_zero: expr) => {}
 }
 
 // On Windows c_long and c_ulong are only 32-bit - in order to implement operations for
@@ -487,16 +487,12 @@ macro_rules! bit_guard {
 }
 
 macro_rules! impl_oper {
-	($tr: ident, $meth: ident, $fun: ident) => {
+	($tr: ident, $meth: ident, $tr_assign: ident, $meth_assign: ident, $fun: ident) => {
 		impl $tr<Mpz> for Mpz {
 			type Output = Mpz;
 			#[inline]
-			fn $meth(mut self, other: Mpz) -> Mpz {
-				unsafe {
-					div_guard!($tr, other, Mpz::zero());
-					$fun(&mut self.mpz, &self.mpz, &other.mpz);
-					self
-				}
+			fn $meth(self, other: Mpz) -> Mpz {
+				self.$meth(&other)
 			}
 		}
 		
@@ -504,11 +500,8 @@ macro_rules! impl_oper {
 			type Output = Mpz;
 			#[inline]
 			fn $meth(mut self, other: &Mpz) -> Mpz {
-				unsafe {
-					div_guard!($tr, *other, Mpz::zero());
-					$fun(&mut self.mpz, &self.mpz, &other.mpz);
-					self
-				}
+				self.$meth_assign(other);
+				self
 			}
 		}
 		
@@ -517,7 +510,7 @@ macro_rules! impl_oper {
 			#[inline]
 			fn $meth(self, mut other: Mpz) -> Mpz {
 				unsafe {
-					div_guard!($tr, other, Mpz::zero());
+					div_guard!($tr, other.is_zero());
 					$fun(&mut other.mpz, &self.mpz, &other.mpz);
 					other
 				}
@@ -528,41 +521,34 @@ macro_rules! impl_oper {
 			type Output = Mpz;
 			fn $meth(self, other: &Mpz) -> Mpz {
 				unsafe {
-					div_guard!($tr, *other, Mpz::zero());
+					div_guard!($tr, other.is_zero());
 					let mut res = Mpz::new();
 					$fun(&mut res.mpz, &self.mpz, &other.mpz);
 					res
 				}
 			}
 		}
-	};
-	
-	(both $num: ident, $cnum: ident, $tr: ident, $meth: ident, $fun: ident) => {
-		impl $tr<$num> for Mpz {
-			type Output = Mpz;
+		
+		impl $tr_assign<Mpz> for Mpz {
 			#[inline]
-			fn $meth(mut self, other: $num) -> Mpz {
-		        unsafe {
-		        	bit_guard!($num, other, {
-		    			$fun(&mut self.mpz, &self.mpz, other as $cnum);
-		    			self
-					}, self.$meth(Mpz::from(other)))
-		        }
+			fn $meth_assign(&mut self, other: Mpz) {
+				self.$meth_assign(&other)
 			}
 		}
 		
-		impl<'a> $tr<$num> for &'a Mpz {
-			type Output = Mpz;
-			fn $meth(self, other: $num) -> Mpz {
-		        unsafe {
-		        	bit_guard!($num, other, {
-			            let mut res = Mpz::new();
-			            $fun(&mut res.mpz, &self.mpz, other as $cnum);
-			            res
-		            }, self.$meth(Mpz::from(other)))
-		        }
+		impl<'a> $tr_assign<&'a Mpz> for Mpz {
+			#[inline]
+			fn $meth_assign(&mut self, other: &Mpz) {
+				unsafe {
+					div_guard!($tr, other.is_zero());
+					$fun(&mut self.mpz, &self.mpz, &other.mpz);
+				}
 			}
 		}
+	};
+	
+	(both $num: ident, $cnum: ident, $tr: ident, $meth: ident, $tr_assign: ident, $meth_assign: ident, $fun: ident) => {
+		impl_oper!(normal $num, $cnum, $tr, $meth, $tr_assign, $meth_assign, $fun);
 		
 		impl $tr<Mpz> for $num {
 			type Output = Mpz;
@@ -591,18 +577,13 @@ macro_rules! impl_oper {
 		}
 	};
 	
-	(normal $num: ident, $cnum: ident, $tr: ident, $meth: ident, $fun: ident) => {
+	(normal $num: ident, $cnum: ident, $tr: ident, $meth: ident, $tr_assign: ident, $meth_assign: ident, $fun: ident) => {
 		impl $tr<$num> for Mpz {
 			type Output = Mpz;
 			#[inline]
 			fn $meth(mut self, other: $num) -> Mpz {
-		        unsafe {
-					div_guard!($tr, other, 0);
-		        	bit_guard!($num, other, {
-		    			$fun(&mut self.mpz, &self.mpz, other as $cnum);
-		    			self
-					}, self.$meth(Mpz::from(other)))
-		        }
+				self.$meth_assign(other);
+				self
 			}
 		}
 		
@@ -610,13 +591,25 @@ macro_rules! impl_oper {
 			type Output = Mpz;
 			fn $meth(self, other: $num) -> Mpz {
 		        unsafe {
-					div_guard!($tr, other, 0);
+					div_guard!($tr, other == 0);
 		        	bit_guard!($num, other, {
 			            let mut res = Mpz::new();
 			            $fun(&mut res.mpz, &self.mpz, other as $cnum);
 			            res
 		            }, self.$meth(Mpz::from(other)))
 		        }
+			}
+		}
+		
+		impl $tr_assign<$num> for Mpz {
+			#[inline]
+			fn $meth_assign(&mut self, other: $num) {
+				unsafe {
+					div_guard!($tr, other == 0);
+					bit_guard!($num, other,
+						$fun(&mut self.mpz, &self.mpz, other as $cnum),
+						self.$meth_assign(Mpz::from(other)))
+				}
 			}
 		}
 	};
@@ -651,22 +644,22 @@ macro_rules! impl_oper {
 	
 }
 
-impl_oper!(Add, add, __gmpz_add);
-impl_oper!(both u64, c_ulong, Add, add, __gmpz_add_ui);
+impl_oper!(Add, add, AddAssign, add_assign, __gmpz_add);
+impl_oper!(both u64, c_ulong, Add, add, AddAssign, add_assign, __gmpz_add_ui);
 
-impl_oper!(Sub, sub, __gmpz_sub);
-impl_oper!(normal u64, c_ulong, Sub, sub, __gmpz_sub_ui);
+impl_oper!(Sub, sub, SubAssign, sub_assign, __gmpz_sub);
+impl_oper!(normal u64, c_ulong, Sub, sub, SubAssign, sub_assign, __gmpz_sub_ui);
 impl_oper!(reverse u64, c_ulong, Sub, sub, __gmpz_ui_sub); 
 
-impl_oper!(Mul, mul, __gmpz_mul);
-impl_oper!(both i64, c_long, Mul, mul, __gmpz_mul_si);
-impl_oper!(both u64, c_ulong, Mul, mul, __gmpz_mul_ui);
+impl_oper!(Mul, mul, MulAssign, mul_assign, __gmpz_mul);
+impl_oper!(both i64, c_long, Mul, mul, MulAssign, mul_assign, __gmpz_mul_si);
+impl_oper!(both u64, c_ulong, Mul, mul, MulAssign, mul_assign, __gmpz_mul_ui);
 
-impl_oper!(Div, div, __gmpz_tdiv_q);
-impl_oper!(normal u64, c_ulong, Div, div, __gmpz_tdiv_q_ui);
+impl_oper!(Div, div, DivAssign, div_assign, __gmpz_tdiv_q);
+impl_oper!(normal u64, c_ulong, Div, div, DivAssign, div_assign, __gmpz_tdiv_q_ui);
 
-impl_oper!(Rem, rem, __gmpz_tdiv_r);
-impl_oper!(normal u64, c_ulong, Rem, rem, __gmpz_tdiv_r_ui);
+impl_oper!(Rem, rem, RemAssign, rem_assign, __gmpz_tdiv_r);
+impl_oper!(normal u64, c_ulong, Rem, rem, RemAssign, rem_assign, __gmpz_tdiv_r_ui);
 
 impl<'b> Neg for &'b Mpz {
     type Output = Mpz;
@@ -690,6 +683,28 @@ impl Neg for Mpz {
     }
 }
 
+impl<'b> Not for &'b Mpz {
+    type Output = Mpz;
+    fn not(self) -> Mpz {
+        unsafe {
+            let mut res = Mpz::new();
+            __gmpz_com(&mut res.mpz, &self.mpz);
+            res
+        }
+    }
+}
+
+impl Not for Mpz {
+    type Output = Mpz;
+    #[inline]
+    fn not(mut self) -> Mpz {
+        unsafe {
+            __gmpz_com(&mut self.mpz, &self.mpz);
+            self
+        }
+    }
+}
+
 // Similarly to mpz_export, this does not preserve the sign of the input.
 impl<'b> Into<Vec<u8>> for &'b Mpz {
     fn into(self) -> Vec<u8> {
@@ -706,7 +721,7 @@ impl<'b> Into<Vec<u8>> for &'b Mpz {
 impl<'b> Into<Option<i64>> for &'b Mpz {
     fn into(self) -> Option<i64> {
         unsafe {
-            let negative = __gmpz_cmp_ui(&self.mpz, 0) < 0;
+            let negative = self.mpz._mp_size < 0;
             let mut to_export = Mpz::new();
 
             if negative {
@@ -733,7 +748,7 @@ impl<'b> Into<Option<i64>> for &'b Mpz {
 impl<'b> Into<Option<u64>> for &'b Mpz {
     fn into(self) -> Option<u64> {
         unsafe {
-            if __gmpz_sizeinbase(&self.mpz, 2) <= 64 && __gmpz_cmp_ui(&self.mpz, 0) >= 0 {
+            if __gmpz_sizeinbase(&self.mpz, 2) <= 64 && self.mpz._mp_size >= 0 {
                 let mut result : u64 = 0;
                 __gmpz_export(&mut result as *mut u64 as *mut c_void, 0 as *mut size_t, -1, size_of::<u64>() as size_t, 0, 0, &self.mpz);
                 Some(result)
@@ -821,9 +836,9 @@ impl From<i32> for Mpz {
     }
 }
 
-impl_oper!(BitAnd, bitand, __gmpz_and);
-impl_oper!(BitOr, bitor, __gmpz_ior);
-impl_oper!(BitXor, bitxor, __gmpz_xor);
+impl_oper!(BitAnd, bitand, BitAndAssign, bitand_assign, __gmpz_and);
+impl_oper!(BitOr, bitor, BitOrAssign, bitor_assign, __gmpz_ior);
+impl_oper!(BitXor, bitxor, BitXorAssign, bitxor_assign, __gmpz_xor);
 
 impl<'b> Shl<usize> for &'b Mpz {
     type Output = Mpz;
@@ -865,6 +880,22 @@ impl Shr<usize> for Mpz {
             let mut res = Mpz::new();
             __gmpz_fdiv_q_2exp(&mut res.mpz, &self.mpz, other as c_ulong);
             res
+        }
+    }
+}
+
+impl ShlAssign<usize> for Mpz {
+    fn shl_assign(&mut self, other: usize) {
+        unsafe {
+            __gmpz_mul_2exp(&mut self.mpz, &self.mpz, other as c_ulong);
+        }
+    }
+}
+
+impl ShrAssign<usize> for Mpz {
+    fn shr_assign(&mut self, other: usize) {
+        unsafe {
+            __gmpz_fdiv_q_2exp(&mut self.mpz, &self.mpz, other as c_ulong);
         }
     }
 }
