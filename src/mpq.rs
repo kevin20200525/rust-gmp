@@ -210,12 +210,32 @@ macro_rules! div_guard {
 
 macro_rules! impl_oper {
     ($tr: ident, $meth: ident, $tr_assign: ident, $meth_assign: ident, $fun: ident) => {
+        impl $tr<Mpq> for Mpq {
+            type Output = Mpq;
+            #[inline]
+            fn $meth(self, other: Mpq) -> Mpq {
+                self.$meth(&other)
+            }
+        }
+
         impl<'a> $tr<&'a Mpq> for Mpq {
             type Output = Mpq;
             #[inline]
             fn $meth(mut self, other: &Mpq) -> Mpq {
                 self.$meth_assign(other);
                 self
+            }
+        }
+
+        impl<'a> $tr<Mpq> for &'a Mpq {
+            type Output = Mpq;
+            #[inline]
+            fn $meth(self, mut other: Mpq) -> Mpq {
+                unsafe {
+                    div_guard!($tr, other);
+                    $fun(&mut other.mpq, &self.mpq, &other.mpq);
+                    other
+                }
             }
         }
 
@@ -343,5 +363,3 @@ impl fmt::Debug for Mpq {
         }
     }
 }
-
-gen_overloads!(Mpq);
