@@ -2,7 +2,7 @@ use libc::{c_double, c_int, c_long, c_ulong, c_void,c_char};
 use std::mem::uninitialized;
 use std::cmp;
 use std::cmp::Ordering::{self, Greater, Less, Equal};
-use std::ops::{Div, Mul, Add, Sub, Neg};
+use std::ops::{Div, DivAssign, Mul, MulAssign, Add, AddAssign, Sub, SubAssign, Neg};
 use std::ffi::CString;
 use std::string::String;
 use super::mpz::mp_bitcnt_t;
@@ -216,101 +216,62 @@ impl PartialOrd for Mpf {
     }
 }
 
-impl<'a, 'b> Add<&'a Mpf> for &'b Mpf {
-    type Output = Mpf;
-    fn add(self, other: &Mpf) -> Mpf {
-        unsafe {
-            let mut res = Mpf::new(cmp::max(self.get_prec(), other.get_prec()));
-            __gmpf_add(&mut res.mpf, &self.mpf, &other.mpf);
-            res
+macro_rules! div_guard {
+    (Div, $is_zero: expr) => {
+        if $is_zero {
+            panic!("divide by zero")
         }
-    }
+    };
+    ($tr: ident, $what: expr) => {}
 }
 
-impl<'a> Add<&'a Mpf> for Mpf {
-    type Output = Mpf;
-    #[inline]
-    fn add(mut self, other: &Mpf) -> Mpf {
-        unsafe {
-            __gmpf_add(&mut self.mpf, &self.mpf, &other.mpf);
-            self
-        }
-    }
-}
-
-impl<'a, 'b> Sub<&'a Mpf> for &'b Mpf {
-    type Output = Mpf;
-    fn sub(self, other: &Mpf) -> Mpf {
-        unsafe {
-            let mut res = Mpf::new(cmp::max(self.get_prec(), other.get_prec()));
-            __gmpf_sub(&mut res.mpf, &self.mpf, &other.mpf);
-            res
-        }
-    }
-}
-
-impl<'a> Sub<&'a Mpf> for Mpf {
-    type Output = Mpf;
-    #[inline]
-    fn sub(mut self, other: &Mpf) -> Mpf {
-        unsafe {
-            __gmpf_sub(&mut self.mpf, &self.mpf, &other.mpf);
-            self
-        }
-    }
-}
-
-impl<'a, 'b> Mul<&'a Mpf> for &'b Mpf {
-    type Output = Mpf;
-    fn mul(self, other: &Mpf) -> Mpf {
-        unsafe {
-            let mut res = Mpf::new(cmp::max(self.get_prec(), other.get_prec()));
-            __gmpf_mul(&mut res.mpf, &self.mpf, &other.mpf);
-            res
-        }
-    }
-}
-
-impl<'a> Mul<&'a Mpf> for Mpf {
-    type Output = Mpf;
-    #[inline]
-    fn mul(mut self, other: &Mpf) -> Mpf {
-        unsafe {
-            __gmpf_mul(&mut self.mpf, &self.mpf, &other.mpf);
-            self
-        }
-    }
-}
-
-impl<'a, 'b> Div<&'a Mpf> for &'b Mpf {
-    type Output = Mpf;
-    fn div(self, other: &Mpf) -> Mpf {
-        unsafe {
-            if __gmpf_cmp_ui(&other.mpf, 0) == 0 {
-                panic!("divide by zero")
+macro_rules! impl_oper {
+    ($tr: ident, $meth: ident, $tr_assign: ident, $meth_assign: ident, $fun: ident) => {
+        impl<'a> $tr<&'a Mpf> for Mpf {
+            type Output = Mpf;
+            #[inline]
+            fn $meth(mut self, other: &Mpf) -> Mpf {
+                self.$meth_assign(other);
+                self
             }
-
-            let mut res = Mpf::new(cmp::max(self.get_prec(), other.get_prec()));
-            __gmpf_div(&mut res.mpf, &self.mpf, &other.mpf);
-            res
         }
-    }
-}
 
-impl<'a> Div<&'a Mpf> for Mpf {
-    type Output = Mpf;
-    #[inline]
-    fn div(mut self, other: &Mpf) -> Mpf {
-        unsafe {
-            if __gmpf_cmp_ui(&other.mpf, 0) == 0 {
-                panic!("divide by zero")
+        impl<'a, 'b> $tr<&'a Mpf> for &'b Mpf {
+            type Output = Mpf;
+            fn $meth(self, other: &Mpf) -> Mpf {
+                unsafe {
+                    div_guard!($tr, __gmpf_cmp_ui(&other.mpf, 0) == 0);
+                    let mut res = Mpf::new(cmp::max(self.get_prec(), other.get_prec()));
+                    $fun(&mut res.mpf, &self.mpf, &other.mpf);
+                    res
+                }
             }
+        }
 
-            __gmpf_div(&mut self.mpf, &self.mpf, &other.mpf);
-            self
+        impl<'a> $tr_assign<Mpf> for Mpf {
+            #[inline]
+            fn $meth_assign(&mut self, other: Mpf) {
+                self.$meth_assign(&other)
+            }
+        }
+
+        impl<'a> $tr_assign<&'a Mpf> for Mpf {
+            #[inline]
+            fn $meth_assign(&mut self, other: &Mpf) {
+                unsafe {
+                    div_guard!($tr, __gmpf_cmp_ui(&other.mpf, 0) == 0);
+                    $fun(&mut self.mpf, &self.mpf, &other.mpf)
+                }
+            }
         }
     }
 }
+
+impl_oper!(Add, add, AddAssign, add_assign, __gmpf_add);
+impl_oper!(Sub, sub, SubAssign, sub_assign, __gmpf_sub);
+impl_oper!(Mul, mul, MulAssign, mul_assign, __gmpf_mul);
+impl_oper!(Div, div, DivAssign, div_assign, __gmpf_div);
+
 
 impl<'b> Neg for &'b Mpf {
     type Output = Mpf;
