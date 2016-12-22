@@ -286,7 +286,7 @@ impl<'a, 'b> Div<&'a Mpf> for &'b Mpf {
     type Output = Mpf;
     fn div(self, other: &Mpf) -> Mpf {
         unsafe {
-            if __gmpf_cmp_ui(&self.mpf, 0) == 0 {
+            if __gmpf_cmp_ui(&other.mpf, 0) == 0 {
                 panic!("divide by zero")
             }
 
@@ -302,7 +302,7 @@ impl<'a> Div<&'a Mpf> for Mpf {
     #[inline]
     fn div(mut self, other: &Mpf) -> Mpf {
         unsafe {
-            if __gmpf_cmp_ui(&self.mpf, 0) == 0 {
+            if __gmpf_cmp_ui(&other.mpf, 0) == 0 {
                 panic!("divide by zero")
             }
 
