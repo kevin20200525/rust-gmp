@@ -8,6 +8,7 @@ use std::str::FromStr;
 use std::ops::{Div, Mul, Add, Sub, Neg, Shl, Shr, BitXor, BitAnd, BitOr, Rem};
 use std::ffi::CString;
 use std::{u32, i32};
+use num_traits::{Zero, One};
 
 use ffi::*;
 
@@ -898,3 +899,19 @@ impl hash::Hash for Mpz {
         }
     }
 }
+
+impl Zero for Mpz {
+    fn zero() -> Self {
+        Mpz::zero()
+    }
+    fn is_zero(&self) -> bool {
+        self.is_zero()
+    }
+}
+
+impl One for Mpz {
+    fn one() -> Self {
+        Mpz::one()
+    }
+}
+

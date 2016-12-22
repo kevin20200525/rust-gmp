@@ -13,3 +13,4 @@ name = "gmp"
 
 [dependencies]
 libc = "~0.2"
+num-traits = "0.1"
