@@ -5,7 +5,7 @@ use std::mem::{uninitialized,size_of};
 use std::{fmt, hash};
 use std::cmp::Ordering::{self, Greater, Less, Equal};
 use std::str::FromStr;
-use std::ops::{Div, DivAssign, Mul, MulAssign, Add, AddAssign, Sub, SubAssign, Neg, Shl, ShlAssign, Shr, ShrAssign, BitXor, BitXorAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, Rem, RemAssign};
+use std::ops::{Div, DivAssign, Mul, MulAssign, Add, AddAssign, Sub, SubAssign, Neg, Not, Shl, ShlAssign, Shr, ShrAssign, BitXor, BitXorAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, Rem, RemAssign};
 use std::ffi::CString;
 use std::{u32, i32};
 
@@ -677,6 +677,28 @@ impl Neg for Mpz {
     fn neg(mut self) -> Mpz {
         unsafe {
             __gmpz_neg(&mut self.mpz, &self.mpz);
+            self
+        }
+    }
+}
+
+impl<'b> Not for &'b Mpz {
+    type Output = Mpz;
+    fn not(self) -> Mpz {
+        unsafe {
+            let mut res = Mpz::new();
+            __gmpz_com(&mut res.mpz, &self.mpz);
+            res
+        }
+    }
+}
+
+impl Not for Mpz {
+    type Output = Mpz;
+    #[inline]
+    fn not(mut self) -> Mpz {
+        unsafe {
+            __gmpz_com(&mut self.mpz, &self.mpz);
             self
         }
     }
