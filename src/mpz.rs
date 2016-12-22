@@ -362,7 +362,7 @@ impl Mpz {
     }
 
     pub fn root(&self, n: u32) -> Mpz {
-        assert!(*self >= Mpz::zero());
+        assert!(self.mpz._mp_size >= 0);
         unsafe {
             let mut res = Mpz::new();
             let _perfect_root
@@ -376,7 +376,7 @@ impl Mpz {
     }
 
     pub fn sqrt(&self) -> Mpz {
-        assert!(*self >= Mpz::zero());
+        assert!(self.mpz._mp_size >= 0);
         unsafe {
             let mut res = Mpz::new();
             __gmpz_sqrt(&mut res.mpz, &self.mpz);
@@ -401,7 +401,7 @@ impl Mpz {
     pub fn zero() -> Mpz { Mpz::new() }
 
     pub fn is_zero(&self) -> bool {
-        unsafe { __gmpz_cmp_ui(&self.mpz, 0) == 0 }
+        self.mpz._mp_size == 0
     }
 }
 
@@ -446,17 +446,17 @@ impl PartialOrd for Mpz {
 
 // This macro inserts a guard against division by 0 for Div and Rem implementations
 macro_rules! div_guard {
-	(Div, $what: expr, $zero: expr) => {
-		if $what == $zero {
+	(Div, $is_zero: expr) => {
+		if $is_zero {
             panic!("divide by zero")
     	}
 	};
-	(Rem, $what: expr, $zero: expr) => {
-		if $what == $zero {
+	(Rem, $is_zero: expr) => {
+		if $is_zero {
             panic!("divide by zero")
     	}
 	};
-	($tr: ident, $what: expr, $zero: expr) => {}
+	($tr: ident, $is_zero: expr) => {}
 }
 
 // On Windows c_long and c_ulong are only 32-bit - in order to implement operations for
@@ -492,7 +492,7 @@ macro_rules! impl_oper {
 			#[inline]
 			fn $meth(mut self, other: Mpz) -> Mpz {
 				unsafe {
-					div_guard!($tr, other, Mpz::zero());
+					div_guard!($tr, other.is_zero());
 					$fun(&mut self.mpz, &self.mpz, &other.mpz);
 					self
 				}
@@ -504,7 +504,7 @@ macro_rules! impl_oper {
 			#[inline]
 			fn $meth(mut self, other: &Mpz) -> Mpz {
 				unsafe {
-					div_guard!($tr, *other, Mpz::zero());
+					div_guard!($tr, other.is_zero());
 					$fun(&mut self.mpz, &self.mpz, &other.mpz);
 					self
 				}
@@ -516,7 +516,7 @@ macro_rules! impl_oper {
 			#[inline]
 			fn $meth(self, mut other: Mpz) -> Mpz {
 				unsafe {
-					div_guard!($tr, other, Mpz::zero());
+					div_guard!($tr, other.is_zero());
 					$fun(&mut other.mpz, &self.mpz, &other.mpz);
 					other
 				}
@@ -527,7 +527,7 @@ macro_rules! impl_oper {
 			type Output = Mpz;
 			fn $meth(self, other: &Mpz) -> Mpz {
 				unsafe {
-					div_guard!($tr, *other, Mpz::zero());
+					div_guard!($tr, other.is_zero());
 					let mut res = Mpz::new();
 					$fun(&mut res.mpz, &self.mpz, &other.mpz);
 					res
@@ -596,7 +596,7 @@ macro_rules! impl_oper {
 			#[inline]
 			fn $meth(mut self, other: $num) -> Mpz {
 		        unsafe {
-					div_guard!($tr, other, 0);
+					div_guard!($tr, other == 0);
 		        	bit_guard!($num, other, {
 		    			$fun(&mut self.mpz, &self.mpz, other as $cnum);
 		    			self
@@ -609,7 +609,7 @@ macro_rules! impl_oper {
 			type Output = Mpz;
 			fn $meth(self, other: $num) -> Mpz {
 		        unsafe {
-					div_guard!($tr, other, 0);
+					div_guard!($tr, other == 0);
 		        	bit_guard!($num, other, {
 			            let mut res = Mpz::new();
 			            $fun(&mut res.mpz, &self.mpz, other as $cnum);
@@ -705,7 +705,7 @@ impl<'b> Into<Vec<u8>> for &'b Mpz {
 impl<'b> Into<Option<i64>> for &'b Mpz {
     fn into(self) -> Option<i64> {
         unsafe {
-            let negative = __gmpz_cmp_ui(&self.mpz, 0) < 0;
+            let negative = self.mpz._mp_size < 0;
             let mut to_export = Mpz::new();
 
             if negative {
@@ -732,7 +732,7 @@ impl<'b> Into<Option<i64>> for &'b Mpz {
 impl<'b> Into<Option<u64>> for &'b Mpz {
     fn into(self) -> Option<u64> {
         unsafe {
-            if __gmpz_sizeinbase(&self.mpz, 2) <= 64 && __gmpz_cmp_ui(&self.mpz, 0) >= 0 {
+            if __gmpz_sizeinbase(&self.mpz, 2) <= 64 && self.mpz._mp_size >= 0 {
                 let mut result : u64 = 0;
                 __gmpz_export(&mut result as *mut u64 as *mut c_void, 0 as *mut size_t, -1, size_of::<u64>() as size_t, 0, 0, &self.mpz);
                 Some(result)
