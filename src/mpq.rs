@@ -399,6 +399,13 @@ impl FromStr for Mpq {
 impl fmt::Debug for Mpq {
     /// Renders as `numer/denom`. If denom=1, renders as numer.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(&self, f)
+    }
+}
+
+impl fmt::Display for Mpq {
+    /// Renders as `numer/denom`. If denom=1, renders as numer.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let numer = self.get_num();
         let denom = self.get_den();
 
