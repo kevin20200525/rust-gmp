@@ -167,7 +167,7 @@ mod mpz {
 
     #[test]
     fn test_invalid_str() {
-        let x: Result<Mpz,()> = FromStr::from_str("foobar");
+        let x: Result<Mpz, _> = FromStr::from_str("foobar");
         assert!(x.is_err());
     }
 
