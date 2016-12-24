@@ -1,7 +1,10 @@
 use super::mpz::{mpz_struct, Mpz, mpz_ptr, mpz_srcptr};
 use super::mpf::{Mpf, mpf_srcptr};
 use ffi::*;
-use libc::{c_double, c_int, c_ulong};
+use libc::{c_char, c_double, c_int, c_ulong};
+use std::ffi::CString;
+use std::str::FromStr;
+use std::error::Error;
 use std::convert::{From, Into};
 use std::mem::uninitialized;
 use std::fmt;
@@ -42,6 +45,7 @@ extern "C" {
     fn __gmpq_set_den(rational: mpq_ptr, denominator: mpz_srcptr);
     fn __gmpq_canonicalize(rational: mpq_ptr);
     fn __gmpq_get_d(rational: mpq_srcptr) -> c_double;
+    fn __gmpq_set_str(rop: mpq_ptr, str: *const c_char, base: c_int) -> c_int;
 }
 
 pub struct Mpq {
@@ -83,6 +87,20 @@ impl Mpq {
     pub fn canonicalize(&mut self) {
         unsafe {
             __gmpq_canonicalize(&mut self.mpq);
+        }
+    }
+
+    pub fn from_str_radix(s: &str, base: u8) -> Result<Mpq, ParseMpqError> {
+        let s = CString::new(s).map_err(|_| ParseMpqError { _priv: () })?;
+        let mut res = Mpq::new();
+        unsafe {
+            assert!(base == 0 || (base >= 2 && base <= 62));
+            let r = __gmpq_set_str(&mut res.mpq, s.as_ptr(), base as c_int);
+            if r == 0 {
+                Ok(res)
+            } else {
+                Err(ParseMpqError { _priv: () })
+            }
         }
     }
 
@@ -163,6 +181,27 @@ impl Mpq {
     pub fn zero() -> Mpq { Mpq::new() }
     pub fn is_zero(&self) -> bool {
         unsafe { __gmpq_cmp_ui(&self.mpq, 0, 1) == 0 }
+    }
+}
+
+#[derive(Debug)]
+pub struct ParseMpqError {
+    _priv: ()
+}
+
+impl fmt::Display for ParseMpqError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.description().fmt(f)
+    }
+}
+
+impl Error for ParseMpqError {
+    fn description(&self) -> &'static str {
+        "invalid rational number"
+    }
+
+    fn cause(&self) -> Option<&'static Error> {
+        None
     }
 }
 
@@ -346,6 +385,13 @@ impl From<u64> for Mpq {
 impl From<u32> for Mpq {
     fn from(other: u32) -> Mpq {
         From::<Mpz>::from(From::<u32>::from(other))
+    }
+}
+
+impl FromStr for Mpq {
+    type Err = ParseMpqError;
+    fn from_str(s: &str) -> Result<Mpq, ParseMpqError> {
+        Mpq::from_str_radix(s, 10)
     }
 }
 
