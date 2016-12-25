@@ -297,18 +297,6 @@ impl Neg for Mpq {
     }
 }
 
-impl Into<Option<i64>> for Mpq {
-    fn into(self) -> Option<i64> {
-        panic!("not implemented")
-    }
-}
-
-impl Into<Option<u64>> for Mpq {
-    fn into(self) -> Option<u64> {
-        panic!("not implemented")
-    }
-}
-
 impl Into<f64> for Mpq {
     fn into(self) -> f64 {
         unsafe {
