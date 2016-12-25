@@ -2,7 +2,7 @@ use super::mpz::{mpz_struct, Mpz, mpz_ptr, mpz_srcptr};
 use super::mpf::{Mpf, mpf_srcptr};
 use ffi::*;
 use libc::{c_double, c_int, c_ulong};
-use std::convert::{From, Into};
+use std::convert::From;
 use std::mem::uninitialized;
 use std::fmt;
 use std::cmp::Ordering::{self, Greater, Less, Equal};
@@ -297,16 +297,28 @@ impl Neg for Mpq {
     }
 }
 
-impl Into<f64> for Mpq {
-    fn into(self) -> f64 {
+impl From<Mpq> for f64 {
+    fn from(other: Mpq) -> f64 {
+        f64::from(&other)
+    }
+}
+
+impl<'a> From<&'a Mpq> for f64 {
+    fn from(other: &Mpq) -> f64 {
         unsafe {
-            __gmpq_get_d(&self.mpq) as f64
+            __gmpq_get_d(&other.mpq) as f64
         }
     }
 }
 
 impl From<Mpz> for Mpq {
     fn from(other: Mpz) -> Mpq {
+        Mpq::from(&other)
+    }
+}
+
+impl<'a> From<&'a Mpz> for Mpq {
+    fn from(other: &Mpz) -> Mpq {
         let mut res = Mpq::new();
         res.set_z(&other);
         res
