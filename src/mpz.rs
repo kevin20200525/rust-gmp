@@ -5,6 +5,7 @@ use std::mem::{uninitialized,size_of};
 use std::{fmt, hash};
 use std::cmp::Ordering::{self, Greater, Less, Equal};
 use std::str::FromStr;
+use std::error::Error;
 use std::ops::{Div, DivAssign, Mul, MulAssign, Add, AddAssign, Sub, SubAssign, Neg, Not, Shl, ShlAssign, Shr, ShrAssign, BitXor, BitXorAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, Rem, RemAssign};
 use std::ffi::CString;
 use std::{u32, i32};
@@ -173,17 +174,17 @@ impl Mpz {
         }
     }
 
-    pub fn from_str_radix(s: &str, base: u8) -> Result<Mpz, ()> {
+    pub fn from_str_radix(s: &str, base: u8) -> Result<Mpz, ParseMpzError> {
+        let s = CString::new(s.to_string()).map_err(|_| ParseMpzError { _priv: () })?;
         unsafe {
             assert!(base == 0 || (base >= 2 && base <= 62));
             let mut mpz = uninitialized();
-            let s = CString::new(s.to_string()).unwrap();
             let r = __gmpz_init_set_str(&mut mpz, s.as_ptr(), base as c_int);
             if r == 0 {
                 Ok(Mpz { mpz: mpz })
             } else {
                 __gmpz_clear(&mut mpz);
-                Err(())
+                Err(ParseMpzError { _priv: () })
             }
         }
     }
@@ -403,6 +404,27 @@ impl Mpz {
 
     pub fn is_zero(&self) -> bool {
         self.mpz._mp_size == 0
+    }
+}
+
+#[derive(Debug)]
+pub struct ParseMpzError {
+    _priv: ()
+}
+
+impl fmt::Display for ParseMpzError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.description().fmt(f)
+    }
+}
+
+impl Error for ParseMpzError {
+    fn description(&self) -> &'static str {
+        "invalid integer"
+    }
+
+    fn cause(&self) -> Option<&'static Error> {
+        None
     }
 }
 
@@ -901,7 +923,7 @@ impl ShrAssign<usize> for Mpz {
 }
 
 impl FromStr for Mpz {
-    type Err = ();
+    type Err = ParseMpzError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Mpz::from_str_radix(s, 10)
     }
