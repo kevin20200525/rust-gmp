@@ -1,6 +1,6 @@
 use libc::{c_char, c_int, c_long, c_ulong, c_void, c_double, size_t};
 use super::rand::gmp_randstate_t;
-use std::convert::{From, Into};
+use std::convert::From;
 use std::mem::{uninitialized,size_of};
 use std::{fmt, hash};
 use std::cmp::Ordering::{self, Greater, Less, Equal};
@@ -706,28 +706,28 @@ impl Not for Mpz {
 }
 
 // Similarly to mpz_export, this does not preserve the sign of the input.
-impl<'b> Into<Vec<u8>> for &'b Mpz {
-    fn into(self) -> Vec<u8> {
+impl<'b> From<&'b Mpz> for Vec<u8> {
+    fn from(other: &Mpz) -> Vec<u8> {
         unsafe {
             let bit_size = size_of::<u8>() * 8;
-            let size = (__gmpz_sizeinbase(&self.mpz, 2) + bit_size - 1) / bit_size;
+            let size = (__gmpz_sizeinbase(&other.mpz, 2) + bit_size - 1) / bit_size;
             let mut result: Vec<u8> = vec!(0; size);
-            __gmpz_export(result.as_mut_ptr() as *mut c_void, 0 as *mut size_t, 1, size_of::<u8>() as size_t, 0, 0, &self.mpz);
+            __gmpz_export(result.as_mut_ptr() as *mut c_void, 0 as *mut size_t, 1, size_of::<u8>() as size_t, 0, 0, &other.mpz);
             result
         }
     }
 }
 
-impl<'b> Into<Option<i64>> for &'b Mpz {
-    fn into(self) -> Option<i64> {
+impl<'b> From<&'b Mpz> for Option<i64> {
+    fn from(other: &Mpz) -> Option<i64> {
         unsafe {
-            let negative = self.mpz._mp_size < 0;
+            let negative = other.mpz._mp_size < 0;
             let mut to_export = Mpz::new();
 
             if negative {
-                __gmpz_com(&mut to_export.mpz, &self.mpz);
+                __gmpz_com(&mut to_export.mpz, &other.mpz);
             } else {
-                __gmpz_set(&mut to_export.mpz, &self.mpz);
+                __gmpz_set(&mut to_export.mpz, &other.mpz);
             }
 
             if __gmpz_sizeinbase(&to_export.mpz, 2) <= 63 {
@@ -745,12 +745,12 @@ impl<'b> Into<Option<i64>> for &'b Mpz {
     }
 }
 
-impl<'b> Into<Option<u64>> for &'b Mpz {
-    fn into(self) -> Option<u64> {
+impl<'b> From<&'b Mpz> for Option<u64> {
+    fn from(other: &Mpz) -> Option<u64> {
         unsafe {
-            if __gmpz_sizeinbase(&self.mpz, 2) <= 64 && self.mpz._mp_size >= 0 {
+            if __gmpz_sizeinbase(&other.mpz, 2) <= 64 && other.mpz._mp_size >= 0 {
                 let mut result : u64 = 0;
-                __gmpz_export(&mut result as *mut u64 as *mut c_void, 0 as *mut size_t, -1, size_of::<u64>() as size_t, 0, 0, &self.mpz);
+                __gmpz_export(&mut result as *mut u64 as *mut c_void, 0 as *mut size_t, -1, size_of::<u64>() as size_t, 0, 0, &other.mpz);
                 Some(result)
             } else {
                 None
@@ -759,10 +759,10 @@ impl<'b> Into<Option<u64>> for &'b Mpz {
     }
 }
 
-impl<'a> Into<f64> for &'a Mpz {
-    fn into(self) -> f64 {
+impl<'a> From<&'a Mpz> for f64 {
+    fn from(other: &Mpz) -> f64 {
         unsafe {
-            __gmpz_get_d(&self.mpz) as f64
+            __gmpz_get_d(&other.mpz) as f64
         }
     }
 }
