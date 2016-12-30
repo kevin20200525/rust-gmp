@@ -932,16 +932,20 @@ impl hash::Hash for Mpz {
 }
 
 impl Zero for Mpz {
-    fn zero() -> Self {
+    #[inline]
+    fn zero() -> Mpz {
         Mpz::zero()
     }
+
+    #[inline]
     fn is_zero(&self) -> bool {
         self.is_zero()
     }
 }
 
 impl One for Mpz {
-    fn one() -> Self {
+    #[inline]
+    fn one() -> Mpz {
         Mpz::one()
     }
 }

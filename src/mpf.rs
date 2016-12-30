@@ -8,6 +8,7 @@ use std::string::String;
 use super::mpz::mp_bitcnt_t;
 use super::mpz::{Mpz, mpz_srcptr};
 use super::mpq::{Mpq, mpq_srcptr};
+use num_traits::{Zero, One};
 
 type mp_exp_t = c_long;
 
@@ -308,5 +309,28 @@ impl Neg for Mpf {
             __gmpf_neg(&mut self.mpf, &self.mpf);
             self
         }
+    }
+}
+
+impl Zero for Mpf {
+    #[inline]
+    fn zero() -> Mpf {
+        Mpf::zero()
+    }
+
+    #[inline]
+    fn is_zero(&self) -> bool {
+        unsafe {
+            __gmpf_cmp_ui(&self.mpf, 0) == 0
+        }
+    }
+}
+
+impl One for Mpf {
+    #[inline]
+    fn one() -> Mpf {
+        let mut res = Mpf::new(32);
+        res.set_from_si(1);
+        res
     }
 }

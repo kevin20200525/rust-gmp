@@ -7,6 +7,7 @@ use std::mem::uninitialized;
 use std::fmt;
 use std::cmp::Ordering::{self, Greater, Less, Equal};
 use std::ops::{Div, DivAssign, Mul, MulAssign, Add, AddAssign, Sub, SubAssign, Neg};
+use num_traits::{Zero, One};
 
 #[repr(C)]
 pub struct mpq_struct {
@@ -361,5 +362,24 @@ impl fmt::Debug for Mpq {
         } else {
             write!(f, "{}/{}", numer, denom)
         }
+    }
+}
+
+impl Zero for Mpq {
+    #[inline]
+    fn zero() -> Mpq {
+        Mpq::zero()
+    }
+
+    #[inline]
+    fn is_zero(&self) -> bool {
+        self.is_zero()
+    }
+}
+
+impl One for Mpq {
+    #[inline]
+    fn one() -> Mpq {
+        Mpq::one()
     }
 }
