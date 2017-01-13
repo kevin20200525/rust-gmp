@@ -60,6 +60,7 @@ pub struct Mpf {
 }
 
 unsafe impl Send for Mpf { }
+unsafe impl Sync for Mpf { }
 
 impl Drop for Mpf {
     fn drop(&mut self) { unsafe { __gmpf_clear(&mut self.mpf) } }

@@ -54,6 +54,7 @@ pub struct Mpq {
 }
 
 unsafe impl Send for Mpq { }
+unsafe impl Sync for Mpq { }
 
 impl Drop for Mpq {
     fn drop(&mut self) { unsafe { __gmpq_clear(&mut self.mpq) } }
