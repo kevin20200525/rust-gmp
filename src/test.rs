@@ -319,6 +319,15 @@ mod mpz {
     }
 
     #[test]
+    fn test_probab_prime_p() {
+        let prime: Mpz = From::<i64>::from(2);
+        assert!(prime.probab_prime_p(15) == 2);
+        
+        let not_prime: Mpz = From::<i64>::from(4);
+        assert!(not_prime.probab_prime_p(15) == 0);
+    }
+
+    #[test]
     fn test_nextprime() {
         let a: Mpz = From::<i64>::from(123456);
         let b: Mpz = From::<i64>::from(123457);

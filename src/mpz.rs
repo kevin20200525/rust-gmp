@@ -78,6 +78,7 @@ extern "C" {
     fn __gmpz_clrbit(rop: mpz_ptr, bit_index: mp_bitcnt_t);
     fn __gmpz_combit(rop: mpz_ptr, bit_index: mp_bitcnt_t);
     fn __gmpz_tstbit(rop: mpz_srcptr, bit_index: mp_bitcnt_t) -> c_int;
+    fn __gmpz_probab_prime_p(n: mpz_srcptr, reps: c_int) -> c_int;
     fn __gmpz_nextprime(rop: mpz_ptr, op: mpz_srcptr);
     fn __gmpz_gcd(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
     fn __gmpz_gcdext(g: mpz_ptr, s: mpz_ptr, t: mpz_ptr, a: mpz_srcptr, b: mpz_srcptr);
@@ -241,6 +242,15 @@ impl Mpz {
             let mut res = Mpz::new();
             __gmpz_fdiv_r(&mut res.mpz, &self.mpz, &other.mpz);
             res
+        }
+    }
+
+    /// Determine whether n is prime. Return 2 if n is definitely prime, return 1 if n is probably prime (without being certain), or return 0 if n is definitely non-prime.
+    ///
+    /// This function performs some trial divisions, then reps Miller-Rabin probabilistic primality tests. A higher reps value will reduce the chances of a non-prime being identified as “probably prime”. A composite number will be identified as a prime with a probability of less than 4^(-reps). Reasonable values of reps are between 15 and 50. 
+    pub fn probab_prime_p(&self, reps: i32) -> u8 {
+        unsafe {
+            __gmpz_probab_prime_p(&self.mpz, reps as c_int) as u8
         }
     }
 
