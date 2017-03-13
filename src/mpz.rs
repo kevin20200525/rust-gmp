@@ -73,6 +73,7 @@ extern "C" {
     fn __gmpz_pow_ui(rop: mpz_ptr, base: mpz_srcptr, exp: c_ulong);
     fn __gmpz_ui_pow_ui(rop: mpz_ptr, base: c_ulong, exp: c_ulong);
     fn __gmpz_powm(rop: mpz_ptr, base: mpz_srcptr, exp: mpz_srcptr, modulo: mpz_srcptr);
+    fn __gmpz_powm_sec(rop: mpz_ptr, base: mpz_srcptr, exp: mpz_srcptr, modulo: mpz_srcptr);
     fn __gmpz_hamdist(op1: mpz_srcptr, op2: mpz_srcptr) -> mp_bitcnt_t;
     fn __gmpz_setbit(rop: mpz_ptr, bit_index: mp_bitcnt_t);
     fn __gmpz_clrbit(rop: mpz_ptr, bit_index: mp_bitcnt_t);
@@ -331,6 +332,14 @@ impl Mpz {
         unsafe {
             let mut res = Mpz::new();
             __gmpz_powm(&mut res.mpz, &self.mpz, &exp.mpz, &modulus.mpz);
+            res
+        }
+    }
+
+    pub fn powm_sec(&self, exp: &Mpz, modulus: &Mpz) -> Mpz {
+        unsafe {
+            let mut res = Mpz::new();
+            __gmpz_powm_sec(&mut res.mpz, &self.mpz, &exp.mpz, &modulus.mpz);
             res
         }
     }

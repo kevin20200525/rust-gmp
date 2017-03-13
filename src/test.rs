@@ -299,6 +299,15 @@ mod mpz {
     }
 
     #[test]
+    fn test_powm_sec() {
+        let a: Mpz = From::<i64>::from(13);
+        let b: Mpz = From::<i64>::from(7);
+        let p: Mpz = From::<i64>::from(19);
+        let c: Mpz = From::<i64>::from(10);
+        assert!(a.powm_sec(&b, &p) == c);
+    }
+
+    #[test]
     fn test_popcount() {
         Mpz::from_str_radix("1010010011", 2).unwrap().popcount() == 5;
     }
