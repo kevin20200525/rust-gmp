@@ -79,6 +79,7 @@ extern "C" {
     fn __gmpz_clrbit(rop: mpz_ptr, bit_index: mp_bitcnt_t);
     fn __gmpz_combit(rop: mpz_ptr, bit_index: mp_bitcnt_t);
     fn __gmpz_tstbit(rop: mpz_srcptr, bit_index: mp_bitcnt_t) -> c_int;
+    fn __gmpz_probab_prime_p(n: mpz_srcptr, reps: c_int) -> c_int;
     fn __gmpz_nextprime(rop: mpz_ptr, op: mpz_srcptr);
     fn __gmpz_gcd(rop: mpz_ptr, op1: mpz_srcptr, op2: mpz_srcptr);
     fn __gmpz_gcdext(g: mpz_ptr, s: mpz_ptr, t: mpz_ptr, a: mpz_srcptr, b: mpz_srcptr);
@@ -104,6 +105,14 @@ unsafe impl Sync for Mpz { }
 
 impl Drop for Mpz {
     fn drop(&mut self) { unsafe { __gmpz_clear(&mut self.mpz) } }
+}
+
+/// The result of running probab_prime
+#[derive(PartialEq)]
+pub enum ProbabPrimeResult {
+    NotPrime,
+    ProbablyPrime,
+    Prime
 }
 
 impl Mpz {
@@ -243,6 +252,20 @@ impl Mpz {
             let mut res = Mpz::new();
             __gmpz_fdiv_r(&mut res.mpz, &self.mpz, &other.mpz);
             res
+        }
+    }
+
+    /// Determine whether n is prime.
+    ///
+    /// This function performs some trial divisions, then reps Miller-Rabin probabilistic primality tests. A higher reps value will reduce the chances of a non-prime being identified as “probably prime”. A composite number will be identified as a prime with a probability of less than 4^(-reps). Reasonable values of reps are between 15 and 50. 
+    pub fn probab_prime(&self, reps: i32) -> ProbabPrimeResult {
+        match unsafe {
+            __gmpz_probab_prime_p(&self.mpz, reps as c_int) as u8
+        } {
+            2 => ProbabPrimeResult::Prime,
+            1 => ProbabPrimeResult::ProbablyPrime,
+            0 => ProbabPrimeResult::NotPrime,
+            x => panic!("Undocumented return value {} from __gmpz_probab_prime_p", x),
         }
     }
 
