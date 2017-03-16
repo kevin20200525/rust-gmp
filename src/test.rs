@@ -15,6 +15,7 @@ fn test_limb_size() {
 
 mod mpz {
     use super::super::mpz::Mpz;
+    use super::super::mpz::ProbabPrimeResult;
     use std::str::FromStr;
     use std::convert::{From, Into};
     use std::{i64, u64};
@@ -319,12 +320,12 @@ mod mpz {
     }
 
     #[test]
-    fn test_probab_prime_p() {
+    fn test_probab_prime() {
         let prime: Mpz = From::<i64>::from(2);
-        assert!(prime.probab_prime_p(15) == 2);
+        assert!(prime.probab_prime(15) == ProbabPrimeResult::Prime);
         
         let not_prime: Mpz = From::<i64>::from(4);
-        assert!(not_prime.probab_prime_p(15) == 0);
+        assert!(not_prime.probab_prime(15) == ProbabPrimeResult::NotPrime);
     }
 
     #[test]

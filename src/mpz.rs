@@ -105,6 +105,14 @@ impl Drop for Mpz {
     fn drop(&mut self) { unsafe { __gmpz_clear(&mut self.mpz) } }
 }
 
+/// The result of running probab_prime
+#[derive(PartialEq)]
+pub enum ProbabPrimeResult {
+    NotPrime,
+    ProbablyPrime,
+    Prime
+}
+
 impl Mpz {
     pub unsafe fn inner(&self) -> mpz_srcptr {
         &self.mpz
@@ -245,12 +253,17 @@ impl Mpz {
         }
     }
 
-    /// Determine whether n is prime. Return 2 if n is definitely prime, return 1 if n is probably prime (without being certain), or return 0 if n is definitely non-prime.
+    /// Determine whether n is prime.
     ///
     /// This function performs some trial divisions, then reps Miller-Rabin probabilistic primality tests. A higher reps value will reduce the chances of a non-prime being identified as “probably prime”. A composite number will be identified as a prime with a probability of less than 4^(-reps). Reasonable values of reps are between 15 and 50. 
-    pub fn probab_prime_p(&self, reps: i32) -> u8 {
-        unsafe {
+    pub fn probab_prime(&self, reps: i32) -> ProbabPrimeResult {
+        match unsafe {
             __gmpz_probab_prime_p(&self.mpz, reps as c_int) as u8
+        } {
+            2 => ProbabPrimeResult::Prime,
+            1 => ProbabPrimeResult::ProbablyPrime,
+            0 => ProbabPrimeResult::NotPrime,
+            x => panic!("Undocumented return value {} from __gmpz_probab_prime_p", x),
         }
     }
 
