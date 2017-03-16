@@ -29,6 +29,9 @@ pub struct RandState {
     state: gmp_randstate_struct,
 }
 
+unsafe impl Send for RandState { }
+unsafe impl Sync for RandState { }
+
 impl Drop for RandState {
     fn drop(&mut self) {
         unsafe { __gmp_randclear(&mut self.state) }

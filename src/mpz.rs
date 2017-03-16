@@ -100,6 +100,7 @@ pub struct Mpz {
 }
 
 unsafe impl Send for Mpz { }
+unsafe impl Sync for Mpz { }
 
 impl Drop for Mpz {
     fn drop(&mut self) { unsafe { __gmpz_clear(&mut self.mpz) } }
