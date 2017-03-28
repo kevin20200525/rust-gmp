@@ -1,5 +1,6 @@
 use libc::{c_char, c_int, c_long, c_ulong, c_void, c_double, size_t};
 use super::rand::gmp_randstate_t;
+use super::sign::Sign;
 use std::convert::From;
 use std::mem::{uninitialized,size_of};
 use std::{fmt, hash};
@@ -422,6 +423,17 @@ impl Mpz {
     pub fn millerrabin(&self, reps: i32) -> i32 {
         unsafe {
             __gmpz_millerrabin(&self.mpz, reps as c_int)
+        }
+    }
+
+    pub fn sign(&self) -> Sign {
+        let size = self.mpz._mp_size;
+        if size == 0 {
+            Sign::Zero
+        } else if size > 0 {
+            Sign::Positive
+        } else {
+            Sign::Negative
         }
     }
 
