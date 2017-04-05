@@ -8,6 +8,7 @@ use std::string::String;
 use super::mpz::mp_bitcnt_t;
 use super::mpz::{Mpz, mpz_srcptr};
 use super::mpq::{Mpq, mpq_srcptr};
+use super::sign::Sign;
 use num_traits::{Zero, One};
 
 type mp_exp_t = c_long;
@@ -179,6 +180,17 @@ impl Mpf {
             }
         }
         retval
+    }
+
+    pub fn sign(&self) -> Sign {
+        let size = self.mpf._mp_size;
+        if size == 0 {
+            Sign::Zero
+        } else if size > 0 {
+            Sign::Positive
+        } else {
+            Sign::Negative
+        }
     }
 }
 

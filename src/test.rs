@@ -16,6 +16,7 @@ fn test_limb_size() {
 mod mpz {
     use super::super::mpz::Mpz;
     use super::super::mpz::ProbabPrimeResult;
+    use super::super::sign::Sign;
     use std::str::FromStr;
     use std::convert::{From, Into};
     use std::{i64, u64};
@@ -556,6 +557,17 @@ mod mpz {
         assert_eq!(Into::<Option<i64>>::into(&max_i64), Some(i64::MAX));
         assert_eq!(Into::<Option<i64>>::into(&(&max_i64 + &one)), None);
     }
+
+    #[test]
+    fn test_sign() {
+        let zero: Mpz = From::<i64>::from(0);
+        let five: Mpz = From::<i64>::from(5);
+        let minus_five: Mpz = From::<i64>::from(-5);
+
+        assert_eq!(zero.sign(), Sign::Zero);
+        assert_eq!(five.sign(), Sign::Positive);
+        assert_eq!(minus_five.sign(), Sign::Negative);
+    }
 }
 
 mod rand {
@@ -581,6 +593,7 @@ mod mpq {
     use std::u64;
     use super::super::mpq::Mpq;
     use super::super::mpz::Mpz;
+    use super::super::sign::Sign;
 
     #[test]
     fn test_one() {
@@ -636,15 +649,40 @@ mod mpq {
         let minus_half = -half;
         assert_eq!(minus_half.ceil(), Mpz::from(0));
     }
+
+    #[test]
+    fn test_sign() {
+        let zero: Mpq = From::<i64>::from(0);
+        let five: Mpq = From::<i64>::from(5);
+        let minus_five: Mpq = From::<i64>::from(-5);
+
+        assert_eq!(zero.sign(), Sign::Zero);
+        assert_eq!(five.sign(), Sign::Positive);
+        assert_eq!(minus_five.sign(), Sign::Negative);
+    }
 }
 
 mod mpf {
     use super::super::mpf::Mpf;
+    use super::super::sign::Sign;
 
     #[test]
     #[should_panic]
     fn test_div_zero() {
         let x = Mpf::new(0);
         &x / &x;
+    }
+
+    #[test]
+    fn test_sign() {
+        let zero = Mpf::zero();
+        let mut five = Mpf::zero();
+        Mpf::set_from_si(&mut five, 5);
+        let mut minus_five = Mpf::zero();
+        Mpf::set_from_si(&mut minus_five, -5);
+
+        assert_eq!(zero.sign(), Sign::Zero);
+        assert_eq!(five.sign(), Sign::Positive);
+        assert_eq!(minus_five.sign(), Sign::Negative);
     }
 }
