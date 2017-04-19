@@ -89,12 +89,6 @@ impl Mpq {
         }
     }
 
-    pub fn canonicalize(&mut self) {
-        unsafe {
-            __gmpq_canonicalize(&mut self.mpq);
-        }
-    }
-
     pub fn from_str_radix(s: &str, base: u8) -> Result<Mpq, ParseMpqError> {
         let s = CString::new(s).map_err(|_| ParseMpqError { _priv: () })?;
         let mut res = Mpq::new();
