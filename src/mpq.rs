@@ -83,6 +83,8 @@ impl Mpq {
             let mut res = Mpq::new();
             __gmpq_set_num(&mut res.mpq, num.inner());
             __gmpq_set_den(&mut res.mpq, den.inner());
+            // Not canonicalizing is unsafe
+            __gmpq_canonicalize(&mut res.mpq);
             res
         }
     }
@@ -99,7 +101,10 @@ impl Mpq {
         unsafe {
             assert!(base == 0 || (base >= 2 && base <= 62));
             let r = __gmpq_set_str(&mut res.mpq, s.as_ptr(), base as c_int);
+
             if r == 0 {
+                // Not canonicalizing is unsafe
+                __gmpq_canonicalize(&mut res.mpq);
                 Ok(res)
             } else {
                 Err(ParseMpqError { _priv: () })

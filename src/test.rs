@@ -660,6 +660,32 @@ mod mpq {
         assert_eq!(five.sign(), Sign::Positive);
         assert_eq!(minus_five.sign(), Sign::Negative);
     }
+
+    #[test]
+    fn test_ratio() {
+        let zero: Mpz = From::<i64>::from(0);
+        let one: Mpz = From::<i64>::from(1);
+        let minus_one = -&one;
+        let two = &one + &one;
+        let four = &two + &two;
+
+        assert_eq!(Mpq::ratio(&one, &minus_one), Mpq::ratio(&minus_one, &one));
+        assert_eq!(Mpq::ratio(&zero, &one), Mpq::ratio(&zero, &minus_one));
+        assert_eq!(Mpq::ratio(&zero, &one), Mpq::ratio(&zero, &two));
+        assert_eq!(Mpq::ratio(&two, &four), Mpq::ratio(&one, &two));
+    }
+
+    #[test]
+    fn test_from_str_radix() {
+        let zero: Mpz = From::<i64>::from(0);
+        let one: Mpz = From::<i64>::from(1);
+        let minus_one = -&one;
+        let two = &one + &one;
+
+        assert_eq!(Mpq::from_str_radix("1/-1", 10).unwrap(), Mpq::ratio(&minus_one, &one));
+        assert_eq!(Mpq::from_str_radix("0/2", 10).unwrap(), Mpq::ratio(&zero, &one));
+        assert_eq!(Mpq::from_str_radix("2/4", 10).unwrap(), Mpq::ratio(&one, &two));
+    }
 }
 
 mod mpf {
