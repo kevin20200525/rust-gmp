@@ -10,7 +10,8 @@ extern "C" {
 #[test]
 fn test_limb_size() {
     // We are assuming that the limb size is the same as the pointer size.
-    assert_eq!(std::mem::size_of::<mp_limb_t>() * 8, __gmp_bits_per_limb as usize);
+    assert_eq!(std::mem::size_of::<mp_limb_t>() * 8,
+               unsafe { __gmp_bits_per_limb as usize });
 }
 
 mod mpz {
@@ -21,7 +22,8 @@ mod mpz {
     use std::convert::{From, Into};
     use std::{i64, u64};
 
-    use std::hash::{Hash, Hasher, SipHasher};
+    use std::hash::{Hash, Hasher};
+    use std::collections::hash_map::DefaultHasher;
 
     #[test]
     fn test_set() {
@@ -472,7 +474,7 @@ mod mpz {
         let two = &one + &one;
 
         let hash = |x : &Mpz| {
-            let mut hasher = SipHasher::new();
+            let mut hasher = DefaultHasher::new();
             x.hash(&mut hasher);
             hasher.finish()
         };
@@ -490,7 +492,7 @@ mod mpz {
         let one: Mpz = From::<i64>::from(1);
 
         let hash = |x : &Mpz| {
-            let mut hasher = SipHasher::new();
+            let mut hasher = DefaultHasher::new();
             x.hash(&mut hasher);
             hasher.finish()
         };
