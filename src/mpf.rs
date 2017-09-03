@@ -1,4 +1,5 @@
-use libc::{c_double, c_int, c_long, c_ulong, c_void,c_char};
+use libc::{c_double, c_int, c_long, c_ulong, c_void,c_char, free};
+use std;
 use std::mem::uninitialized;
 use std::cmp;
 use std::cmp::Ordering::{self, Greater, Less, Equal};
@@ -120,12 +121,15 @@ impl Mpf {
     }
 
     pub fn get_str(&mut self, n_digits: i32, base: i32, exp: &mut c_long) -> String{
-        let c_str = CString::new("").unwrap();
-        let out;
+	let out;
         unsafe{
-            out = CString::from_raw(__gmpf_get_str(c_str.into_raw(), exp, base, n_digits, &mut self.mpf));
+            out = CString::from_raw(__gmpf_get_str(std::ptr::null(), exp, base, n_digits, &mut self.mpf));
         }
-        out.to_str().unwrap().to_string()
+        let r = out.to_str().unwrap().to_string();
+	// Free the pointer returned to us, as r already took a copy of the data inside of it
+	// Stops memory leaking
+	unsafe { free(out.into_raw() as _) };
+	r
     }
 
     pub fn abs(&self) -> Mpf {
