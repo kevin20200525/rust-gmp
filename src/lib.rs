@@ -6,6 +6,15 @@
 extern crate libc;
 extern crate num_traits;
 
+#[cfg(feature="serde_support")]
+extern crate serde;
+
+#[cfg(feature="serde_support")]
+extern crate serde_derive;
+
+#[cfg(feature="serde_support")]
+extern crate serde_json;
+
 mod ffi;
 pub mod mpz;
 pub mod mpq;

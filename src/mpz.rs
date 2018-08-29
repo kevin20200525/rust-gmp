@@ -12,6 +12,15 @@ use std::ffi::CString;
 use std::{u32, i32};
 use num_traits::{Zero, One};
 
+#[cfg(feature="serde_support")]
+use serde::ser::{Serialize, Serializer};
+#[cfg(feature="serde_support")]
+use serde::de::{Visitor};
+#[cfg(feature="serde_support")]
+use serde::de;
+#[cfg(feature="serde_support")]
+use serde::{Deserialize, Deserializer};
+
 use ffi::*;
 
 #[repr(C)]
@@ -99,6 +108,45 @@ extern "C" {
 
 pub struct Mpz {
     mpz: mpz_struct,
+}
+
+#[cfg(feature="serde_support")]
+const HEX_RADIX : u8 = 16;
+
+#[cfg(feature="serde_support")]
+impl Serialize for Mpz {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+    {
+        serializer.serialize_str(&self.to_str_radix(HEX_RADIX))
+    }
+}
+
+#[cfg(feature="serde_support")]
+struct MpzVisitor;
+
+#[cfg(feature="serde_support")]
+impl<'de> Deserialize<'de> for Mpz {
+    fn deserialize<D>(deserializer: D) -> Result<Mpz, D::Error>
+        where
+            D: Deserializer<'de>,
+    {
+        deserializer.deserialize_str(MpzVisitor)
+    }
+}
+
+#[cfg(feature="serde_support")]
+impl<'de> Visitor<'de> for MpzVisitor {
+    type Value = Mpz;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("BigInt")
+    }
+
+    fn visit_str<E: de::Error>(self, s: &str) -> Result<Mpz, E> {
+       Ok(Mpz::from_str_radix(s, HEX_RADIX).expect("Failed in serde"))
+    }
 }
 
 unsafe impl Send for Mpz { }
