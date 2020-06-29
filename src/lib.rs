@@ -4,6 +4,7 @@
 #![allow(non_camel_case_types)]
 
 extern crate libc;
+extern crate rs_libc;
 extern crate num_traits;
 
 #[cfg(feature="serde_support")]

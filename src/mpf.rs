@@ -1,4 +1,5 @@
-use libc::{c_double, c_int, c_long, c_ulong, c_void,c_char, free};
+use libc::{c_double, c_int, c_long, c_ulong, c_void,c_char};
+use rs_libc::alloc::free;
 use std;
 use std::mem::uninitialized;
 use std::cmp;
